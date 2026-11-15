@@ -7,70 +7,72 @@ throne for you to review.
 
 ## Talk to the Queen
 
-Bring your requests and follow-ups to the Queen. Her Secretary keeps the other
-agents moving, so you can follow the work without following every tab.
+Tell the Queen what you need, ask how it's going, or change direction. Her
+Secretary keeps the workers moving and takes care of the follow-ups.
 
-- **Ask in one place.** Bring requests, changes of direction, and status questions
-  to the Queen's thread.
-- **Let the agents coordinate.** The court assigns work, follows up on blockers,
-  arranges reviews, and passes context between sessions.
-- **Decide what matters.** When work needs your judgment or permission, the Queen
-  brings the choice, the tradeoff, and a recommendation. She carries your answer
-  back to the agents.
-- **Get a clear result.** The Queen explains what finished, what was verified,
-  and what still needs attention, with links when you want the detail.
+- **Ask in one place.** New requests and follow-ups all go to the Queen. She
+  keeps track of what you've asked for as the work moves between agents.
+- **Leave the legwork to the court.** The Secretary assigns tasks, follows up
+  when workers get stuck, and gets their work reviewed. The court passes along
+  the context each agent needs.
+- **Make the calls that matter.** When a decision needs your judgment or
+  permission, the Queen explains the tradeoffs and recommends a way forward.
+  Give her your answer, and she takes it back to the workers.
+- **See what got done.** The Queen tells you what finished, what was checked,
+  and what's still open, with links when you want a closer look.
 
-You can inspect the other sessions. Keeping up with every tab isn't meant to be
-your job. [How the conversation works →](docs/how-it-works.md)
+You can still peek into the other sessions whenever you like.
+[How the conversation works →](docs/how-it-works.md)
 
 ## Meet the court
 
 | Role | What they do |
 | --- | --- |
-| Queen | Your point of contact for goals, decisions, status, and results. |
-| Secretary | Coordinates assignments, progress, reviews, and handoffs. |
-| Workers | Build, investigate, and review bounded tasks in their own workspaces. |
+| Queen | Takes your requests, keeps the goal in view, and brings back results and decisions. |
+| Secretary | Assigns tasks, checks progress, arranges reviews, and manages handoffs. |
+| Workers | Write code, investigate problems, and review changes, each with an assignment and a separate workspace. |
 
-The Queen keeps the overall request in view while the court handles the steps.
-Routine questions stay with the agents when they can resolve them within your
-instructions. Changes to scope, spending, or actions you've reserved come back
-to you. Each project keeps its own review and delivery rules.
+Even a monarchy has ground rules. The court handles routine questions within
+your instructions. Changes to scope, spending, or actions you've reserved for
+yourself come back to you. Each project keeps its own review and delivery rules.
 
 ## Why we built it
 
-Working with several agents meant following several conversations. A fix needed
-review, a reviewer needed context, and a blocked agent needed an answer from
-another tab. Too much of the coordination came back to the person who asked for
-the work.
+On PISCES, every new agent meant another conversation to keep up with. A fix
+needed review, a reviewer needed context, and someone was waiting on an answer
+buried in another tab. We kept carrying messages between agents.
 
-Monarchy grew out of that experience on PISCES. We wanted one place to explain
-the goal and follow the outcome, with the agents doing the coordination.
-[First Mate](https://github.com/kunchenguid/firstmate) helped shape that approach:
-a single point of contact, delegated work, and important decisions brought back
-to the user. Monarchy gives that relationship a royal vocabulary.
+So we gave that job to the court. Tell the Queen what you want, follow one
+conversation, and let the agents sort out who does what.
+[First Mate](https://github.com/kunchenguid/firstmate) helped shape the idea:
+one agent to talk to, a team working behind the scenes, and important decisions
+brought back to you.
 
 ## When the crown changes hands
+
 _"The Queen is dead, long live the Queen!"_
 
-Even Queens run out of context. Before a session hands over, it records what's done, what's still running, and
-what the next agent needs to know. The successor checks that handoff before
-taking over. Your decisions carry forward with the work.
+Even Queens run out of context. Before handing over, an agent writes down
+where things stand, including unfinished work and anything still running.
+Its successor checks the handoff before taking over. Your decisions carry
+over too.
 [How succession works →](docs/succession.md)
 
 ## Start a court
 
-Follow [the quickstart](docs/quickstart.md) to set up the Queen and try one task.
-The first checkpoint is a result returned to her thread without you carrying
-messages between agents.
+Follow [the quickstart](docs/quickstart.md) to set up your Queen and give her
+one task. Let the court do the coordination, then check the result in your
+conversation with her.
 
-This first version contains agent instructions, reusable briefs and handoffs,
-a Conductor guide, and a Python status watcher. The workflow is supervised:
-agents use the host's tools, and the watcher reads session and PR state. It does
-not launch agents, transfer authority, or keep itself running after its host exits.
+The kit includes instructions for each role, templates for briefs and handoffs,
+a Conductor setup guide, and a Python watcher for session and pull request
+status. For now, this is a supervised workflow. Agents use the host's tools to
+do the work. The watcher only observes: it can't launch agents, transfer
+authority, or keep running after its host exits.
 
-The instructions are project-independent. **Conductor cloud is the first runtime
-integration**; other runtimes need their own integration and verification. The
-existing PISCES installation is not migrated by cloning this repository.
+You can use Monarchy's instructions with any project. **Conductor cloud is the
+first runtime integration**; other runtimes need their own integration and
+verification. Cloning this repository doesn't migrate the existing PISCES setup.
 
 [Get started](docs/quickstart.md) · [Meet the court](docs/how-it-works.md) ·
 [Pass the crown](docs/succession.md) · [Read the limits](docs/limits.md)
