@@ -1,15 +1,15 @@
 # Monarchy
 
+<p align="center">
+  <img src="assets/keep-calm-and-dm-the-queen.png" width="450" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
+</p>
+
 The Queen is dead, long live the Queen.
 
 A coding session ends. Its responsibilities shouldn't. Monarchy is an orchestration
 layer for passing leadership, ownership, and unfinished work between agents without
 making you rebuild the context every time. The next session should know what was
 promised, what happened, and what it owns now.
-
-<p align="center">
-  <img src="assets/keep-calm-and-dm-the-queen.png" width="300" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
-</p>
 
 ## One conversation. A working court.
 
