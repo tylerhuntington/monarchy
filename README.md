@@ -4,9 +4,8 @@
 
 *“The Queen is dead, long live the Queen.”*
 
-Even the Queen runs out of context. In Monarchy, her successor gets the brief,
-your decisions, and the work still to do, so you don't have to explain the
-kingdom all over again.
+The crown comes with unfinished business. Each new Queen inherits the work
+already underway and picks up the conversation where the last one left off.
 
 Monarchy lets you work with a team of coding agents through one conversation.
 Tell the Queen what you want done. Her Secretary assigns the work and follows
