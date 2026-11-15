@@ -1,7 +1,7 @@
 # Monarchy
 
 <p align="center">
-  <img src="assets/keep-calm-and-dm-the-queen.png" width="450" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
+  <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
 The Queen is dead, long live the Queen.
