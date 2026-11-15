@@ -11,7 +11,7 @@ kingdom all over again.
 Monarchy lets you work with a team of coding agents through one conversation.
 Tell the Queen what you want done. Her Secretary assigns the work and follows
 it through review. Results and decisions that need your input come back to the
-Queen's thread.
+throne for you to review.
 
 ## Talk to the Queen
 
