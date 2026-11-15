@@ -1,13 +1,13 @@
 # Poster
 
 `keep-calm-and-dm-the-queen-square.png` is the current README artwork, edited
-with the built-in image generation tool from the original poster below. The
-square composition adds red space beside the lettering and displays at 400 pixels
-wide, reducing the height on the page. The wording was visually checked.
+with the built-in image generation tool. The square composition has tighter
+left, right, and bottom margins and still displays at 400 pixels wide. The
+wording was visually checked.
 
 Final edit prompt:
 
-> Edit the supplied Monarchy poster. Change its canvas and composition from a tall 2:3 portrait to a true 1:1 SQUARE poster. The user wants it shorter on a README page and with substantially more blank red space on either side of the text. Preserve the same deep red background, crisp flat white crown, white uppercase geometric sans-serif lettering, and EXACT text: KEEP / CALM / AND / DM THE / QUEEN. Preserve these five centered lines, with AND smaller. Keep all content upright and undistorted, no stretching. Scale the complete crown-and-lettering composition down to occupy approximately the middle 55 percent of the square's width, with broad even RED side margins of about 22 percent each; fit it comfortably within 85 percent of the square's height. The crown should remain clearly visible above the text, proportional to the smaller typography. Minimal flat poster artwork only: solid uniform red to all four edges, clean white symbols and lettering, no textures, gradients, frames, shadows, captions, or other text. Output a 1024 by 1024 square image. The extra negative space must be red, not white borders. This is an edit of the supplied artwork, retaining its familiar Keep Calm look.
+> Refine this exact square Keep Calm poster with a modest spacing adjustment, keeping the SQUARE canvas and overall design. The current display size is approved. Reduce the excessive blank red padding on the LEFT, RIGHT, and BOTTOM only. Keep roughly the existing top margin above the crown. Make the centered white lettering comfortably larger and arrange the vertical spacing more tightly so the widest text lines occupy approximately 62 percent of the canvas width (currently about 44 percent), with even red side margins around 19 percent each. Bring the bottom of QUEEN down to around 8 percent above the bottom edge (currently about 17 percent). Preserve the white crown above the words, the same red background, the clean geometric uppercase lettering style, and the EXACT wording in five lines: KEEP / CALM / AND / DM THE / QUEEN. AND remains smaller. Adjust inter-line spacing and crown-to-text spacing as needed for the tighter composition. Do not stretch or distort letterforms; no text changes, added words, borders, captions, texture, or new elements. The result must remain a 1:1 square, clean and balanced, with less wasted space beside and below the message.
 
 ## Original Poster
 
