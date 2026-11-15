@@ -24,7 +24,7 @@ Secretary keeps the workers moving and takes care of the follow-ups.
 You can still peek into the other sessions whenever you like.
 [How the conversation works →](docs/how-it-works.md)
 
-## Meet the court
+## Meet the Royal Court
 
 | Role | What they do |
 | --- | --- |
@@ -74,5 +74,5 @@ You can use Monarchy's instructions with any project. **Conductor cloud is the
 first runtime integration**; other runtimes need their own integration and
 verification. Cloning this repository doesn't migrate the existing PISCES setup.
 
-[Get started](docs/quickstart.md) · [Meet the court](docs/how-it-works.md) ·
+[Get started](docs/quickstart.md) · [Meet the Royal Court](docs/how-it-works.md) ·
 [Pass the crown](docs/succession.md) · [Read the limits](docs/limits.md)
