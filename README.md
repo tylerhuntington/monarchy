@@ -11,8 +11,6 @@ promised, what happened, and what it owns now.
   <img src="assets/keep-calm-and-dm-the-queen.png" width="300" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-<p align="center"><strong>Keep Calm and DM the Queen.</strong></p>
-
 ## One conversation. A working court.
 
 You talk to the **Queen**. The **Chamberlain** coordinates the work. **Workers**
