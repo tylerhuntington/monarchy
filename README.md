@@ -4,15 +4,16 @@
 
 *“The Queen is dead, long live the Queen.”*
 
-The crown passes on, and the work continues. Monarchy applies that idea to coding
-agents: a successor picks up the goals, decisions, and unfinished work left by
-the previous session, keeping your direction intact as the team changes.
+Coding agents run out of context, and that can happen halfway through a task.
+When a new session takes over, it needs to know where things left off and what
+you've already decided. Monarchy makes that handoff part of the job, including
+when the Queen herself needs a new session.
 
-That continuity supports a simpler way to work: one conversation with the Queen.
-Tell her what you want, ask how it's going, and make the decisions that need your
-judgment. She keeps the bigger picture in view while her court handles delegation
-and coordination behind the scenes, bringing important choices and results back
-to you in her thread.
+The Queen is your point of contact through all of this. You tell her what you
+want to get done, and she works with the rest of the court to assign the work
+and follow it through review. The agents coordinate with each other in the
+background, while you stay in one conversation. When they need a decision from
+you, the Queen brings it back with the context you need and a recommendation.
 
 ## Stay in one conversation
 
