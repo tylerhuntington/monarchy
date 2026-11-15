@@ -2,9 +2,7 @@
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-Monarchy lets you rule an empire of coding agents through one conversation.
-Tell the Queen what you want done. Her Secretary assigns the work and follows
-it through review. Results and decisions that need your input come back to the
+Managing dozens of coding agents can be a royal headache. But it doesn't have to be. Monarchy takes the pain out of agent orchestration by letting you rule empires of agents through one conversation. Just talk to the Queen, and let the monarchy handle the rest. Her Secretary delegates tasks to workers follows it through review. Results and decisions that need your input come back to the
 throne for you to review.
 
 ## Talk to the Queen
@@ -52,8 +50,9 @@ a single point of contact, delegated work, and important decisions brought back
 to the user. Monarchy gives that relationship a royal vocabulary.
 
 ## When the crown changes hands
+_"The Queen is dead, long live the Queen!"_
 
-Before a session hands over, it records what's done, what's still running, and
+Even Queens run out of context. Before a session hands over, it records what's done, what's still running, and
 what the next agent needs to know. The successor checks that handoff before
 taking over. Your decisions carry forward with the work.
 [How succession works →](docs/succession.md)
