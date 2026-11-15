@@ -1,6 +1,6 @@
 # Watch the Court
 
-The observer gives the Chamberlain a current view of registered task sessions and
+The observer gives the Secretary a current view of registered task sessions and
 pull requests. It reads Conductor and GitHub, then prints JSON. It never launches
 agents, sends messages, changes a PR, or decides that a task is done.
 
@@ -114,7 +114,7 @@ atomically. A lock prevents two watchers from using the same state at once.
 Use a separate state file for each court. Malformed or mismatched state produces
 an error instead of silently starting over.
 
-The Chamberlain reads the result and chooses the next authorized action. The
+The Secretary reads the result and chooses the next authorized action. The
 watch doesn't wake a stopped agent or install a background service. After a
 crash, read current status and compare it with retained task and handoff records:
 the state file is a change baseline, not a durable message queue or acceptance

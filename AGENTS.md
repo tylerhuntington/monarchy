@@ -7,7 +7,7 @@ projects those agents change.
 ## Pick your role
 
 When the user asks to run Monarchy, read [the Queen's instructions](roles/queen.md).
-When assigned as Chamberlain or Worker, read the matching file under `roles/`.
+When assigned as Secretary or Worker, read the matching file under `roles/`.
 When explicitly asked to develop Monarchy itself, work as a maintainer. That
 assignment permits changes here; it does not put you in charge of other sessions.
 

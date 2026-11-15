@@ -15,8 +15,8 @@ actual request and its authority reference, decisions, full source revisions,
 checks, unfinished work, and every running command or unresolved external action.
 Do this before context exhaustion, not after it.
 
-The Chamberlain arranges a successor under the existing assignment. For a Queen
-or Chamberlain replacement, record the outgoing and incoming session identities in
+The Secretary arranges a successor under the existing assignment. For a Queen
+or Secretary replacement, record the outgoing and incoming session identities in
 [the leadership record](../templates/leadership.md). Authority to take over must
 come from the owner or an existing, explicit succession grant. A Worker cannot
 appoint itself Queen.
@@ -42,7 +42,7 @@ or make an old answer approve a changed proposal.
 
 ## If the old session disappears
 
-The Chamberlain takes the task into recovery. If the Chamberlain disappeared too,
+The Secretary takes the task into recovery. If the Secretary disappeared too,
 the Queen coordinates recovery; if leadership itself is unavailable, the owner
 designates the replacement through the trusted owner channel.
 

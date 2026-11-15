@@ -4,20 +4,19 @@
 
 *“The Queen is dead, long live the Queen.”*
 
-Coding agents run out of context, and that can happen halfway through a task.
-When a new session takes over, it needs to know where things left off and what
-you've already decided. Monarchy makes that handoff part of the job, including
-when the Queen herself needs a new session.
+Even the Queen runs out of context. In Monarchy, her successor gets the brief,
+your decisions, and the work still to do, so you don't have to explain the
+kingdom all over again.
 
-The Queen is your point of contact through all of this. You tell her what you
-want to get done, and she works with the rest of the court to assign the work
-and follow it through review. The agents coordinate with each other in the
-background, while you stay in one conversation. When they need a decision from
-you, the Queen brings it back with the context you need and a recommendation.
+Monarchy lets you work with a team of coding agents through one conversation.
+Tell the Queen what you want done. Her Secretary assigns the work and follows
+it through review. Results and decisions that need your input come back to the
+Queen's thread.
 
-## Stay in one conversation
+## Talk to the Queen
 
-Give the Queen the goal. Follow one conversation. Let the court handle the rest.
+Bring your requests and follow-ups to the Queen. Her Secretary keeps the other
+agents moving, so you can follow the work without following every tab.
 
 - **Ask in one place.** Bring requests, changes of direction, and status questions
   to the Queen's thread.
@@ -32,12 +31,12 @@ Give the Queen the goal. Follow one conversation. Let the court handle the rest.
 You can inspect the other sessions. Keeping up with every tab isn't meant to be
 your job. [How the conversation works →](docs/how-it-works.md)
 
-## Behind the scenes
+## Meet the court
 
 | Role | What they do |
 | --- | --- |
 | Queen | Your point of contact for goals, decisions, status, and results. |
-| Chamberlain | Coordinates assignments, progress, reviews, and handoffs. |
+| Secretary | Coordinates assignments, progress, reviews, and handoffs. |
 | Workers | Build, investigate, and review bounded tasks in their own workspaces. |
 
 The Queen keeps the overall request in view while the court handles the steps.
@@ -58,12 +57,12 @@ the goal and follow the outcome, with the agents doing the coordination.
 a single point of contact, delegated work, and important decisions brought back
 to the user. Monarchy gives that relationship a royal vocabulary.
 
-## When a session ends
+## When the crown changes hands
 
-The crown belongs to the role, not the chat window. A replacement Queen should
-pick up your requests, decisions, and unfinished work from the court's records.
-Careful handoffs support the promise of one point of contact, even when the
-underlying session changes. [How succession works →](docs/succession.md)
+Before a session hands over, it records what's done, what's still running, and
+what the next agent needs to know. The successor checks that handoff before
+taking over. Your decisions carry forward with the work.
+[How succession works →](docs/succession.md)
 
 ## Start a court
 

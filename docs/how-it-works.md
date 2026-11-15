@@ -8,7 +8,7 @@ judgment, and blockers it cannot resolve within your instructions.
 
 Start with the outcome you want. Ask for progress in the same thread. Change
 priorities there too. The Queen keeps the overall request in view and delegates
-the work through the Chamberlain.
+the work through the Secretary.
 
 You shouldn't need to find the right Worker, forward a review, or explain the
 same decision in several tabs. The Queen is responsible for carrying your
@@ -36,15 +36,15 @@ linked so you can read it without turning every update into a technical report.
 records the assignment, gathers the decisions that need you, and returns the
 outcome. She delegates project code changes and their review.
 
-**The Chamberlain** runs routine coordination. It tracks assignments, follows up
+**The Secretary** runs routine coordination. It tracks assignments, follows up
 on blockers, arranges independent reviews, and manages handoffs. It sends the
 Queen important decisions and outcomes, rather than forwarding every status event.
 
-The title is a household-management analogy, not a claim to deputy-monarch rank.
-The royal office oversees household business; see the [Royal Household's description](https://www.royal.uk/sites/default/files/media/part1_introduction_to_head_of_state_expenditure_0809.pdf).
+The Secretary keeps the task records current and brings decisions to the Queen
+when they need the user's attention.
 
 **Workers** build, investigate, and review in isolated task workspaces. Each gets
-a brief and a completion condition. They report through the Chamberlain instead
+a brief and a completion condition. They report through the Secretary instead
 of asking you to coordinate with the next agent.
 
 ## Follow one request
@@ -74,6 +74,6 @@ physically permanent chat thread or automatic recovery from every interruption.
 A replacement Queen verifies and accepts the handoff before continuing.
 
 This release uses supervised coordination. Its [observer](observer.md) helps the
-Chamberlain read session and PR changes; it doesn't dispatch agents or keep
+Secretary read session and PR changes; it doesn't dispatch agents or keep
 supervision alive on its own. See [the limits](limits.md) before relying on
 unattended operation.

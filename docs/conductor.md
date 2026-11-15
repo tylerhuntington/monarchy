@@ -1,6 +1,6 @@
 # Run the Court in Conductor
 
-Use one Monarchy cloud workspace for the Queen and Chamberlain, and one isolated
+Use one Monarchy cloud workspace for the Queen and Secretary, and one isolated
 project workspace per independent task. Sequential stages can share a task
 workspace after a verified handoff.
 
@@ -10,13 +10,13 @@ this CLI integration is for cloud workspaces.
 
 ## Establish the leadership
 
-The owner starts the Queen. Under that assignment, the Queen creates a Chamberlain
+The owner starts the Queen. Under that assignment, the Queen creates a Secretary
 session in the same Monarchy workspace, using an explicit chosen profile and a
 message file containing its role instructions and the court's scope. Record both
-native session IDs in `.monarchy/leadership.md` and have the Chamberlain verify
+native session IDs in `.monarchy/leadership.md` and have the Secretary verify
 its assignment.
 
-A new Queen or Chamberlain follows [succession](succession.md). Do not take over a
+A new Queen or Secretary follows [succession](succession.md). Do not take over a
 session because its title resembles a role, or supervise an existing workspace
 without a direct assignment or an authorized handover.
 
@@ -108,7 +108,7 @@ claim that a sent message cannot interrupt that prompt. Missing or ambiguous
 human provenance must not authorize expanded scope.
 
 The [observer](observer.md) returns changes to the active caller; it doesn't
-install a re-arm hook or wake a stopped agent. The Chamberlain must arrange the
+install a re-arm hook or wake a stopped agent. The Secretary must arrange the
 next bounded check and report degraded or interrupted supervision.
 
 ## Retire a workspace

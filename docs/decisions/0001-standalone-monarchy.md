@@ -1,6 +1,6 @@
 # 0001: A Standalone Monarchy
 
-Status: Accepted direction; framing refined by [0002](0002-one-conversation.md)
+Status: Accepted direction; framing refined by [0002](0002-one-conversation.md), role naming updated by [0003](0003-secretary-role.md)
 Pacific date: 2026-11-15
 
 ## Context
@@ -19,8 +19,8 @@ the reference for a single point of contact serving a group of coding agents.
 
 The README opens with “The Queen is dead, long live the Queen.” Its purpose is
 continuity of leadership and ownership through context and session transitions,
-including graceful handoffs. The owner requested a historically analogous title
-for the Supervisor. **Chamberlain** was proposed and the direction accepted.
+including graceful handoffs. The coordination role is **Secretary**, following
+the naming update in [0003](0003-secretary-role.md).
 
 The owner also requested a generated poster retaining the familiar red, white,
 crown, and typography of “Keep Calm and Carry On,” with the wording changed to

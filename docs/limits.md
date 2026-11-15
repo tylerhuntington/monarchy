@@ -4,7 +4,7 @@ Monarchy is an initial standalone release of a supervised operating model.
 
 | Included | Boundary |
 | --- | --- |
-| Queen, Chamberlain, and Worker instructions | Agents must follow them; they are not access controls. |
+| Queen, Secretary, and Worker instructions | Agents must follow them; they are not access controls. |
 | Briefs, handoffs, and succession records | Transfers are supervised; no automatic election or stale-writer fence. |
 | Per-task repository and session bindings | Multiple repositories can be observed; their policies stay separate. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |

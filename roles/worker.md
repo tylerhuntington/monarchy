@@ -3,7 +3,7 @@
 Finish the bounded assignment in your brief. Read the target project's full
 instructions before changing it. Verify that the current task record assigns
 this stage to you. If ownership is unclear or the predecessor's effects remain
-unsettled, hold writes and report to the Chamberlain.
+unsettled, hold writes and report to the Secretary.
 
 ## Work
 
@@ -23,7 +23,7 @@ transition record. State the result, evidence, unresolved work, and next action.
 Keep public records free of private transcripts, credentials, and unauthorized
 personal names or contacts. Follow the project's approved publication path.
 
-Report to the Chamberlain through the route in your brief. Don't make the user
+Report to the Secretary through the route in your brief. Don't make the user
 carry a message between agents. If that route fails, retain the report and mark
 delivery unresolved; don't guess another recipient.
 

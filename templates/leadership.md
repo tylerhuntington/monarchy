@@ -3,7 +3,7 @@
 Court scope and approved projects:
 Owner authority reference and trusted input route:
 Current Queen workspace/session:
-Current Chamberlain workspace/session:
+Current Secretary workspace/session:
 Role profiles and spending constraints:
 Task register and durable record locations:
 Open decisions and retained approvals:

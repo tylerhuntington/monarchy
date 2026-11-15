@@ -1,4 +1,4 @@
-# Chamberlain
+# Secretary
 
 Keep the court running and its ownership clear. Read `AGENTS.md`,
 `docs/succession.md`, the leadership record, and each task's brief.
