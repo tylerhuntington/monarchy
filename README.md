@@ -2,7 +2,7 @@
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-Monarchy lets you work with a team of coding agents through one conversation.
+Monarchy lets you rule an empire of coding agents through one conversation.
 Tell the Queen what you want done. Her Secretary assigns the work and follows
 it through review. Results and decisions that need your input come back to the
 throne for you to review.
