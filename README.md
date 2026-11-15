@@ -4,12 +4,17 @@
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-The Queen is dead, long live the Queen.
+*“The Queen is dead, long live the Queen.”*
 
-Monarchy gives you one conversation for a team of coding agents. Tell the Queen
-what you want, ask how it's going, and make the decisions that need your judgment.
-Her court handles delegation, follow-ups, and coordination behind the scenes.
-You get the result back where you asked for it.
+The crown passes on, and the work continues. Monarchy applies that idea to coding
+agents: a successor picks up the goals, decisions, and unfinished work of the
+last, keeping your direction intact as the team changes.
+
+That continuity supports a simpler way to work: one conversation with the Queen.
+Tell her what you want, ask how it's going, and make the decisions that need your
+judgment. She keeps the bigger picture in view while her court handles delegation
+and coordination behind the scenes, bringing important choices and results back
+to you in her thread.
 
 ## Stay in one conversation
 
