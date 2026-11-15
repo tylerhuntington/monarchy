@@ -6,44 +6,66 @@
 
 The Queen is dead, long live the Queen.
 
-A coding session ends. Its responsibilities shouldn't. Monarchy is an orchestration
-layer for passing leadership, ownership, and unfinished work between agents without
-making you rebuild the context every time. The next session should know what was
-promised, what happened, and what it owns now.
+Monarchy gives you one conversation for a team of coding agents. Tell the Queen
+what you want, ask how it's going, and make the decisions that need your judgment.
+Her court handles delegation, follow-ups, and coordination behind the scenes.
+You get the result back where you asked for it.
 
-## One conversation. A working court.
+## Stay in one conversation
 
-You talk to the **Queen**. The **Chamberlain** coordinates the work. **Workers**
-build, investigate, and review in their own task workspaces.
+Give the Queen the goal. Follow one conversation. Let the court handle the rest.
+
+- **Ask in one place.** Bring requests, changes of direction, and status questions
+  to the Queen's thread.
+- **Let the agents coordinate.** The court assigns work, follows up on blockers,
+  arranges reviews, and passes context between sessions.
+- **Decide what matters.** When work needs your judgment or permission, the Queen
+  brings the choice, the tradeoff, and a recommendation. She carries your answer
+  back to the agents.
+- **Get a clear result.** The Queen explains what finished, what was verified,
+  and what still needs attention, with links when you want the detail.
+
+You can inspect the other sessions. Keeping up with every tab isn't meant to be
+your job. [How the conversation works →](docs/how-it-works.md)
+
+## Behind the scenes
 
 | Role | What they do |
 | --- | --- |
-| Queen | Understand your request, keep the decisions straight, and bring back the result. |
-| Chamberlain | Track ownership, watch progress, resolve routine blockers, and arrange handoffs. |
-| Workers | Finish a bounded assignment and leave evidence the next agent can use. |
+| Queen | Your point of contact for goals, decisions, status, and results. |
+| Chamberlain | Coordinates assignments, progress, reviews, and handoffs. |
+| Workers | Build, investigate, and review bounded tasks in their own workspaces. |
 
-The crown belongs to the role, not the chat window. When a session fills up,
-crashes, or hands over, its successor inherits a written record of the work and
-its limits. A handoff is complete when the successor checks that record and
-accepts responsibility. [How succession works →](docs/succession.md)
+The Queen keeps the overall request in view while the court handles the steps.
+Routine questions stay with the agents when they can resolve them within your
+instructions. Changes to scope, spending, or actions you've reserved come back
+to you. Each project keeps its own review and delivery rules.
 
 ## Why we built it
 
-Parallel agents gave us more hands and more coordination work. Someone still had
-to remember which agent owned a fix, carry decisions between tabs, and notice when
-an apparently finished task had stopped short of its goal.
+Working with several agents meant following several conversations. A fix needed
+review, a reviewer needed context, and a blocked agent needed an answer from
+another tab. Too much of the coordination came back to the person who asked for
+the work.
 
-Monarchy grew out of that work on PISCES. It keeps the useful parts: one conversation,
-clear assignments, independent review, and careful transfers of ownership. Each
-project keeps its own build, review, merge, and deployment rules.
+Monarchy grew out of that experience on PISCES. We wanted one place to explain
+the goal and follow the outcome, with the agents doing the coordination.
+[First Mate](https://github.com/kunchenguid/firstmate) helped shape that approach:
+a single point of contact, delegated work, and important decisions brought back
+to the user. Monarchy gives that relationship a royal vocabulary.
 
-[First Mate](https://github.com/kunchenguid/firstmate) inspired the single point of
-contact. Monarchy puts continuity of leadership at the center of that idea.
+## When a session ends
+
+The crown belongs to the role, not the chat window. A replacement Queen should
+pick up your requests, decisions, and unfinished work from the court's records.
+Careful handoffs support the promise of one point of contact, even when the
+underlying session changes. [How succession works →](docs/succession.md)
 
 ## Start a court
 
-Clone this repository and follow [the quickstart](docs/quickstart.md). Start with
-one project and one task. Add parallel work when you can track its ownership.
+Follow [the quickstart](docs/quickstart.md) to set up the Queen and try one task.
+The first checkpoint is a result returned to her thread without you carrying
+messages between agents.
 
 This first version contains agent instructions, reusable briefs and handoffs,
 a Conductor guide, and a Python status watcher. The workflow is supervised:
@@ -54,5 +76,5 @@ The instructions are project-independent. **Conductor cloud is the first runtime
 integration**; other runtimes need their own integration and verification. The
 existing PISCES installation is not migrated by cloning this repository.
 
-[Get started](docs/quickstart.md) · [Understand the court](docs/how-it-works.md) ·
+[Get started](docs/quickstart.md) · [Meet the court](docs/how-it-works.md) ·
 [Pass the crown](docs/succession.md) · [Read the limits](docs/limits.md)

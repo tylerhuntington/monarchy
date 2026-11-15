@@ -1,60 +1,79 @@
 # Meet the Court
 
-Monarchy keeps the conversation with you separate from the work of coordinating
-agents. Its royal vocabulary describes three jobs.
+You follow one conversation with the Queen. The court coordinates the agents
+working on your request and brings back results, questions that need your
+judgment, and blockers it cannot resolve within your instructions.
 
-## The Queen keeps the promise
+## Your conversation with the Queen
 
-The Queen is your point of contact. You explain the outcome you want; she turns it
-into an assignment with a clear finish line. She brings you results and decisions
-that need your judgment. She doesn't edit project code while running the court.
+Start with the outcome you want. Ask for progress in the same thread. Change
+priorities there too. The Queen keeps the overall request in view and delegates
+the work through the Chamberlain.
 
-A new Queen session inherits the role through [succession](succession.md), with
-open decisions and existing authority intact. Starting a new chat alone doesn't
-make it the Queen.
+You shouldn't need to find the right Worker, forward a review, or explain the
+same decision in several tabs. The Queen is responsible for carrying your
+direction into the court and bringing the result back. Other sessions remain
+available when you want to inspect the detail.
 
-## The Chamberlain keeps things moving
+## What comes back to you
 
-The Chamberlain knows who owns each task, what they are doing next, and what must
-happen before another agent takes over. Routine reports go here, so your
-conversation with the Queen stays useful.
+Routine coordination stays with the agents: choosing the next step within an
+assignment, sharing context, arranging review, and following up on unfinished work.
 
-The name comes from the royal office that oversees household business and
-coordinates its leadership. See the [Royal Household's description](https://www.royal.uk/sites/default/files/media/part1_introduction_to_head_of_state_expenditure_0809.pdf).
-It's a working analogy: Monarchy's Chamberlain handles agent coordination.
+A choice comes back when it needs your judgment or authority. For example, a fix
+may require changing behavior outside the agreed scope, or work may need access
+you haven't granted. The Queen explains the situation, presents the tradeoff,
+recommends a path, and says what is waiting on your answer. She passes that answer
+back through the court; you don't have to repeat it to each Worker.
 
-The Chamberlain can resolve ordinary problems within the assignment. Changing the
-scope, spending limits, or reserved actions goes back to you through the Queen.
+An update should tell you what changed and what it means. A final result should
+say what was completed, what was checked, and what remains open. Evidence stays
+linked so you can read it without turning every update into a technical report.
 
-## Workers do the work
+## Who does what
 
-Workers get a brief, an isolated task workspace, and a completion condition.
-A small change can move straight to Build and then independent Review. Uncertain
-work starts with Plan. Findings go through Fix and fresh Review before landing.
+**The Queen** owns the conversation with you and keeps the goal in view. She
+records the assignment, gathers the decisions that need you, and returns the
+outcome. She delegates project code changes and their review.
 
-A reviewer checks the actual change and its evidence. If the source changes, the
-review must cover the new source. A project may require more stages; Monarchy
-follows that project's rules.
+**The Chamberlain** runs routine coordination. It tracks assignments, follows up
+on blockers, arranges independent reviews, and manages handoffs. It sends the
+Queen important decisions and outcomes, rather than forwarding every status event.
 
-## Follow one task
+The title is a household-management analogy, not a claim to deputy-monarch rank.
+The royal office oversees household business; see the [Royal Household's description](https://www.royal.uk/sites/default/files/media/part1_introduction_to_head_of_state_expenditure_0809.pdf).
 
-Suppose you ask for a broken CSV export to be fixed and a PR prepared.
+**Workers** build, investigate, and review in isolated task workspaces. Each gets
+a brief and a completion condition. They report through the Chamberlain instead
+of asking you to coordinate with the next agent.
 
-1. The Queen records the bug, the allowed scope, and “reviewed PR ready” as the endpoint.
-2. The Chamberlain assigns a Worker and records its workspace and session.
-3. The Worker reproduces the failure, fixes it, checks the result, and leaves a handoff.
-4. After the Worker has stopped changing the branch, a fresh Worker reviews it.
-5. The Chamberlain checks the evidence. The Queen gives you the PR and any remaining limits.
+## Follow one request
 
-“PR ready” doesn't authorize deployment. A project with a different endpoint
-keeps going until that endpoint is verified.
+Suppose you ask the Queen to fix a broken CSV export and prepare a PR.
 
-## Keep the record small
+1. You describe the problem and the result you want in the Queen's thread.
+2. Behind the scenes, the court assigns the fix, checks it, and arranges a fresh
+   review. Workers resolve routine questions within the brief.
+3. If a decision exceeds that brief, the Queen brings it back with context and a
+   recommendation. You answer in her thread.
+4. The court carries on within that answer's scope. The Queen returns the
+   reviewed PR, verification results, and any remaining limits.
 
-A task needs a brief, its current owner, a next action, and evidence. Put durable
-results in the project's existing issue, PR, or approved record. Keep private
-coordination notes in `.monarchy/` in the Monarchy home, with retention appropriate
-to that machine. Never publish private transcripts to make a handoff convenient.
+Small changes can go through Build and Review; uncertain work starts with Plan.
+Findings go through Fix and fresh Review. Each project's own checks and delivery
+rules still apply. Preparing a PR doesn't authorize deployment.
 
-The [observer](observer.md) reads the task register and reports changes. An idle
-session means “check the handoff,” not “declare success.”
+## Keep one point of contact through a handoff
+
+An agent session can run out of context or stop. The court's records preserve the
+request, decisions, current owner, and next action so the successor can take over
+without asking you to reconstruct the work.
+
+[Succession](succession.md) supports this experience. It doesn't promise one
+physically permanent chat thread or automatic recovery from every interruption.
+A replacement Queen verifies and accepts the handoff before continuing.
+
+This release uses supervised coordination. Its [observer](observer.md) helps the
+Chamberlain read session and PR changes; it doesn't dispatch agents or keep
+supervision alive on its own. See [the limits](limits.md) before relying on
+unattended operation.

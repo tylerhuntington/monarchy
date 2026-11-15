@@ -1,7 +1,8 @@
 # Start a Court
 
-Set up a Monarchy home, then try one supervised task in Conductor cloud. Start
-with a read-only investigation so you can check the handoff before allowing changes.
+Set up one conversation with the Queen, then give the court a small task in
+Conductor cloud. Start with a read-only investigation: the result should come
+back to the Queen without you coordinating the Workers.
 
 You need Python 3.9 or later on macOS or Linux for the observer. Live observation
 also needs the Conductor CLI with access to your cloud sessions. GitHub PR reads
@@ -44,8 +45,9 @@ Start your chosen agent in that workspace and give it this instruction:
 
 > Act as the Queen using AGENTS.md and roles/queen.md. Establish this court for
 > the project I specify. Keep a leadership record, use a Chamberlain for
-> coordination, and follow each project's existing rules. Start with one
-> read-only task. Ask for missing project or model choices before dispatch.
+> coordination, and follow each project's existing rules. Keep my requests,
+> status updates, important decisions, and results in this conversation. Start
+> with one read-only task. Ask for missing project or model choices before dispatch.
 
 This authorizes setup of that court and the bounded task, not changes to every
 repository the agent can access. The Queen records the project, model choices,
@@ -65,26 +67,41 @@ adds its row to `.monarchy/court.json` using [the task format](observer.md#regis
 The task's `repo` must match the native workspace's repository; the observer does
 not check that association for you.
 
-## 4. Check the handoff
+## 4. Get the result in the Queen's thread
 
-From the Monarchy root in the cloud workspace, read the registered task:
+Ask the Queen how the task is going. She should give you a concise status and any
+choice that needs your input. Routine questions and follow-ups stay with the court.
+
+When the Worker finishes, the Chamberlain checks the report and file references.
+The Queen returns the explanation and evidence in your conversation. Check that
+it answers the original request. You should not need to relay a report or ask a
+second agent to pick up the work.
+
+If the result is incomplete, tell the Queen what's missing. She routes the
+follow-up through the court within the original assignment, or asks about any
+new scope.
+
+### Optional: inspect the machinery
+
+To inspect the task yourself, run this from the Monarchy root in the cloud
+workspace:
 
 ```bash
 python3 bin/monarchy.py status --court .monarchy/court.json
 ```
 
-You should see that task's session status with an empty `errors` list. When its
-turn ends, the Chamberlain reads the report and checks the file references before
-the Queen returns the result. An idle status alone doesn't pass the task.
+You should see the task's session status with an empty `errors` list. An idle
+status means the turn ended, not that the requested outcome passed.
 
-Ask the Queen to prepare a handoff to a fresh session. The successor must recover
-the brief, result, outstanding work, and authority from the records, then accept
-ownership through [the succession protocol](succession.md). If it needs you to
-reconstruct the assignment, improve the handoff before adding more tasks.
+To exercise recovery, ask the Queen to arrange a handoff to a fresh session.
+The successor should recover the request and decisions from the records and
+accept ownership through [the succession protocol](succession.md). This checks
+how the court preserves your direction when an underlying session changes.
 
 ## Next
 
 Use [the bounded watcher](observer.md#wait-for-a-change) for a longer task.
-Add a build task with independent review once the first handoff works.
+Add a build task with independent review once the first task returns a checked
+result through the Queen.
 Keep the [implementation limits](limits.md) visible when deciding how much
 supervision to delegate.

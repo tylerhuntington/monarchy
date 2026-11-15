@@ -1,6 +1,6 @@
 # 0001: A Standalone Monarchy
 
-Status: Accepted direction; initial implementation
+Status: Accepted direction; framing refined by [0002](0002-one-conversation.md)
 Pacific date: 2026-11-15
 
 ## Context

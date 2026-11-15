@@ -1,7 +1,8 @@
 # Working in Monarchy
 
-Monarchy coordinates coding agents across repositories. Its home is separate
-from the projects those agents change.
+Monarchy gives the user one conversation with the Queen while the court
+coordinates coding agents across repositories. Its home is separate from the
+projects those agents change.
 
 ## Pick your role
 

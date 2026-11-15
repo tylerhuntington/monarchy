@@ -2,12 +2,12 @@
 
 The Queen is dead, long live the Queen.
 
-Monarchy exists to keep leadership and ownership intact when an agent's context
-or session ends. These guides explain how to start the court, follow the work,
-and pass responsibility to the next session without losing decisions along the way.
+Monarchy gives you one conversation with the Queen for requests, status, decisions,
+and results. The court handles delegation and coordination behind the scenes.
+Start here to set up that conversation and understand what comes back to you.
 
 - [Start a court](quickstart.md): set up the home and try one bounded task.
-- [Meet the court](how-it-works.md): Queen, Chamberlain, and Workers.
+- [Meet the court](how-it-works.md): your conversation with the Queen and the work behind it.
 - [Pass the crown](succession.md): transfer responsibility and recover after interruption.
 - [Use Conductor](conductor.md): connect the workflow to visible agent sessions.
 - [Watch the work](observer.md): validate a task register and read live status.
