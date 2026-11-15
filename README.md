@@ -1,5 +1,3 @@
-# Monarchy
-
 <p align="center">
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
@@ -7,8 +5,8 @@
 *“The Queen is dead, long live the Queen.”*
 
 The crown passes on, and the work continues. Monarchy applies that idea to coding
-agents: a successor picks up the goals, decisions, and unfinished work of the
-last, keeping your direction intact as the team changes.
+agents: a successor picks up the goals, decisions, and unfinished work left by
+the previous session, keeping your direction intact as the team changes.
 
 That continuity supports a simpler way to work: one conversation with the Queen.
 Tell her what you want, ask how it's going, and make the decisions that need your
