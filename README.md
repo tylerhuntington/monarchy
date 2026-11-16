@@ -2,8 +2,8 @@
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy simplifies agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. Her Secretary delegates tasks to workers and follows it through review. Results and decisions that need your input come back to the
-throne for your sign-off. Once the Crown is at your service, you'll never look back.
+Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy streamlines agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. Her royal court delegates tasks to workers and follows them through planning, implementation and review. Results and decisions that need your input come back to the
+throne for your sign-off. Simplicity and centralization of power keeps order in the kingdom. Once the Crown is at your service, you'll never look back.
 
 ## Talk to the Queen
 
