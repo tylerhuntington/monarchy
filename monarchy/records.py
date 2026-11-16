@@ -118,6 +118,17 @@ def _offset(value):
     return value
 
 
+def _decision_reference(request):
+    fields = {"decision_id", "decision_revision"}
+    present = fields.intersection(request)
+    if not present:
+        return None
+    if present != fields:
+        raise RecordError("operation decision reference requires its ID and revision")
+    return (_identifier(request["decision_id"], "decision_id"),
+            _generation(request["decision_revision"]))
+
+
 class CourtRecords:
     """One private court database, used only by trusted local callers.
 
@@ -585,6 +596,14 @@ class CourtRecords:
             decision = self.get_decision(decision_id)
             if decision["revision"] != expected_revision:
                 raise Conflict("decision changed before the revision")
+            unresolved = self._connection.execute(
+                "SELECT * FROM operations WHERE task_id = ? AND state IN ('in_flight', 'unknown')",
+                (decision["task_id"],),
+            )
+            for row in unresolved:
+                reference = _decision_reference(self._decode(row)["request"])
+                if reference is not None and reference[0] == decision_id:
+                    raise Conflict("reconcile the decision's unresolved delivery before revising it")
             if expected_revision == 2**63 - 1:
                 raise RecordError("decision revision is exhausted")
             self._connection.execute(
@@ -602,6 +621,7 @@ class CourtRecords:
         _identifier(task_id, "task_id")
         _identifier(kind, "kind")
         encoded = _payload(request)
+        decision_reference = _decision_reference(request)
         with self._transaction():
             existing = self._connection.execute("SELECT * FROM operations WHERE operation_id = ?", (operation_id,)).fetchone()
             if existing:
@@ -609,6 +629,10 @@ class CourtRecords:
                     raise Conflict("operation identity was reused with different content")
                 return self._decode(existing)
             self.get_task(task_id)
+            if decision_reference is not None:
+                decision = self.get_decision(decision_reference[0])
+                if decision["task_id"] != task_id:
+                    raise Conflict("operation decision belongs to another task")
             now = _now()
             self._connection.execute(
                 "INSERT INTO operations VALUES (?, ?, ?, ?, 'prepared', NULL, ?, ?)",
@@ -639,6 +663,13 @@ class CourtRecords:
                 generation = _generation(operation["request"]["generation"])
                 if generation != self.get_task(operation["task_id"])["generation"]:
                     raise StaleGeneration("operation belongs to a stale assignment generation")
+            if state == "in_flight":
+                reference = _decision_reference(operation["request"])
+                if reference is not None:
+                    decision = self.get_decision(reference[0])
+                    if (decision["task_id"] != operation["task_id"]
+                            or decision["revision"] != reference[1] or decision["state"] != "answered"):
+                        raise Conflict("operation requires the current answered decision revision")
             self._connection.execute(
                 "UPDATE operations SET state = ?, result = ?, updated_at = ? WHERE operation_id = ?",
                 (state, encoded, _now(), operation_id),
