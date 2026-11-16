@@ -3,22 +3,22 @@
 </p>
 
 Managing dozens of coding agents can be a royal headache. But it doesn't have to be. Monarchy takes the pain out of agent orchestration by letting you rule empires of agents through one chat. Just talk to the Queen, and let Monarchy handle the rest. Her Secretary delegates tasks to workers and follows it through review. Results and decisions that need your input come back to the
-throne for review.
+throne for your sign-off. 
 
 ## Talk to the Queen
 
-Tell the Queen what you need, ask how it's going, or change direction. Her
+Tell the Queen what you want done, ask about work in flight, or change direction on something you kicked off hours ago. Nothing is off limits. Queen's got you. Her
 Secretary keeps the workers moving and takes care of the follow-ups.
 
-- **Ask in one place.** New requests and follow-ups all go to the Queen. She
+- **Ask in one chat.** New requests and follow-ups all go to the Queen. She
   keeps track of what you've asked for as the work moves between agents.
-- **Leave the legwork to the court.** The Secretary assigns tasks, follows up
+- **Leave the legwork to the royal court.** The Secretary assigns tasks, follows up
   when workers get stuck, and gets their work reviewed. The court passes along
   the context each agent needs.
-- **Make the calls that matter.** When a decision needs your judgment or
+- **Make the decisions that matter.** When a decision needs your judgment or
   permission, the Queen explains the tradeoffs and recommends a way forward.
   Give her your answer, and she takes it back to the workers.
-- **See what got done.** The Queen tells you what finished, what was checked,
+- **See what's getting done.** The Queen tells you what finished, what was checked,
   and what's still open, with links when you want a closer look.
 
 You can still peek into the other sessions whenever you like.
