@@ -153,3 +153,29 @@ class CourtTests(unittest.TestCase):
         self.court.tick('task')
         self.assertEqual(len(self.records.list_events(task_id='task')), 1)
         self.assertEqual(len(self.court.inbox()['outcomes']), 1)
+
+    def test_answer_without_prepared_delivery_still_blocks_completion(self):
+        self.event('question', 'decision', {'question': 'Which choice?'})
+        self.event('done', 'completed', {'summary': 'Ready', 'source_revision': REVISION})
+        self.court.tick('task')
+        decision = self.records.list_decisions(task_id='task')[0]
+        self.court.answer(decision['decision_id'], {'text': 'Choose the first'},
+                          expected_revision=1, owner_message='trusted-message')
+        self.assertEqual(self.court.status('task')['next_action'], 'deliver_answer')
+        with self.assertRaises(Conflict):
+            self.court.verify('task', source_revision=REVISION, observed_revision=REVISION,
+                              reviewer='reviewer', evidence={'checks': ['pass']})
+
+    def test_superseded_decision_answer_cannot_be_delivered(self):
+        self.event('question', 'decision', {'question': 'Which choice?'})
+        self.court.tick('task')
+        decision = self.records.list_decisions(task_id='task')[0]
+        self.court.answer(decision['decision_id'], {'text': 'First'},
+                          expected_revision=1, owner_message='trusted-message')
+        operation = self.court.prepare_answer(decision['decision_id'])
+        self.records.revise_decision(decision['decision_id'], {
+            'generation': 1, 'question': 'A changed question', 'source_event': 'question'}, expected_revision=1)
+        class MustNotSend:
+            def send_message(self, *args): raise AssertionError('stale decision must not send')
+        self.court.transport = MustNotSend()
+        with self.assertRaises(Conflict): self.court.deliver(operation['operation_id'])
