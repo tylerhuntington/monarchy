@@ -389,8 +389,10 @@ class ConductorTransport:
             observed = self._binding(binding, deadline)
             args = ["message", "create", "--session", binding["session_id"]]
         else:
-            self._workspace(binding, deadline)
             profile = binding["profile"]
+            if not profile["fast_mode"]:
+                raise TransportError("native CLI cannot explicitly disable fast mode; session creation is held")
+            self._workspace(binding, deadline)
             args = ["session", "create", "--workspace", binding["workspace_id"],
                     "--session-id", binding["session_id"], "--name", request["name"],
                     "--agent", profile["agent"], "--model", profile["model"], "--effort", profile["effort"]]

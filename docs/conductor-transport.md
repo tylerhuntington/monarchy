@@ -91,6 +91,15 @@ UUID. Session creation also retains its session UUID and name and requires all
 four requested profile fields. Generated IDs must be persisted with the intent
 before executing it. Do not rebuild a factory result to retry an earlier intent.
 
+The installed CLI can explicitly enable fast mode with `--fast-mode`, but it has
+no flag to explicitly disable it. Omitting the flag leaves the value to the host.
+Consequently, a prepared session request with `fast_mode=False` is held with a
+`TransportError` before any native create or journal transition. Use a separately
+created session whose observed profile matches for message delivery, or wait for
+an adapter with a verified way to send false. Existing uncertain session requests
+still receive read-only reconciliation. No typed Conductor session-creation tool
+is available in the inspected environment as an alternative.
+
 Explicit writes are `send_message(operation, persist)` and
 `create_session(operation, persist)`. `persist` must synchronously save the
 entire passed operation or raise. It receives a separate dictionary, so changing
