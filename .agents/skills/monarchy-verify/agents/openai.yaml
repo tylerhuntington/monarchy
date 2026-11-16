@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Verify"
+  short_description: "Check the evidence behind a result"
+  default_prompt: "Use $monarchy-verify for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

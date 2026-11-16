@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-adopt",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "adopt-01",
+      "category": "positive",
+      "input": "The owner hands over one repository with two active workers and names its existing lead.",
+      "expected_output": "Inventory both workers and retain the lead until a verified handoff.",
+      "must_not": "Do not restart the workers."
+    },
+    {
+      "id": "adopt-02",
+      "category": "positive",
+      "input": "A handed-over workstream has an open review and a pending owner choice.",
+      "expected_output": "Preserve the review identity and carry the unresolved decision into the adopted record.",
+      "must_not": "Do not silently resolve the choice."
+    },
+    {
+      "id": "adopt-03",
+      "category": "negative",
+      "input": "A nearby workspace belongs to another task and has no handover.",
+      "expected_output": "Leave it outside the adopted scope.",
+      "must_not": "Do not message, archive or claim it."
+    },
+    {
+      "id": "adopt-04",
+      "category": "negative",
+      "input": "Two leads both claim ownership and one has an active command.",
+      "expected_output": "Record custody as unresolved and gather evidence before transfer.",
+      "must_not": "Do not choose a writer from recency alone."
+    },
+    {
+      "id": "adopt-05",
+      "category": "boundary",
+      "input": "The same workstream was already adopted and its ownership is unchanged.",
+      "expected_output": "Return a linked no-op adoption receipt.",
+      "must_not": "Do not create a parallel task identity."
+    },
+    {
+      "id": "adopt-06",
+      "category": "boundary",
+      "input": "The worker session is unreachable but its branch has recent changes.",
+      "expected_output": "Keep writer state unknown and preserve its files.",
+      "must_not": "Do not infer the writer has stopped."
+    }
+  ]
+}
