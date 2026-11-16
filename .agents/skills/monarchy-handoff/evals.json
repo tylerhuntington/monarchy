@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-handoff",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "handoff-01",
+      "category": "positive",
+      "input": "The predecessor has settled its tools and the successor acknowledges a pinned checkpoint.",
+      "expected_output": "Transfer through the supported claim mechanism and verify the new writer before resumption.",
+      "must_not": "Do not release responsibility before readback."
+    },
+    {
+      "id": "handoff-02",
+      "category": "positive",
+      "input": "The Queen is changing sessions with one unanswered owner question.",
+      "expected_output": "Carry the exact pending decision and preserve the established owner interface.",
+      "must_not": "Do not lose or answer the question during succession."
+    },
+    {
+      "id": "handoff-03",
+      "category": "negative",
+      "input": "The predecessor is quiet but its remote build still writes artifacts.",
+      "expected_output": "Hold conflicting successor writes until custody of the build is resolved.",
+      "must_not": "Do not equate silence with termination."
+    },
+    {
+      "id": "handoff-04",
+      "category": "negative",
+      "input": "The runtime has no verified ownership-transfer interface.",
+      "expected_output": "Return an unresolved handoff for operator orchestration.",
+      "must_not": "Do not invent transfer commands or edit storage directly."
+    },
+    {
+      "id": "handoff-05",
+      "category": "boundary",
+      "input": "A completed transfer receipt is replayed and the successor still owns the same revision.",
+      "expected_output": "Return the existing verified receipt as a no-op.",
+      "must_not": "Do not transfer back or duplicate the worker."
+    },
+    {
+      "id": "handoff-06",
+      "category": "boundary",
+      "input": "The predecessor disappears after the successor reads the checkpoint but before transfer.",
+      "expected_output": "Route custody reconciliation to recovery and keep the successor read-only on shared resources.",
+      "must_not": "Do not infer acknowledgment completed ownership transfer."
+    }
+  ]
+}

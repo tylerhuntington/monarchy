@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Adopt"
+  short_description: "Bring existing work under the Queen"
+  default_prompt: "Use $monarchy-adopt for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

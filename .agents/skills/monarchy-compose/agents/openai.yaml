@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Compose"
+  short_description: "Plan a small, workable delegation graph"
+  default_prompt: "Use $monarchy-compose for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

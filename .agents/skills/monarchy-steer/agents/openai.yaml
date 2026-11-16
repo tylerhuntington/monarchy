@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Steer"
+  short_description: "Change direction without losing ownership"
+  default_prompt: "Use $monarchy-steer for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

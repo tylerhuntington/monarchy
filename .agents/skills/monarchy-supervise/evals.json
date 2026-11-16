@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-supervise",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "supervise-01",
+      "category": "positive",
+      "input": "A worker reports a routine test failure with a clear in-scope fix and no policy decision.",
+      "expected_output": "Record a routine outcome and coordinate the correction behind the scenes.",
+      "must_not": "Do not interrupt the owner with a non-decision."
+    },
+    {
+      "id": "supervise-02",
+      "category": "positive",
+      "input": "Two worker reports expose the same unresolved public API choice.",
+      "expected_output": "Consolidate them into one current decision packet for the Queen.",
+      "must_not": "Do not send two competing owner prompts."
+    },
+    {
+      "id": "supervise-03",
+      "category": "negative",
+      "input": "The event says complete but the native validation source is unavailable.",
+      "expected_output": "Record unknown verification and retain the task as incomplete.",
+      "must_not": "Do not mark completion from the event alone."
+    },
+    {
+      "id": "supervise-04",
+      "category": "negative",
+      "input": "Saving the triage outcome fails after the event was claimed.",
+      "expected_output": "Keep its wake unacknowledged and expose the persistence failure.",
+      "must_not": "Do not discard the event as handled."
+    },
+    {
+      "id": "supervise-05",
+      "category": "boundary",
+      "input": "A replayed wake has a durable outcome for the same task revision.",
+      "expected_output": "Return a deduplicated no-op after checking current evidence.",
+      "must_not": "Do not repeat an external action."
+    },
+    {
+      "id": "supervise-06",
+      "category": "boundary",
+      "input": "The owner has an open question but this host cannot observe prompt state.",
+      "expected_output": "Keep the delivery limitation explicit and use the established safe route.",
+      "must_not": "Do not promise an automatic prompt latch exists."
+    }
+  ]
+}

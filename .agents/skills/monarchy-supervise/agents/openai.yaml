@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Supervise"
+  short_description: "Keep routine coordination behind the scenes"
+  default_prompt: "Use $monarchy-supervise for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true
