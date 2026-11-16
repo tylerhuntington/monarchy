@@ -4,6 +4,10 @@ The observer gives the Secretary a current view of registered task sessions and
 pull requests. It reads Conductor and GitHub, then prints JSON. It never launches
 agents, sends messages, changes a PR, or decides that a task is done.
 
+This observer is separate from [the court runtime](runtime.md). Its JSON watch
+list and baseline do not replace the runtime's SQLite journal of assignments,
+decisions, and deliveries.
+
 You need Python 3.9 or later on macOS or Linux. Live reads also need an
 authenticated Conductor CLI with access to the registered cloud sessions, and
 an authenticated GitHub CLI when a task has a PR. Local Conductor workspaces

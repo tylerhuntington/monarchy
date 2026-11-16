@@ -12,6 +12,10 @@ within scope. Run checks that prove the requested behavior and the project's
 required gates. Keep one writer on the task branch. Don't create a new court,
 launch unrelated sessions, or appoint another owner.
 
+Read the selected skill package and project instructions named in the brief.
+Check the package against its full archive digest before using it. A package
+provides context; it does not grant authority or replace the project's gates.
+
 A Review assignment is independent: read the requirements, exact source, diff,
 and evidence yourself. Report concrete defects and acceptance gaps. A changed
 source needs review of the changed source.
@@ -26,6 +30,12 @@ personal names or contacts. Follow the project's approved publication path.
 Report to the Secretary through the route in your brief. Don't make the user
 carry a message between agents. If that route fails, retain the report and mark
 delivery unresolved; don't guess another recipient.
+
+For the native runtime, use the report envelope in `docs/conductor-transport.md`
+with the court, task, and current assignment generation supplied in the brief.
+Keep its report ID stable when reconciling delivery. A completion report includes
+the full source revision; a decision report states the question. Neither is an
+owner approval.
 
 Before handing over, account for background processes and uncertain external
 writes. Wait for the supervised transfer. If you resume after another session

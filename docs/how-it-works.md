@@ -73,7 +73,12 @@ without asking you to reconstruct the work.
 physically permanent chat thread or automatic recovery from every interruption.
 A replacement Queen verifies and accepts the handoff before continuing.
 
-This release uses supervised coordination. Its [observer](observer.md) helps the
-Secretary read session and PR changes; it doesn't dispatch agents or keep
-supervision alive on its own. See [the limits](limits.md) before relying on
-unattended operation.
+The [runtime](runtime.md) keeps the assignments and receipts, handles reports,
+and delivers work only through explicit commands. Its inbox lets the Queen pick
+up decisions and checked results without a stream of routine messages. The
+[twelve skills](skills.md) guide the court through that work.
+
+Each runtime command exits after a bounded pass. The separate
+[observer](observer.md) reads session and PR changes. An active Secretary still
+arranges the next check; see [the limits](limits.md) before relying on unattended
+operation.

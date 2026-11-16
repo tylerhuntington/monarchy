@@ -4,9 +4,10 @@ Set up one conversation with the Queen, then give the court a small task in
 Conductor cloud. Start with a read-only investigation: the result should come
 back to the Queen without you coordinating the Workers.
 
-You need Python 3.9 or later on macOS or Linux for the observer. Live observation
-also needs the Conductor CLI with access to your cloud sessions. GitHub PR reads
-need an authenticated `gh` CLI. Choose an agent and model you already have access
+You need Python 3.9 or later on macOS or Linux, plus Bash and jq for the upstream
+compatibility test. Live work also needs the Conductor CLI with access to your
+cloud sessions. GitHub PR reads need an authenticated `gh` CLI. Choose an agent
+and model you already have access
 to; Monarchy supplies no subscription or model default.
 
 ## 1. Check the package
@@ -21,7 +22,9 @@ python3 -m unittest discover -s tests -v
 ```
 
 The check command prints `"valid": true` with zero tasks. The tests should pass
-without credentials or network access. This checks the package, not a live court.
+without credentials or network access. They exercise the record layer, transport
+fixtures, skill packages, and an isolated First Mate outcome store. They do not
+launch a live court or prove that an agent follows a skill correctly.
 
 ## 2. Give the Queen a home
 
@@ -40,6 +43,12 @@ cp templates/leadership.md .monarchy/leadership.md
 
 These files are gitignored. On a disposable machine, retain important handoffs in
 an approved durable location before the machine goes away.
+
+The runtime's canonical task state is a private SQLite database outside the
+checkout. `.monarchy/court.json` is only the observer's watch list; it does not
+replace the journal. Follow [the runtime setup](runtime.md) to register the
+existing Worker and Secretary sessions before sending a task. Setup starts no
+watcher, agent, or service.
 
 Start your chosen agent in that workspace and give it this instruction:
 
@@ -61,20 +70,28 @@ Give the Queen an outcome such as:
 > In my project, find where CSV exports are built. Return a short explanation
 > with file references. Do not change files or publish anything.
 
-The Queen records the brief and endpoint. The Secretary sends a self-contained
-assignment to a Worker, verifies its native workspace and session identities, and
-adds its row to `.monarchy/court.json` using [the task format](observer.md#register-the-work).
-The task's `repo` must match the native workspace's repository; the observer does
-not check that association for you.
+The Queen records the brief and endpoint. The Secretary selects the
+[skills and project instructions](skills.md) the Worker needs, registers its
+native binding, then prepares and explicitly delivers the assignment through
+[the runtime](runtime.md). Start with an existing session whose observed profile
+matches the requested one; the current CLI cannot explicitly disable fast mode
+when creating a session.
+
+For optional status watching, add a row to `.monarchy/court.json` using
+[the task format](observer.md#register-the-work). Its `repo` must match the native
+workspace's repository. The runtime adapter checks that association; the separate
+observer does not.
 
 ## 4. Get the result in the Queen's thread
 
 Ask the Queen how the task is going. She should give you a concise status and any
 choice that needs your input. Routine questions and follow-ups stay with the court.
 
-When the Worker finishes, the Secretary checks the report and file references.
-The Queen returns the explanation and evidence in your conversation. Check that
-it answers the original request. You should not need to relay a report or ask a
+When the Worker finishes, the Secretary ingests its native report and checks the
+file references. Independent review ties the result to the exact source revision
+before it reaches the Queen's results inbox. The Queen returns the explanation
+and evidence in your conversation. Check that it answers the original request.
+You should not need to relay a report or ask a
 second agent to pick up the work.
 
 If the result is incomplete, tell the Queen what's missing. She routes the
@@ -101,6 +118,9 @@ how the court preserves your direction when an underlying session changes.
 ## Next
 
 Use [the bounded watcher](observer.md#wait-for-a-change) for a longer task.
+Use [the runtime guide](runtime.md) for decision answers, delivery recovery, and
+inbox acknowledgments. Each command exits after its work; the Secretary must
+arrange the next check.
 Add a build task with independent review once the first task returns a checked
 result through the Queen.
 Keep the [implementation limits](limits.md) visible when deciding how much

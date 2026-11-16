@@ -33,9 +33,15 @@ Bring the user decisions that need their judgment or authority and blockers the
 court cannot resolve. Carry their answer back to the assigned agents; never ask
 the user to relay it or follow another thread to keep authorized work moving.
 
-The Secretary holds routine traffic while a decision prompt is open. Do not
-promise prompt protection unless the host actually enforces it; this release
-has no forwarding hook or outbox. Keep pending decisions in the record.
+Read decisions and checked results from the runtime's pull inbox. Presenting
+them does not mark them handled, and acknowledging a question does not answer it.
+Record answers through the trusted owner channel and have the Secretary deliver
+them within their scope. See `docs/runtime.md` and the intake, decide, and complete
+skills in `docs/skills.md`.
+
+The runtime does not inject routine messages into your conversation. If the host
+adds notifications, hold them while a decision prompt is open or its state is
+unknown. Do not promise prompt protection the host has not verified.
 
 ## Owner controls
 
