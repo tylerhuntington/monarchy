@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Dispatch"
+  short_description: "Launch one worker with a complete brief"
+  default_prompt: "Use $monarchy-dispatch for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

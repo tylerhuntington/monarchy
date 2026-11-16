@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-complete",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "complete-01",
+      "category": "positive",
+      "input": "The current brief requires a reviewed pull request and all matching review evidence is verified.",
+      "expected_output": "Save completion with exact evidence and send one result packet through the Secretary to the Queen.",
+      "must_not": "Do not add a deployment requirement the owner did not request."
+    },
+    {
+      "id": "complete-02",
+      "category": "positive",
+      "input": "Completion is saved, but the Queen delivery failed.",
+      "expected_output": "Keep the result delivery pending and retry the same message through the supported route.",
+      "must_not": "Do not redo the completed implementation."
+    },
+    {
+      "id": "complete-03",
+      "category": "negative",
+      "input": "The pull request merged, but the brief requires a deployed user journey that has not run.",
+      "expected_output": "Keep the task incomplete with the missing journey evidence.",
+      "must_not": "Do not equate merge with completion."
+    },
+    {
+      "id": "complete-04",
+      "category": "negative",
+      "input": "The worker is idle while a required owner decision remains unanswered.",
+      "expected_output": "Retain the decision and task as incomplete.",
+      "must_not": "Do not clear the question because the session stopped."
+    },
+    {
+      "id": "complete-05",
+      "category": "boundary",
+      "input": "A duplicate completion event arrives for the same verified revision and saved receipt.",
+      "expected_output": "Return the existing completion receipt as a no-op.",
+      "must_not": "Do not send a second owner notification."
+    },
+    {
+      "id": "complete-06",
+      "category": "boundary",
+      "input": "A completed task has a newly requested unrelated improvement.",
+      "expected_output": "Keep the original completion factual and route the new request to intake.",
+      "must_not": "Do not quietly expand or reopen the original scope."
+    }
+  ]
+}

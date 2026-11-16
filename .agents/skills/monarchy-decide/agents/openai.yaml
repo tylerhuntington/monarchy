@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Decide"
+  short_description: "Bring a real choice to the Queen"
+  default_prompt: "Use $monarchy-decide for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true
