@@ -192,3 +192,23 @@ class CourtTests(unittest.TestCase):
         self.assertEqual(self.court.tick('task')['consumed'], 1)
         self.assertEqual(len(self.records.list_outcomes(task_id='task')), 1)
         self.assertEqual(self.records.list_events(task_id='task', processed=False), [])
+
+    def test_decision_creation_replay_preserves_later_revision(self):
+        for crash_at in ('outcome', 'ack'):
+            with self.subTest(crash_at=crash_at), tempfile.TemporaryDirectory() as directory:
+                with CourtRecords(Path(directory) / 'court.db') as records:
+                    court = Court(records)
+                    records.create_task('task', 'example/project', WORKER)
+                    records.record_event('question', 'task', 1, WORKER, 'decision', {'question': 'Original?'})
+                    method = 'record_outcome' if crash_at == 'outcome' else 'ack_events'
+                    original = getattr(records, method)
+                    setattr(records, method, lambda *a, **k: (_ for _ in ()).throw(OSError('crash')))
+                    with self.assertRaises(OSError): court.tick('task')
+                    setattr(records, method, original)
+                    decision = records.list_decisions(task_id='task')[0]
+                    changed = {**decision['payload'], 'question': 'Changed?'}
+                    records.revise_decision(decision['decision_id'], changed, expected_revision=1)
+                    self.assertEqual(court.tick('task')['consumed'], 1)
+                    self.assertEqual(records.get_decision(decision['decision_id'])['revision'], 2)
+                    self.assertEqual(records.get_decision(decision['decision_id'])['payload'], changed)
+                    self.assertEqual(len(records.list_outcomes(task_id='task')), 1)
