@@ -179,3 +179,16 @@ class CourtTests(unittest.TestCase):
             def send_message(self, *args): raise AssertionError('stale decision must not send')
         self.court.transport = MustNotSend()
         with self.assertRaises(Conflict): self.court.deliver(operation['operation_id'])
+
+    def test_reassignment_between_disposition_and_ack_does_not_poison_replay(self):
+        self.event('blocked', 'blocked', {'summary': 'Investigate failure'})
+        original = self.records.ack_events
+        def reassign_before_ack(*args, **kwargs):
+            self.records.assign_task('task', 'replacement', expected_generation=1)
+            return original(*args, **kwargs)
+        self.records.ack_events = reassign_before_ack
+        with self.assertRaises(StaleGeneration): self.court.tick('task')
+        self.records.ack_events = original
+        self.assertEqual(self.court.tick('task')['consumed'], 1)
+        self.assertEqual(len(self.records.list_outcomes(task_id='task')), 1)
+        self.assertEqual(self.records.list_events(task_id='task', processed=False), [])
