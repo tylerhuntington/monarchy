@@ -3,7 +3,7 @@
 </p>
 
 Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy simplifies agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. Her Secretary delegates tasks to workers and follows it through review. Results and decisions that need your input come back to the
-throne for your sign-off. 
+throne for your sign-off. Once the Crown is at your service, you'll never look back.
 
 ## Talk to the Queen
 
