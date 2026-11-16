@@ -28,7 +28,6 @@ class Court:
 
     def tick(self, task_id, *, actor='secretary', limit=100):
         """Persist each disposition before consuming its exact claimed event."""
-        task = self.records.get_task(task_id)
         claim = self.records.claim_events(actor, task_id, limit=limit)
         if claim is None:
             return {'task_id': task_id, 'consumed': 0}
@@ -38,11 +37,10 @@ class Court:
                 continue
             payload = event['payload']
             kind = event['kind']
-            stale = event['generation'] != task['generation']
             routine = (kind == 'progress' and payload.get('routine') is True
                        and set(payload) <= {'summary', 'routine', 'evidence', 'next_action', 'status'})
-            if not routine or stale:
-                outcome = {'kind': 'stale_report' if stale else kind,
+            if not routine:
+                outcome = {'kind': kind,
                            'generation': event['generation'], 'source_event': event['event_id'],
                            'report': payload}
                 if kind == 'decision':
