@@ -1,27 +1,47 @@
 # What This Version Does
 
-Monarchy is an initial standalone release of a supervised operating model.
+Monarchy supplies role instructions, twelve core skills, and an opt-in court
+runtime. You still need an active Secretary to coordinate the work. Installing
+the package starts no agents, hooks, or background service.
 
 | Included | Boundary |
 | --- | --- |
 | Queen, Secretary, and Worker instructions | Agents must follow them; they are not access controls. |
-| Briefs, handoffs, and succession records | Transfers are supervised; no automatic election or stale-writer fence. |
-| Per-task repository and session bindings | Multiple repositories can be observed; their policies stay separate. |
+| Twelve core skills and checked worker packages | Package tests check integrity and contracts; model-driven skill scenarios remain unrun. |
+| Private SQLite records for tasks, reports, decisions, and outcomes | Survive local process restarts; host-loss recovery needs a separate backup or durable volume. |
+| Assignment generations and operation admission | Fence stale writes through the record API; do not stop native sessions or subprocesses. |
+| Conductor message delivery and native report ingestion | Require explicit commands and verified court membership; do not authenticate new owner authority. |
+| Queen and Secretary pull inboxes | Presenting a result does not acknowledge it. No automatic prompt-safe forwarding. |
+| Source-bound completion review | Checks the submitted evidence contract; the reviewer must perform the actual checks. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |
-| Persistent local watch baseline | Survives command restarts if retained; doesn't survive losing the machine without a copy. |
-| Conductor cloud operating guide | No installed hooks, daemon, automatic dispatch, or prompt-safe forwarding. |
+| Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the Monarchy court. |
 
-The observer makes no model calls. It still polls external APIs. Reading a change
-doesn't send a notification or wake an agent by itself.
+The [runtime](runtime.md) processes one bounded command at a time. Preparing a
+dispatch saves an intent; `deliver` performs or reconciles the native action.
+After an uncertain result, it reads the original identities rather than sending
+again. The separate observer only polls. Neither command keeps supervision alive
+after it exits.
+
+The current [Conductor adapter](conductor-transport.md) targets cloud sessions.
+It cannot verify the agent type from session readback, prove human authority from
+missing sender markers, or observe whether the Queen has an open decision prompt.
+The CLI can enable fast mode but cannot explicitly disable it, so new-session
+requests with `fast_mode=False` are held. Workspace creation remains a host action.
+
+Offline tests use controlled transport fixtures and local databases. The upstream
+compatibility test runs First Mate's real outcome store in an isolated home.
+Neither establishes live Conductor delivery or unattended operation. Native
+qualification is a separate gate in [the adoption plan](planning/firstmate-adoption.md).
 
 The PISCES implementation has additional reporting, forwarding, hook, and delivery
 integrations. Those remain in PISCES. This release neither replaces them nor carries
 over their authority grants, credentials, model choices, staging limits, or
 production permissions.
 
-Private `.monarchy/` records need deliberate retention. On an ephemeral machine,
-store necessary handoffs in an approved durable location before leaving. Public
-Git history is not the place for private task state.
+Keep the runtime database outside the source checkout and retain it with a
+SQLite-consistent backup procedure. Private handoffs and the observer's
+`.monarchy/` files also need deliberate retention. Public Git history is not the
+place for private task state.
 
 No production release, infrastructure change, model subscription, or personal
 outreach is authorized by installing Monarchy. Those permissions belong to the

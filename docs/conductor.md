@@ -8,13 +8,21 @@ This guide uses the Conductor CLI. Check `conductor --help` and `conductor model
 on the host before dispatch. Local Mac workspaces require the app's own controls;
 this CLI integration is for cloud workspaces.
 
+Use [the runtime guide](runtime.md) for journaled dispatch, report ingestion,
+decisions, and delivery recovery. The steps here establish the native sessions
+that guide binds to. Cloning Monarchy creates none of them.
+
 ## Establish the leadership
 
-The owner starts the Queen. Under that assignment, the Queen creates a Secretary
-session in the same Monarchy workspace, using an explicit chosen profile and a
-message file containing its role instructions and the court's scope. Record both
-native session IDs in `.monarchy/leadership.md` and have the Secretary verify
-its assignment.
+The owner starts the Queen. Under that assignment, establish a Secretary session
+in the same Monarchy workspace with the selected profile, its role instructions,
+and the court's scope. Record both native session IDs in `.monarchy/leadership.md`
+and have the Secretary verify its assignment.
+
+The current CLI can enable fast mode but cannot explicitly disable it. The
+runtime therefore holds new-session requests with `fast_mode=False`. For that
+profile, use a separately created session and verify its observed fields before
+dispatch. Do not treat an omitted flag as proof of the requested setting.
 
 A new Queen or Secretary follows [succession](succession.md). Do not take over a
 session because its title resembles a role, or supervise an existing workspace
@@ -27,26 +35,10 @@ In the Monarchy workspace, prepare `.monarchy/task.md` from
 project references. A task workspace cannot assume access to the Monarchy
 checkout or the Queen's conversation.
 
-Record the intended task and create attempt in a private dispatch note before
-running the command. The following shell variables must already hold the target
-Conductor project ID, a unique task name, and the explicitly chosen agent, model,
-and effort. From the Monarchy checkout:
-
-```bash
-conductor --json workspace create \
-  --project-id "$PROJECT_ID" \
-  --name "$TASK_NAME" \
-  --session-name '01 Build' \
-  --agent "$AGENT" --model "$MODEL" --effort "$EFFORT" \
-  --message-file .monarchy/task.md
-```
-
-For a research assignment, use a research stage name. Add `--fast-mode` only when
-that profile calls for it. Do not change a model or billing route after failure
-without applicable authority.
-
-The command creates a workspace and its first session. Retain the response's
-identities. If the response is lost or uncertain, search before retrying:
+Workspace creation remains an explicit host action. Record the intended task,
+chosen profile, and create attempt before using the host's controls. Retain the
+returned workspace and session IDs. If creation has an uncertain result, search
+before another attempt. With `TASK_NAME` set to the recorded workspace name:
 
 ```bash
 conductor --json workspace list --name "$TASK_NAME" --limit 100
@@ -64,10 +56,13 @@ conductor --json session get "$SESSION_ID"
 conductor --json session status "$SESSION_ID"
 ```
 
-Verify the repository, workspace/session relationship, actual profile fields,
-and task scope before registering the task in `.monarchy/court.json`. Treat
-missing profile fields as unobserved. Native title or model labels do not prove
-billing entitlement or approval provenance.
+Verify the repository, workspace/session relationship, observable profile fields,
+and task scope before registering the task in the runtime journal. The native
+readback does not expose the agent type; missing fields remain unobserved. Native
+title or model labels do not prove billing entitlement or approval provenance.
+The observer's `.monarchy/court.json` is an optional watch list, not the runtime
+record. Do not change a model or billing route after failure without applicable
+authority.
 
 ## Move to the next stage
 
@@ -75,25 +70,12 @@ Complete the handoff through predecessor quiescence and successor assignment.
 Keep the successor's first message limited to validation before writing. Prepare
 `.monarchy/next-stage.md` with the role, brief, exact source, handoff, and checks.
 
-Generate and retain new UUIDs for the session and initial message in the dispatch
-note before creating the stage. With those values set as `NEXT_SESSION_ID` and
-`NEXT_MESSAGE_ID`, run from the Monarchy checkout:
-
-```bash
-conductor --json session create \
-  --workspace "$WORKSPACE_ID" \
-  --name '02 Review' \
-  --session-id "$NEXT_SESSION_ID" --message-id "$NEXT_MESSAGE_ID" \
-  --agent "$AGENT" --model "$MODEL" --effort "$EFFORT" \
-  --message-file .monarchy/next-stage.md
-```
-
-Add `--fast-mode` here too when the chosen stage profile calls for it.
-
-After an uncertain result, inspect the recorded session ID before any retry;
-reuse the same IDs for the same attempt. Verify the new session independently,
-retain its acceptance, and update the watch register. A fresh review session
-checks the exact current source, not a predecessor's assertion of correctness.
+Bind the successor through the supervised handoff, then use the runtime's
+dispatch preparation and explicit delivery. For a supported new-session profile,
+preparation retains the session and initial-message UUIDs before creation. An
+uncertain delivery stays in the journal and receives readback, not another create
+call. Verify the new session independently, retain its acceptance, and update any
+watch register. A fresh review session checks the exact current source.
 
 ## Reports and decision prompts
 
@@ -102,10 +84,12 @@ record for routine updates, subject to its publication rules. Agent-to-agent
 messages must stay within the authorized court and task scope. They carry facts
 and instructions within existing authority, not new owner approvals.
 
-This release has no prompt-safe forwarding helper. Hold routine updates in the
-shared private record while the Queen is asking the owner a question. Do not
-claim that a sent message cannot interrupt that prompt. Missing or ambiguous
-human provenance must not authorize expanded scope.
+The runtime verifies structured reports against the native sender and current
+assignment. Its pull inbox holds decisions and checked results for the Queen;
+it does not forward routine messages into her conversation. The native CLI
+cannot prove whether a decision prompt is open. Any host-added notification
+route must hold when that state is open or unknown. Missing or ambiguous human
+provenance must not authorize expanded scope.
 
 The [observer](observer.md) returns changes to the active caller; it doesn't
 install a re-arm hook or wake a stopped agent. The Secretary must arrange the
