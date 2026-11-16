@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-dispatch",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "dispatch-01",
+      "category": "positive",
+      "input": "A ready task has satisfied dependencies, a supported launch adapter and complete pinned policy files.",
+      "expected_output": "Build the package, launch once, and retain a verified worker acknowledgment.",
+      "must_not": "Do not claim readiness from the launch response alone."
+    },
+    {
+      "id": "dispatch-02",
+      "category": "positive",
+      "input": "The owner selected a model and effort for an existing parked worker.",
+      "expected_output": "Resume through the supported adapter with those selections and a fresh task binding check.",
+      "must_not": "Do not silently switch providers or lower effort."
+    },
+    {
+      "id": "dispatch-03",
+      "category": "negative",
+      "input": "The package references a missing resource or has a stale hash.",
+      "expected_output": "Hold dispatch and report the exact package integrity failure.",
+      "must_not": "Do not send a partial package."
+    },
+    {
+      "id": "dispatch-04",
+      "category": "negative",
+      "input": "The task has no supported ownership claim mechanism in this runtime.",
+      "expected_output": "Return a held dispatch for operator orchestration.",
+      "must_not": "Do not invent runtime API names or launch unclaimed writers."
+    },
+    {
+      "id": "dispatch-05",
+      "category": "boundary",
+      "input": "A launch timed out and the runtime may have created the session.",
+      "expected_output": "Reconcile the existing operation and session inventory before any retry.",
+      "must_not": "Do not launch a duplicate worker."
+    },
+    {
+      "id": "dispatch-06",
+      "category": "boundary",
+      "input": "The task already has one acknowledged healthy worker and the same brief.",
+      "expected_output": "Return the existing binding as a no-op.",
+      "must_not": "Do not send a redundant kickoff."
+    }
+  ]
+}
