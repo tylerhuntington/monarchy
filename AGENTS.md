@@ -29,8 +29,9 @@ assignment permits changes here; it does not put you in charge of other sessions
 
 ## Maintainer workflow
 
-Keep the core small: instructions, templates, and a standard-library Python
-observer. Conductor is the first runtime integration. Adding another runtime
+Keep the toolkit understandable: role instructions, skills, a pinned First Mate
+distribution, and tested runtime adapters. Follow the adoption plan in
+`docs/planning/firstmate-adoption.md`. Conductor is the first runtime integration. Adding another runtime
 requires its own adapter and verification; portable instructions alone don't
 prove runtime support.
 
