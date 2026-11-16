@@ -64,11 +64,20 @@ Follow [the quickstart](docs/quickstart.md) to set up your Queen and give her
 one task. Let the court do the coordination, then check the result in your
 conversation with her.
 
-The kit includes instructions for each role, templates for briefs and handoffs,
-a Conductor setup guide, and a Python watcher for session and pull request
-status. For now, this is a supervised workflow. Agents use the host's tools to
-do the work. The watcher only observes: it can't launch agents, transfer
-authority, or keep running after its host exits.
+The court has [twelve core skills](docs/skills.md) for taking requests, dividing
+work, handling decisions, and passing the crown. Workers carry the skills and
+project instructions they need in a checked package.
+
+The [opt-in runtime](docs/runtime.md) keeps assignments, reports, decisions, and
+delivery receipts in one private journal. The Secretary takes a bounded pass
+through incoming reports; the Queen reads the decisions and checked results in
+her inbox. Explicit delivery commands send work to Conductor sessions. Nothing
+starts when you clone the repo, and no background service keeps the court running.
+
+A separate [watcher](docs/observer.md) reads session and pull request status.
+The bundled First Mate source is a pinned reference and compatibility fixture;
+Monarchy's runtime uses Python and SQLite. Offline tests and live Conductor
+verification cover different things. [Read the current limits](docs/limits.md).
 
 You can use Monarchy's instructions with any project. **Conductor cloud is the
 first runtime integration**; other runtimes need their own integration and

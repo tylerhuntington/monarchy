@@ -56,10 +56,16 @@ when needed authority or a decision cannot be recovered from the records.
 
 ## Continuity has an implementation boundary
 
-These steps are a supervised protocol. This release does not lock out an old
-session, authenticate human approvals, elect a replacement, or enforce exclusive
-writes across tools. Its observer tracks changes to session bindings; that is
-observation, not authority transfer.
+These steps are a supervised protocol. The [record layer](runtime-records.md)
+increments the assignment generation, rejects new reports from the old owner,
+and blocks reassignment while a delivery remains in flight or unknown. These
+checks apply to operations using that record layer. They do not stop an old
+native session or enforce exclusive writes across tools.
+
+Monarchy does not authenticate human approvals or elect a replacement. Its
+observer tracks changes to session bindings; that is observation, not authority
+transfer. Use the [checkpoint, handoff, and recovery skills](skills.md) to preserve
+the evidence needed for the supervised steps.
 
 A future automatic succession mechanism must prove those boundaries before it
 can replace the supervised steps. Monarchy's purpose is seamless continuity;
