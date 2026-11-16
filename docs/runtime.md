@@ -54,7 +54,10 @@ python3 -m monarchy --state /path/to/private/court.db deliver OPERATION_ID
 
 Preparation only journals the intent. `deliver` is the explicit external action.
 For a fresh session in an existing workspace, reserve a new session UUID in the
-binding and add `--new-session` to `prepare-dispatch`. Creating workspaces remains
+binding and add `--new-session` to `prepare-dispatch`. The current CLI cannot
+explicitly turn fast mode off for a new session, so that profile is held before
+creation. Existing sessions with fast mode off can still receive messages.
+Creating workspaces remains
 a host action; the adapter does not pretend an ambiguous workspace create is safe
 to repeat.
 

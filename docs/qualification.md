@@ -59,7 +59,8 @@ a claim of exactly-once execution across a network or inside an agent.
 
 ## Run it
 
-From the repository root, with Python 3.9 or newer:
+From the repository root, with Python 3.9 or newer. The full suite also needs
+Bash and jq for the isolated upstream outcome test:
 
 ```sh
 python3 -m unittest discover -s tests -p test_qualification.py -v
