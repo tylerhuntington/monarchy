@@ -231,6 +231,35 @@ class CourtRecordsTests(unittest.TestCase):
                 records.set_operation_state("operation-2", "in_flight", expected_state="prepared")
             self.assertEqual(records.get_operation("operation-2")["state"], "prepared")
 
+    def test_decision_delivery_is_fenced_against_revision_and_pending_answers(self):
+        with CourtRecords(self.path) as records:
+            records.create_task("task-1", "example/project", "worker-1")
+            records.open_decision("decision-1", "task-1", {"question": "Continue?"})
+            request = {"generation": 1, "decision_id": "decision-1", "decision_revision": 1}
+            records.prepare_operation("operation-1", "task-1", "send_message", request)
+            with self.assertRaises(Conflict):
+                records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
+            records.answer_decision("decision-1", {"yes": True}, expected_revision=1, owner_message="message-1")
+            records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
+            with self.assertRaises(Conflict):
+                records.revise_decision("decision-1", {"question": "Change scope?"}, expected_revision=1)
+            records.set_operation_state("operation-1", "unknown", expected_state="in_flight")
+            with self.assertRaises(Conflict):
+                records.revise_decision("decision-1", {"question": "Change scope?"}, expected_revision=1)
+            records.set_operation_state("operation-1", "confirmed", expected_state="unknown")
+            records.prepare_operation("operation-2", "task-1", "send_message", request)
+            records.revise_decision("decision-1", {"question": "Change scope?"}, expected_revision=1)
+            with self.assertRaises(Conflict):
+                records.set_operation_state("operation-2", "in_flight", expected_state="prepared")
+            for invalid in ({"decision_id": "decision-1"}, {"decision_revision": 1},
+                            {"decision_id": "../escape", "decision_revision": 1},
+                            {"decision_id": "decision-1", "decision_revision": True}):
+                with self.assertRaises(RecordError):
+                    records.prepare_operation("invalid", "task-1", "send_message", invalid)
+            records.create_task("task-2", "example/project", "worker-2")
+            with self.assertRaises(Conflict):
+                records.prepare_operation("cross-task", "task-2", "send_message", request)
+
     def test_existing_records_are_validated_as_data_and_foreign_schema_is_rejected(self):
         with CourtRecords(self.path) as records:
             records.create_task("task-1", "example/project", "worker-1")
@@ -319,6 +348,27 @@ class CourtRecordsTests(unittest.TestCase):
             "task-1", f"worker-{index + 3}", expected_generation=generation,
         ))
         self.assertEqual(sum(isinstance(row, StaleGeneration) for row in assignments), 7)
+
+    def test_concurrent_decision_revision_and_answer_admission_have_one_winner(self):
+        with CourtRecords(self.path) as records:
+            records.create_task("task-1", "example/project", "worker-1")
+            records.open_decision("decision-1", "task-1", {"question": "Continue?"})
+            records.answer_decision("decision-1", {"yes": True}, expected_revision=1, owner_message="message-1")
+            records.prepare_operation("operation-1", "task-1", "send_message", {
+                "generation": 1, "decision_id": "decision-1", "decision_revision": 1,
+            })
+        results = self.concurrently(2, lambda records, index: (
+            records.revise_decision("decision-1", {"question": "Change scope?"}, expected_revision=1)
+            if index == 0 else records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
+        ))
+        self.assertEqual(sum(isinstance(row, Conflict) for row in results), 1)
+        with CourtRecords(self.path) as records:
+            operation = records.get_operation("operation-1")
+            decision = records.get_decision("decision-1")
+            if operation["state"] == "in_flight":
+                self.assertEqual((decision["revision"], decision["state"]), (1, "answered"))
+            else:
+                self.assertEqual((decision["revision"], decision["state"]), (2, "pending"))
 
     def test_abrupt_process_exit_preserves_committed_work_and_unknown_effects(self):
         script = """
