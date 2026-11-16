@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-recover",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "recover-01",
+      "category": "positive",
+      "input": "A dead worker has no active external writes and a verified checkpoint.",
+      "expected_output": "Prepare a supported successor handoff within the original scope.",
+      "must_not": "Do not broaden its task or skip custody verification."
+    },
+    {
+      "id": "recover-02",
+      "category": "positive",
+      "input": "A delivery failed before acknowledgment but its durable message remains pending.",
+      "expected_output": "Reconcile the recipient and retry the same pending item within limits.",
+      "must_not": "Do not create a new decision identity."
+    },
+    {
+      "id": "recover-03",
+      "category": "negative",
+      "input": "A timed-out publish may already have succeeded.",
+      "expected_output": "Read the native publication by operation identity before any retry.",
+      "must_not": "Do not publish again blindly."
+    },
+    {
+      "id": "recover-04",
+      "category": "negative",
+      "input": "Two identical recovery attempts failed and the project says to stop at two.",
+      "expected_output": "Stop the sequence and record a concrete blocker for the Queen.",
+      "must_not": "Do not increase the retry budget."
+    },
+    {
+      "id": "recover-05",
+      "category": "boundary",
+      "input": "A quiet worker is still running its expected validation job.",
+      "expected_output": "Return a verified waiting state and schedule the appropriate evidence check.",
+      "must_not": "Do not restart a healthy worker."
+    },
+    {
+      "id": "recover-06",
+      "category": "boundary",
+      "input": "The ownership lease expired while a remote write remains unobservable.",
+      "expected_output": "Keep custody unresolved and block conflicting replacement work.",
+      "must_not": "Do not treat lease expiry as proof of termination."
+    }
+  ]
+}

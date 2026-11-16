@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Complete"
+  short_description: "Close the task at its actual endpoint"
+  default_prompt: "Use $monarchy-complete for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

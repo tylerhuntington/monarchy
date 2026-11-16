@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Recover"
+  short_description: "Reconcile failures before restarting work"
+  default_prompt: "Use $monarchy-recover for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true

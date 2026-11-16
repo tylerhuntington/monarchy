@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-steer",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "steer-01",
+      "category": "positive",
+      "input": "The owner narrows an active feature to one endpoint while independent documentation remains valid.",
+      "expected_output": "Revise the affected brief, retain valid documentation and request worker acknowledgment.",
+      "must_not": "Do not restart every task."
+    },
+    {
+      "id": "steer-02",
+      "category": "positive",
+      "input": "The owner reprioritizes two tasks without changing their scope.",
+      "expected_output": "Record priority changes and leave valid acceptance evidence intact.",
+      "must_not": "Do not treat priority as new implementation authority."
+    },
+    {
+      "id": "steer-03",
+      "category": "negative",
+      "input": "A cancellation request arrives while a remote migration may still be running.",
+      "expected_output": "Reconcile that operation and hold conflicting replacement writes.",
+      "must_not": "Do not assume interrupting chat canceled the migration."
+    },
+    {
+      "id": "steer-04",
+      "category": "negative",
+      "input": "A worker suggests broadening the task but cites no owner instruction.",
+      "expected_output": "Record a proposal within existing authority or route the choice to the Queen.",
+      "must_not": "Do not rewrite the brief as approved scope."
+    },
+    {
+      "id": "steer-05",
+      "category": "boundary",
+      "input": "The owner asks for status during an active task.",
+      "expected_output": "Answer status through the Queen and preserve the existing objective.",
+      "must_not": "Do not cancel or replace the task."
+    },
+    {
+      "id": "steer-06",
+      "category": "boundary",
+      "input": "The same steer is delivered twice and the worker already acknowledged its revision.",
+      "expected_output": "Return the acknowledged steering receipt as a no-op.",
+      "must_not": "Do not invalidate evidence a second time."
+    }
+  ]
+}

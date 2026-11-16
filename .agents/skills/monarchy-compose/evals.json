@@ -1,0 +1,50 @@
+{
+  "schema_version": 1,
+  "skill": "monarchy-compose",
+  "status": "not_run",
+  "purpose": "Scenario contracts for independent agent evaluation; structural tests do not evaluate model behavior.",
+  "cases": [
+    {
+      "id": "compose-01",
+      "category": "positive",
+      "input": "A feature has independent backend and documentation work plus a shared integration test.",
+      "expected_output": "Compose two nonoverlapping tasks and an integration task dependent on both.",
+      "must_not": "Do not claim the integration is already verified."
+    },
+    {
+      "id": "compose-02",
+      "category": "positive",
+      "input": "The target project has a mandatory planning skill.",
+      "expected_output": "Use that planning skill and preserve its outputs in the task graph.",
+      "must_not": "Do not bypass it with a generic checklist."
+    },
+    {
+      "id": "compose-03",
+      "category": "negative",
+      "input": "Two proposed workers would edit the same schema simultaneously.",
+      "expected_output": "Rescope ownership or sequence those writes.",
+      "must_not": "Do not dispatch overlapping writers."
+    },
+    {
+      "id": "compose-04",
+      "category": "negative",
+      "input": "A plan assumes a runtime can transfer live sessions but no adapter supports it.",
+      "expected_output": "Hold that operation and identify a supported handoff route.",
+      "must_not": "Do not invent a transfer command."
+    },
+    {
+      "id": "compose-05",
+      "category": "boundary",
+      "input": "One small change fits one worker and the existing review path.",
+      "expected_output": "Keep a single task with its existing verification gate.",
+      "must_not": "Do not manufacture a committee of agents."
+    },
+    {
+      "id": "compose-06",
+      "category": "boundary",
+      "input": "A requirement changes only the documentation endpoint.",
+      "expected_output": "Revise the affected task and dependencies while preserving still-valid work.",
+      "must_not": "Do not restart unrelated validated tasks."
+    }
+  ]
+}
