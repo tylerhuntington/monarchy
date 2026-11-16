@@ -1,0 +1,9 @@
+{
+  "repository": "https://github.com/kunchenguid/firstmate",
+  "revision": "427056c4181c41074ad24f051f79919330df0fa5",
+  "sha256": "1d370a002b490bada31921160b96fe35e21616bce91ae1b5212b0a7a73cc94bc",
+  "files": 880,
+  "format": "git archive tar.gz",
+  "license": "MIT",
+  "patches": []
+}

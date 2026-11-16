@@ -1,0 +1,6 @@
+interface:
+  display_name: "Monarchy Handoff"
+  short_description: "Pass the work without a gap in ownership"
+  default_prompt: "Use $monarchy-handoff for the current task within its existing authority."
+policy:
+  allow_implicit_invocation: true
