@@ -187,7 +187,7 @@ class Court:
         meta = task['metadata']
         binding = meta['binding']
         if binding['session_id'] != task['owner'] or binding['repo'] != task['repository']:
-            raise Conflict('worker binding differs from the current assignment')
+            raise Conflict('00 Agent binding differs from the current assignment')
         if not meta.get('authority_ref'):
             raise RecordError('dispatch requires the original user authority reference')
         key = task_id + ':' + str(task['generation'])
@@ -220,10 +220,10 @@ class Court:
         if decision['state'] != 'answered':
             raise Conflict('decision has no recorded owner answer')
         if decision['payload']['generation'] != task['generation']:
-            raise StaleGeneration('answer belongs to an earlier worker assignment')
+            raise StaleGeneration('answer belongs to an earlier 00 Agent assignment')
         binding = task['metadata']['binding']
         if binding['session_id'] != task['owner'] or binding['repo'] != task['repository']:
-            raise Conflict('worker binding differs from the current assignment')
+            raise Conflict('00 Agent binding differs from the current assignment')
         key = decision_id + ':' + str(decision['revision'])
         text = json.dumps({'kind': 'monarchy.answer', 'task_id': task['task_id'],
                            'generation': task['generation'], 'decision_id': decision_id,
@@ -245,7 +245,7 @@ class Court:
         request = operation['request']
         if (request.get('generation') != task['generation']
                 or request['binding']['session_id'] != task['owner']):
-            raise StaleGeneration('delivery belongs to an earlier worker assignment')
+            raise StaleGeneration('delivery belongs to an earlier 00 Agent assignment')
         if 'decision_id' in request:
             decision = self.records.get_decision(request['decision_id'])
             if decision['revision'] != request['decision_revision'] or decision['state'] != 'answered':

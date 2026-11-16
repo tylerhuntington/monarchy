@@ -1,7 +1,7 @@
 # 0005: 00 Agents
 
 Status: Accepted naming decision
-Pacific date: 2026-11-15
+Pacific date: 2026-11-16
 Tracking: [#20](https://github.com/tylerhuntington/monarchy/issues/20)
 
 ## Context
