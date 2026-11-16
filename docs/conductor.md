@@ -35,6 +35,10 @@ In the Monarchy workspace, prepare `.monarchy/task.md` from
 project references. A task workspace cannot assume access to the Monarchy
 checkout or the Queen's conversation.
 
+Name each new task session `00-<descriptor>`, with two numeric zeros and a short
+job description: `00-tests`, `00-docs`, or `00-build-fix`. The name is a label;
+keep using the recorded native ID to address the session.
+
 Workspace creation remains an explicit host action. Record the intended task,
 chosen profile, and create attempt before using the host's controls. Retain the
 returned workspace and session IDs. If creation has an uncertain result, search

@@ -28,7 +28,7 @@ Use the installed runtime's supported Python API or operator-controlled orchestr
 
 ## Authority
 
-The authorized coordinator manages transfer; neither worker can expand the task. There is one writer before and after the transition. During uncertainty the predecessor's claim remains unresolved, and the successor may read or prepare without conflicting writes.
+The authorized coordinator manages transfer; neither 00 agent can expand the task. There is one writer before and after the transition. During uncertainty the predecessor's claim remains unresolved, and the successor may read or prepare without conflicting writes.
 
 ## Failure and no-op
 

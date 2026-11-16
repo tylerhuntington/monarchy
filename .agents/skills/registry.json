@@ -9,7 +9,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-intake/SKILL.md",
-          "sha256": "2d08dbde913c7f5baa9a4086d1b872e5ac8453be005e0ffbc396d14bd6ab6c29"
+          "sha256": "d7f5b410daadc66593787a371fd0c199d75ae39a7579198a90a47e409ad9d025"
         },
         {
           "path": ".agents/skills/monarchy-intake/agents/openai.yaml",
@@ -17,7 +17,7 @@
         },
         {
           "path": ".agents/skills/monarchy-intake/evals.json",
-          "sha256": "d129a1458e6dbfcd9087e44ff507eaf3b535682ee479283893ea3f660007f027"
+          "sha256": "8685f9cb813cb5faaa7c973bbc46f8cc0b6da1ae23270ed9f13811be8258464b"
         },
         {
           "path": ".agents/skills/monarchy-intake/references/output.md",
@@ -40,7 +40,7 @@
         },
         {
           "path": ".agents/skills/monarchy-adopt/evals.json",
-          "sha256": "5a0aaad96e5df0d51bd759a78be5a55ac375e5e3688273a44ecdce5f9a62144e"
+          "sha256": "254f7b7e1fde8d7e335a4e521ad1525d557908505f63ab30f21408005a67a8ba"
         },
         {
           "path": ".agents/skills/monarchy-adopt/references/output.md",
@@ -55,7 +55,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-compose/SKILL.md",
-          "sha256": "db3f34e9f02aaedd169b3e401f5cc90bc1cf81e4f9331ffe66dba5ff0c0c1db3"
+          "sha256": "5e9b9c6d93e36b42b2efde6c3140f41da922a62baec5a4cc48aa1637eb73b1c1"
         },
         {
           "path": ".agents/skills/monarchy-compose/agents/openai.yaml",
@@ -63,7 +63,7 @@
         },
         {
           "path": ".agents/skills/monarchy-compose/evals.json",
-          "sha256": "61892bb6f5fa709ebe30d557ba4d56e560e1fe19a477f6b2318e4e62b20450df"
+          "sha256": "70fcfbf828d749105e6872040bfd590c29f82c2afed9874f2c68b5e55b37812a"
         },
         {
           "path": ".agents/skills/monarchy-compose/references/output.md",
@@ -73,20 +73,20 @@
     },
     {
       "name": "monarchy-dispatch",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-dispatch/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-dispatch/SKILL.md",
-          "sha256": "55c7df3ac1c06a5ca626eba99f5391ba180b3f64d40263b766f7932eb01e3602"
+          "sha256": "fb59cabb5c8fcb5e6acb15abb17a9fe02581dc66d571a3576963acff8cb4980c"
         },
         {
           "path": ".agents/skills/monarchy-dispatch/agents/openai.yaml",
-          "sha256": "6c360d7a76861b3211271c17e8ccc52bcc72fa12ee3bef8b19578b5a121462e6"
+          "sha256": "17b9bfb071e67b7584e1a2bc07205c7826ed60968d616ddf9c58ff159e94b780"
         },
         {
           "path": ".agents/skills/monarchy-dispatch/evals.json",
-          "sha256": "671a2c684ecfb05a3e371e1df7f3cf4bf2a0bdf4a46e2bb48f51799040ea1c08"
+          "sha256": "781d09590057630ee7294de489c4bc174f86b8f240ad708436de84203e6a2fef"
         },
         {
           "path": ".agents/skills/monarchy-dispatch/references/output.md",
@@ -101,7 +101,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-supervise/SKILL.md",
-          "sha256": "4bdac209e674552c192b1a936a5e0afb83cce836819122dabe8940329214dfc7"
+          "sha256": "d464ec70518fa326e260ae1102a06a3f0bfa0c4966d30f4957b4fe31e9e5dbf4"
         },
         {
           "path": ".agents/skills/monarchy-supervise/agents/openai.yaml",
@@ -109,7 +109,7 @@
         },
         {
           "path": ".agents/skills/monarchy-supervise/evals.json",
-          "sha256": "24040aa5279fd901d316b435d93e33a29df8ee8b9fdf4f3164158eef99be6857"
+          "sha256": "36f15de1bc5d5f457734294b4a6fa2faed2631d5e51d8df9b7bba0f996b28f03"
         },
         {
           "path": ".agents/skills/monarchy-supervise/references/output.md",
@@ -124,7 +124,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-decide/SKILL.md",
-          "sha256": "4a2018f7a43239563826691394736534d3334c767f6edd00e9738c23c87909b1"
+          "sha256": "229ae70d2f5c96b9af2372bdf9d4a7760e6cb11930cd967f89a46f383f75deee"
         },
         {
           "path": ".agents/skills/monarchy-decide/agents/openai.yaml",
@@ -132,7 +132,7 @@
         },
         {
           "path": ".agents/skills/monarchy-decide/evals.json",
-          "sha256": "3ee014f3215e4f4a2becfd7597c4d464c9bff5bdace1474d8e389599da055519"
+          "sha256": "dc17d9722986059431b2119b774b512e03e525a0ef9f0ef0d8c8e0d5452d29ae"
         },
         {
           "path": ".agents/skills/monarchy-decide/references/output.md",
@@ -147,7 +147,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-steer/SKILL.md",
-          "sha256": "9181a00ff396fb7ffab63f788bab97fc17e2eac5cede6cbfc4a5f9ee6bc6517a"
+          "sha256": "fe1ea41358b932849d53bb8fd32208053d9b29097896219a090b6105a4cfb814"
         },
         {
           "path": ".agents/skills/monarchy-steer/agents/openai.yaml",
@@ -155,7 +155,7 @@
         },
         {
           "path": ".agents/skills/monarchy-steer/evals.json",
-          "sha256": "012ef029663aade0f91c9dff304e4cb69f0a19ebb6f3e8660214fce3f4f9889e"
+          "sha256": "cec6378043fa31100b09d7134c9b68440e313ba52b97e00613f5eb1a0fa772a8"
         },
         {
           "path": ".agents/skills/monarchy-steer/references/output.md",
@@ -178,7 +178,7 @@
         },
         {
           "path": ".agents/skills/monarchy-checkpoint/evals.json",
-          "sha256": "d64862e41e7fc5b354c4ba70ef3c1a5aa18aaa75c38441b5307cc6c182b5c34f"
+          "sha256": "b157d052420d1187b9b16825f1ac4bc754c49e155a656cd09cadcb56eb6a4d2d"
         },
         {
           "path": ".agents/skills/monarchy-checkpoint/references/output.md",
@@ -193,7 +193,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-handoff/SKILL.md",
-          "sha256": "22eb080fcfbe507b2b2fb3f31c7443564a3acd6874d6a3598705d3e21a779b76"
+          "sha256": "c3024f18c2dea388bde0f7ac5097fab68ef15b3ef7646582a45dd9fd29d08e22"
         },
         {
           "path": ".agents/skills/monarchy-handoff/agents/openai.yaml",
@@ -201,7 +201,7 @@
         },
         {
           "path": ".agents/skills/monarchy-handoff/evals.json",
-          "sha256": "3119f76f30686c577d899da300990a998b8d0412892d79f13913f72e7c3762dc"
+          "sha256": "041281899192c12700259212c080c4f6b00c525f904bd5f070029f7568877be4"
         },
         {
           "path": ".agents/skills/monarchy-handoff/references/output.md",
@@ -216,7 +216,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-recover/SKILL.md",
-          "sha256": "8171bce20efdf0c46a83ebb25c75b52f59b7432acb3f9f067c5f9c574520e0ec"
+          "sha256": "db66879f23a2c6fa648724e6aa95dfb70d6e1396e597a72dfb2d843acd5a7672"
         },
         {
           "path": ".agents/skills/monarchy-recover/agents/openai.yaml",
@@ -224,7 +224,7 @@
         },
         {
           "path": ".agents/skills/monarchy-recover/evals.json",
-          "sha256": "6f01c7b9e1712acf09ec73869416a92e4ae4e95b80b763b114f3e0c75492c753"
+          "sha256": "113a7c4a1768d9ab8e0bfe03059f651509357f7fd37e0403d1babd5518bd5ed3"
         },
         {
           "path": ".agents/skills/monarchy-recover/references/output.md",
@@ -239,7 +239,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-verify/SKILL.md",
-          "sha256": "050dcef9e3393444adc4e4244dabb413c5ab3a697df932fc183f04fb9f9df396"
+          "sha256": "4a0656a91d821b01b781d69271e706a0baaee7543c1101ec61b39e4823e9c497"
         },
         {
           "path": ".agents/skills/monarchy-verify/agents/openai.yaml",
@@ -247,7 +247,7 @@
         },
         {
           "path": ".agents/skills/monarchy-verify/evals.json",
-          "sha256": "3f685c2d0cc01e16288f70374b8151e4cac33bd9a0f6bfee23d9c2891885f29d"
+          "sha256": "6f9d3eb63de6542ff4b24445992c7898df3ab216ebb132e08b5cf5ca5f710414"
         },
         {
           "path": ".agents/skills/monarchy-verify/references/output.md",
@@ -262,7 +262,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-complete/SKILL.md",
-          "sha256": "f47368482d875bddf582ffaa9eee7851e2b112d1f7827f9a300a17365afef160"
+          "sha256": "ee48d7c5bc1673ec1f935f03a3558e15ee52b1feaabfd83104d214a5ccd9cc87"
         },
         {
           "path": ".agents/skills/monarchy-complete/agents/openai.yaml",
@@ -270,7 +270,7 @@
         },
         {
           "path": ".agents/skills/monarchy-complete/evals.json",
-          "sha256": "ddb14fa926554f0e86eb54707d324608549c0f4d78c77a7c3d7b6e5b98f55c15"
+          "sha256": "088cdd380aea0e661023806d322226e63b35fbfae231826ff16f0f75255b9ef9"
         },
         {
           "path": ".agents/skills/monarchy-complete/references/output.md",

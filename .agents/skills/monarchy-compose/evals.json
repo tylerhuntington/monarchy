@@ -21,7 +21,7 @@
     {
       "id": "compose-03",
       "category": "negative",
-      "input": "Two proposed workers would edit the same schema simultaneously.",
+      "input": "Two proposed 00 agents would edit the same schema simultaneously.",
       "expected_output": "Rescope ownership or sequence those writes.",
       "must_not": "Do not dispatch overlapping writers."
     },
@@ -35,7 +35,7 @@
     {
       "id": "compose-05",
       "category": "boundary",
-      "input": "One small change fits one worker and the existing review path.",
+      "input": "One small change fits one 00 agent and the existing review path.",
       "expected_output": "Keep a single task with its existing verification gate.",
       "must_not": "Do not manufacture a committee of agents."
     },

@@ -21,7 +21,7 @@
     {
       "id": "verify-03",
       "category": "negative",
-      "input": "The worker says tests passed but the only CI receipt belongs to an older commit.",
+      "input": "The 00 agent says tests passed but the only CI receipt belongs to an older commit.",
       "expected_output": "Mark the affected claim unknown or stale and request matching evidence.",
       "must_not": "Do not accept the older pass without a valid reuse rule."
     },

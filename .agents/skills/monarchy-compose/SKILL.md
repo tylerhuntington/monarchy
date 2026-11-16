@@ -17,7 +17,7 @@ description: Turn a ready Monarchy brief into bounded tasks with dependencies, o
 2. Choose the smallest useful task graph. Give each task one outcome, one writer, its allowed files or resources, dependencies and a verifiable endpoint. Keep coupled edits with one owner.
 3. Mark which tasks can run in parallel and which require another task's evidence. Resolve overlapping write scopes before dispatch; use an integrator where changes must meet.
 4. Assign a role and required capabilities, not an invented runtime promise. Preserve owner-selected model and effort. Note costs, concurrency and deadlines only when known or explicitly bounded.
-5. Include verification, review and integration as real work. Test the plan against failure: blocked dependency, stale policy, worker loss and a changed requirement. Record how each returns to a decision or recovery path.
+5. Include verification, review and integration as real work. Test the plan against failure: blocked dependency, stale policy, 00 agent loss and a changed requirement. Record how each returns to a decision or recovery path.
 6. Save the graph and readiness checks. Dispatch only tasks whose dependencies, authority and required tools are satisfied.
 
 ## Output

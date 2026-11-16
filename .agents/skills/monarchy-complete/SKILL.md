@@ -1,6 +1,6 @@
 ---
 name: monarchy-complete
-description: Close an owned task only after its requested endpoint is verified, then report the result through the Queen. Use for completion review, not merely because a worker is idle or a pull request merged.
+description: Close an owned task only after its requested endpoint is verified, then report the result through the Queen. Use for completion review, not merely because a 00 agent is idle or a pull request merged.
 ---
 
 # Monarchy Complete
@@ -17,7 +17,7 @@ description: Close an owned task only after its requested endpoint is verified, 
 2. Reconcile pending decisions, reviews, dependencies and external writes. Resolve or explicitly supersede obsolete questions with evidence; never clear them just to reach a terminal state.
 3. Confirm no unfinished operation still needs this task's writer. Keep custody of any remaining work or create an explicitly scoped follow-up under existing authority without disguising incompleteness.
 4. Record completion through the canonical runtime only when the endpoint is satisfied. Save exact evidence and the result reference, then verify the record readback.
-5. Send one concise completion packet to the Queen through the established route: what changed, what proves it, remaining accepted limits and any real decision. Workers report to the Secretary; they do not open a second owner conversation.
+5. Send one concise completion packet to the Queen through the established route: what changed, what proves it, remaining accepted limits and any real decision. 00 Agents report to the Secretary; they do not open a second owner conversation.
 6. Release the task claim only after completion and delivery obligations are accounted for. Keep durable records under the project's retention policy; cleanup and archiving require their own authority.
 
 ## Output

@@ -7,14 +7,14 @@
     {
       "id": "dispatch-01",
       "category": "positive",
-      "input": "A ready task has satisfied dependencies, a supported launch adapter and complete pinned policy files.",
-      "expected_output": "Build the package, launch once, and retain a verified worker acknowledgment.",
+      "input": "A ready task has satisfied dependencies, a supported launch adapter and complete pinned policy files. The brief gives the new session the descriptor \"Fix build\".",
+      "expected_output": "Build the package, launch once, and retain a verified 00 agent acknowledgment. Name the new session \"00-fix-build\" and retain its native session ID.",
       "must_not": "Do not claim readiness from the launch response alone."
     },
     {
       "id": "dispatch-02",
       "category": "positive",
-      "input": "The owner selected a model and effort for an existing parked worker.",
+      "input": "The owner selected a model and effort for an existing parked 00 agent.",
       "expected_output": "Resume through the supported adapter with those selections and a fresh task binding check.",
       "must_not": "Do not silently switch providers or lower effort."
     },
@@ -37,12 +37,12 @@
       "category": "boundary",
       "input": "A launch timed out and the runtime may have created the session.",
       "expected_output": "Reconcile the existing operation and session inventory before any retry.",
-      "must_not": "Do not launch a duplicate worker."
+      "must_not": "Do not launch a duplicate 00 agent."
     },
     {
       "id": "dispatch-06",
       "category": "boundary",
-      "input": "The task already has one acknowledged healthy worker and the same brief.",
+      "input": "The task already has one acknowledged healthy 00 agent and the same brief.",
       "expected_output": "Return the existing binding as a no-op.",
       "must_not": "Do not send a redundant kickoff."
     }

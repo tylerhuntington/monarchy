@@ -15,6 +15,19 @@ def identity(kind, value):
     return str(uuid.uuid5(uuid.NAMESPACE_URL, 'monarchy:' + kind + ':' + value))
 
 
+def agent_name(descriptor):
+    """Make a readable display name; task and native session identities stay intact."""
+    if not isinstance(descriptor, str):
+        raise RecordError('00 Agent name must be a nonempty text descriptor')
+    value = descriptor.strip().lower()
+    if value.startswith('00-'):
+        value = value[3:]
+    value = re.sub(r'[\W_]+', '-', value).strip('-')
+    if not value:
+        raise RecordError('00 Agent name needs a purpose descriptor')
+    return '00-' + value
+
+
 def _revision(value):
     if not isinstance(value, str) or not REVISION.fullmatch(value):
         raise RecordError('a full source revision is required')
@@ -174,7 +187,7 @@ class Court:
         meta = task['metadata']
         binding = meta['binding']
         if binding['session_id'] != task['owner'] or binding['repo'] != task['repository']:
-            raise Conflict('worker binding differs from the current assignment')
+            raise Conflict('00 Agent binding differs from the current assignment')
         if not meta.get('authority_ref'):
             raise RecordError('dispatch requires the original user authority reference')
         key = task_id + ':' + str(task['generation'])
@@ -182,11 +195,22 @@ class Court:
                'message_id': identity('dispatch-message', key)}
         if new_session:
             operation = prepare_session(task_id, binding['workspace_id'], binding['repo'],
-                                        binding['profile'], 'Worker · ' + task_id, meta['brief'],
+                                        binding['profile'], agent_name(meta.get('agent_name', task_id)), meta['brief'],
                                         session_id=binding['session_id'], **ids)
         else:
             operation = prepare_message(task_id, binding, meta['brief'], **ids)
         operation['request']['generation'] = task['generation']
+        if new_session:
+            # A stored launch is immutable. A branding change must not replace
+            # its original intent or prevent reconciliation of an uncertain send.
+            try:
+                previous = self.records.get_operation(operation['operation_id'])
+            except RecordError:
+                previous = None
+            if previous is not None and previous['kind'] == operation['kind']:
+                comparable = {**previous['request'], 'name': operation['request']['name']}
+                if comparable == operation['request']:
+                    operation['request'] = previous['request']
         return self.records.prepare_operation(operation['operation_id'], task_id,
                                                operation['kind'], operation['request'])
 
@@ -196,10 +220,10 @@ class Court:
         if decision['state'] != 'answered':
             raise Conflict('decision has no recorded owner answer')
         if decision['payload']['generation'] != task['generation']:
-            raise StaleGeneration('answer belongs to an earlier worker assignment')
+            raise StaleGeneration('answer belongs to an earlier 00 Agent assignment')
         binding = task['metadata']['binding']
         if binding['session_id'] != task['owner'] or binding['repo'] != task['repository']:
-            raise Conflict('worker binding differs from the current assignment')
+            raise Conflict('00 Agent binding differs from the current assignment')
         key = decision_id + ':' + str(decision['revision'])
         text = json.dumps({'kind': 'monarchy.answer', 'task_id': task['task_id'],
                            'generation': task['generation'], 'decision_id': decision_id,
@@ -221,7 +245,7 @@ class Court:
         request = operation['request']
         if (request.get('generation') != task['generation']
                 or request['binding']['session_id'] != task['owner']):
-            raise StaleGeneration('delivery belongs to an earlier worker assignment')
+            raise StaleGeneration('delivery belongs to an earlier 00 Agent assignment')
         if 'decision_id' in request:
             decision = self.records.get_decision(request['decision_id'])
             if decision['revision'] != request['decision_revision'] or decision['state'] != 'answered':

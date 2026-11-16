@@ -6,8 +6,8 @@ the package starts no agents, hooks, or background service.
 
 | Included | Boundary |
 | --- | --- |
-| Queen, Secretary, and Worker instructions | Agents must follow them; they are not access controls. |
-| Twelve core skills and checked worker packages | Package tests check integrity and contracts; model-driven skill scenarios remain unrun. |
+| Queen, Secretary, and 00 Agent instructions | Agents must follow them; they are not access controls. |
+| Twelve core skills and checked 00 agent packages | Package tests check integrity and contracts; model-driven skill scenarios remain unrun. |
 | Private SQLite records for tasks, reports, decisions, and outcomes | Survive local process restarts; host-loss recovery needs a separate backup or durable volume. |
 | Assignment generations and operation admission | Fence stale writes through the record API; do not stop native sessions or subprocesses. |
 | Conductor message delivery and native report ingestion | Require explicit commands and verified court membership; do not authenticate new owner authority. |
