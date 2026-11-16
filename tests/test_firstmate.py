@@ -15,6 +15,8 @@ class UpstreamTests(unittest.TestCase):
         meta=m.verify()
         self.assertEqual(meta['revision'],'427056c4181c41074ad24f051f79919330df0fa5')
         self.assertGreater(meta['files'],800)
+        with tarfile.open(m.VENDOR / 'source.tar.gz') as archive:
+            self.assertEqual(archive.extractfile('LICENSE').read(), (m.VENDOR / 'LICENSE').read_bytes())
     def test_corrupt_archive_refused(self):
         with tempfile.TemporaryDirectory() as d:
             p=Path(d)/'bad.tar.gz';p.write_bytes(b'bad')
@@ -45,3 +47,19 @@ class UpstreamTests(unittest.TestCase):
             self.assertEqual(json.loads(m.outcome(source,home,['unprocessed']))['seq'],1)
             m.outcome(source,home,['mark-processed','--through','1'])
             self.assertEqual(m.outcome(source,home,['unprocessed']).strip(),'')
+
+    def test_symlink_chain_cannot_escape_after_extraction(self):
+        with tempfile.TemporaryDirectory() as d:
+            archive = Path(d) / 'chain.tar'
+            with tarfile.open(archive, 'w') as tar:
+                for name, target in [('x/b', '../shallow'), ('x/a', 'b/../../outside')]:
+                    member = tarfile.TarInfo(name)
+                    member.type = tarfile.SYMTYPE
+                    member.linkname = target
+                    tar.addfile(member)
+                member = tarfile.TarInfo('shallow')
+                member.type = tarfile.DIRTYPE
+                tar.addfile(member)
+            with self.assertRaises(m.UpstreamError):
+                m.safe_extract(archive, Path(d) / 'output')
+            self.assertFalse((Path(d) / 'output').exists())

@@ -57,6 +57,14 @@ def safe_extract(archive,destination):
             for member in members:
                 if member.issym():
                     p=temporary/member.name;p.parent.mkdir(parents=True,exist_ok=True);p.symlink_to(member.linkname)
+            # Validate the completed graph, not just individual lexical targets.
+            for name in links:
+                try:
+                    resolved = (temporary / name).resolve()
+                except (OSError, RuntimeError) as exc:
+                    raise UpstreamError('Invalid archive symlink chain') from exc
+                if temporary not in resolved.parents:
+                    raise UpstreamError('Escaping archive symlink chain')
             # Refuse to replace an existing destination, including an empty directory.
             destination.mkdir(mode=0o700)
             for p in temporary.iterdir():p.rename(destination/p.name)
