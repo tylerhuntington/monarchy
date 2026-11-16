@@ -1,6 +1,6 @@
 ---
 name: monarchy-verify
-description: Independently check a worker result against the exact brief, source and project gates. Use before accepting a handoff result or completion claim; a worker saying done is not verification.
+description: Independently check a 00 agent result against the exact brief, source and project gates. Use before accepting a handoff result or completion claim; a 00 agent saying done is not verification.
 ---
 
 # Monarchy Verify

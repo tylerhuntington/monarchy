@@ -7,6 +7,7 @@ Scope and exclusions:
 Acceptance criteria:
 Completion endpoint (for example, reviewed PR ready):
 Current stage and assigned workspace/session:
+00 Agent name (00- plus a short job description):
 Agent profile and spending constraints:
 Project instructions and required checks:
 Reserved actions and open decisions:

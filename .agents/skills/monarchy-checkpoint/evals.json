@@ -7,7 +7,7 @@
     {
       "id": "checkpoint-01",
       "category": "positive",
-      "input": "The worker is near its context limit with tests passing and a review still open.",
+      "input": "The 00 agent is near its context limit with tests passing and a review still open.",
       "expected_output": "Save the exact source and test evidence, open review and next action, then verify readback.",
       "must_not": "Do not mark the review or task complete."
     },

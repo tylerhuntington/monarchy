@@ -10,7 +10,7 @@ Start with the outcome you want. Ask for progress in the same thread. Change
 priorities there too. The Queen keeps the overall request in view and delegates
 the work through the Secretary.
 
-You shouldn't need to find the right Worker, forward a review, or explain the
+You shouldn't need to find the right 00 Agent, forward a review, or explain the
 same decision in several tabs. The Queen is responsible for carrying your
 direction into the court and bringing the result back. Other sessions remain
 available when you want to inspect the detail.
@@ -24,7 +24,7 @@ A choice comes back when it needs your judgment or authority. For example, a fix
 may require changing behavior outside the agreed scope, or work may need access
 you haven't granted. The Queen explains the situation, presents the tradeoff,
 recommends a path, and says what is waiting on your answer. She passes that answer
-back through the court; you don't have to repeat it to each Worker.
+back through the court; you don't have to repeat it to each 00 Agent.
 
 An update should tell you what changed and what it means. A final result should
 say what was completed, what was checked, and what remains open. Evidence stays
@@ -43,7 +43,7 @@ Queen important decisions and outcomes, rather than forwarding every status even
 The Secretary keeps the task records current and brings decisions to the Queen
 when they need the user's attention.
 
-**Workers** build, investigate, and review in isolated task workspaces. Each gets
+**00 Agents** build, investigate, and review in isolated task workspaces. Each gets
 a brief and a completion condition. They report through the Secretary instead
 of asking you to coordinate with the next agent.
 
@@ -53,7 +53,7 @@ Suppose you ask the Queen to fix a broken CSV export and prepare a PR.
 
 1. You describe the problem and the result you want in the Queen's thread.
 2. Behind the scenes, the court assigns the fix, checks it, and arranges a fresh
-   review. Workers resolve routine questions within the brief.
+   review. 00 Agents resolve routine questions within the brief.
 3. If a decision exceeds that brief, the Queen brings it back with context and a
    recommendation. You answer in her thread.
 4. The court carries on within that answer's scope. The Queen returns the

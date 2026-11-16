@@ -146,6 +146,6 @@ errors print JSON to standard output; usage errors use argparse's standard error
 output.
 
 The observer doesn't read CI checks, review verdicts, merge queues, deployments,
-worker reports or owner decisions. Project-specific verification still belongs
+00 agent reports or owner decisions. Project-specific verification still belongs
 in the brief and handoff. The lock protects the observer's state file; it doesn't
-fence worker processes or enforce exclusive execution.
+fence 00 agent processes or enforce exclusive execution.

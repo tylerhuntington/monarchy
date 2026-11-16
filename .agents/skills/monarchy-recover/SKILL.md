@@ -1,6 +1,6 @@
 ---
 name: monarchy-recover
-description: Diagnose a lost worker, stale claim, stuck wake or uncertain external write and restore safe progress. Use after failed evidence or transport checks; recovery starts with reconciliation, not a blind restart.
+description: Diagnose a lost 00 agent, stale claim, stuck wake or uncertain external write and restore safe progress. Use after failed evidence or transport checks; recovery starts with reconciliation, not a blind restart.
 ---
 
 # Monarchy Recover
@@ -16,7 +16,7 @@ description: Diagnose a lost worker, stale claim, stuck wake or uncertain extern
 1. Classify the failure from native evidence: live but quiet, waiting for validation, waiting for a decision, dead session, unreachable transport, stale claim, or unknown external write. Keep uncertainty visible.
 2. Reconcile each attempted external write by its operation identity and observable result before retrying. A timeout is not evidence that nothing happened.
 3. Check writer custody independently of lease expiry. Use the supported runtime to establish whether old work is stopped or safely isolated. Keep a replacement from touching conflicting resources until this is known.
-4. Choose the smallest authorized repair: resume the existing worker, redeliver an unacknowledged item, renew a valid claim, adopt settled output, or prepare a successor handoff. Use project-native recovery procedures and shared retry limits.
+4. Choose the smallest authorized repair: resume the existing 00 agent, redeliver an unacknowledged item, renew a valid claim, adopt settled output, or prepare a successor handoff. Use project-native recovery procedures and shared retry limits.
 5. Perform one bounded recovery action, then read back its effect. On repeated identical failures, stop that retry sequence and bring a concrete blocker or decision to the Queen through the Secretary.
 6. Save the diagnosis, action, evidence and next check. Do not close open owner decisions or claim completion as a side effect of recovery.
 

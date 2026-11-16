@@ -2,22 +2,22 @@
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy streamlines agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. Her royal court delegates tasks to workers and supervises them through planning, implementation and review. Results and decisions that need your input come back to the
+Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy streamlines agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. Her royal court delegates tasks to 00 agents and supervises them through planning, implementation and review. Results and decisions that need your input come back to the
 throne for sign-off. Simplicity and hierarchy keep order in the kingdom. Once the Crown is at your service, you'll never look back.
 
 ## Talk to the Queen
 
 Tell the Queen what you want done, ask about work in flight, or change direction on something you kicked off hours ago. Nothing is off limits. Queen's got you. Her
-Secretary keeps the workers moving and takes care of the follow-ups.
+Secretary keeps the 00 agents moving and takes care of the follow-ups.
 
 - **Ask in one chat.** New requests and follow-ups all go to the Queen. She
   keeps track of what you've asked for as the work moves between agents.
 - **Leave the legwork to the royal court.** The Secretary assigns tasks, follows up
-  when workers get stuck, and gets their work reviewed. The court passes along
+  when 00 agents get stuck, and gets their work reviewed. The court passes along
   the context each agent needs.
 - **Make the decisions that matter.** When a decision needs your judgment or
   permission, the Queen explains the tradeoffs and recommends a way forward.
-  Give her your answer, and she takes it back to the workers.
+  Give her your answer, and she takes it back to the 00 agents.
 - **See what's getting done.** The Queen tells you what finished, what was checked,
   and what's still open, with links when you want a closer look.
 
@@ -30,7 +30,11 @@ You can still peek into the other sessions whenever you like.
 | --- | --- |
 | Queen | Takes your requests, keeps the goal in view, and brings back results and decisions. |
 | Secretary | Assigns tasks, checks progress, arranges reviews, and manages handoffs. |
-| Workers | Write code, investigate problems, and review changes, each with an assignment and a separate workspace. |
+| 00 Agents | Write code, investigate problems, and review changes, each with an assignment and a separate workspace. |
+
+Each 00 Agent gets a name that says what it does: `00-tests`, `00-docs`,
+or `00-build-fix`. The two zeros are a small nod to the
+[disputed royal-spy legend behind 007](https://www.rcp.ac.uk/news-and-media/news-and-opinion/code-making-and-code-breaking-john-dee-and-the-art-of-cryptography/).
 
 Even a monarchy has ground rules. The court handles routine questions within
 your instructions. Changes to scope, spending, or actions you've reserved for
@@ -65,7 +69,7 @@ one task. Let the court do the coordination, then check the result in your
 conversation with her.
 
 The court has [twelve core skills](docs/skills.md) for taking requests, dividing
-work, handling decisions, and passing the crown. Workers carry the skills and
+work, handling decisions, and passing the crown. 00 Agents carry the skills and
 project instructions they need in a checked package.
 
 The [opt-in runtime](docs/runtime.md) keeps assignments, reports, decisions, and

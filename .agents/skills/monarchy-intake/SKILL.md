@@ -13,7 +13,7 @@ description: Turn a new owner request into a scoped Monarchy work item, with a c
 
 ## Workflow
 
-1. Read the request in its conversation. Separate the requested outcome, constraints and open choices. Keep exact authorization evidence; a worker's interpretation is not a new grant.
+1. Read the request in its conversation. Separate the requested outcome, constraints and open choices. Keep exact authorization evidence; a 00 agent's interpretation is not a new grant.
 2. Search the canonical task index for existing ownership. Attach a clarification to its task instead of opening a duplicate. A task already running belongs in adoption or steering.
 3. Write a brief with the target, scope, exclusions, observable endpoint, evidence needed, risk limits and permission source. State uncertain facts as uncertain.
 4. Resolve ordinary implementation choices from project conventions. Bring a question to the Queen only when its answer changes the outcome, authority or an irreversible step. Independent research may continue while that choice stays open.

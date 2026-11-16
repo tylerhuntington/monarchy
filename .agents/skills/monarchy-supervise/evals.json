@@ -7,14 +7,14 @@
     {
       "id": "supervise-01",
       "category": "positive",
-      "input": "A worker reports a routine test failure with a clear in-scope fix and no policy decision.",
+      "input": "A 00 agent reports a routine test failure with a clear in-scope fix and no policy decision.",
       "expected_output": "Record a routine outcome and coordinate the correction behind the scenes.",
       "must_not": "Do not interrupt the owner with a non-decision."
     },
     {
       "id": "supervise-02",
       "category": "positive",
-      "input": "Two worker reports expose the same unresolved public API choice.",
+      "input": "Two 00 agent reports expose the same unresolved public API choice.",
       "expected_output": "Consolidate them into one current decision packet for the Queen.",
       "must_not": "Do not send two competing owner prompts."
     },

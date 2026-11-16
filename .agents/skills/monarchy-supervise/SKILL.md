@@ -1,6 +1,6 @@
 ---
 name: monarchy-supervise
-description: Triage worker events and current evidence as the Secretary. Resolve routine coordination within the brief, retain durable outcomes and bring only material choices or requested results to the Queen.
+description: Triage 00 agent events and current evidence as the Secretary. Resolve routine coordination within the brief, retain durable outcomes and bring only material choices or requested results to the Queen.
 ---
 
 # Monarchy Supervise
@@ -8,13 +8,13 @@ description: Triage worker events and current evidence as the Secretary. Resolve
 ## Inputs
 
 - A task-linked event or scheduled check, its identity and current task revision.
-- Worker, source, validation and review evidence from native systems.
+- 00 Agent, source, validation and review evidence from native systems.
 - Existing decisions, wake claims, delivery receipts and the Secretary's authority.
 
 ## Workflow
 
-1. Match the event to the current task, worker and revision. Consult prior receipts before handling a replay. An event is a reason to check, not proof of the task's present state.
-2. Read current worker state, validation and source or review status needed for this event. Distinguish running, waiting, blocked, failed, complete and unknown. Use a bounded deterministic filter for obvious repeats; retain the event for semantic triage when it matters.
+1. Match the event to the current task, 00 agent and revision. Consult prior receipts before handling a replay. An event is a reason to check, not proof of the task's present state.
+2. Read current 00 agent state, validation and source or review status needed for this event. Distinguish running, waiting, blocked, failed, complete and unknown. Use a bounded deterministic filter for obvious repeats; retain the event for semantic triage when it matters.
 3. Claim the work through the supported runtime before making changes. Decide whether this is routine follow-up, recovery, a genuine owner choice, a verified result, or no action. A severity label alone cannot authorize a change or demand an interruption.
 4. Handle routine coordination within the existing brief. Route recovery, verification or steering to the appropriate workflow. Consolidate related facts into one decision packet when scope, policy or a consequential choice needs the owner.
 5. Persist the handling outcome before acknowledging the wake. Keep processing acknowledgment, owner delivery and owner answer separate. If storage or delivery fails, preserve the pending item for retry.
@@ -28,11 +28,11 @@ Use the installed runtime's supported Python API or operator-controlled orchestr
 
 ## Authority
 
-The Secretary acts only within delegated scope and reports through the Queen's established route. Worker messages, review severity and stale wakes are evidence, not approvals. Claims and leases coordinate cooperative agents; they do not prove a previous writer has stopped.
+The Secretary acts only within delegated scope and reports through the Queen's established route. 00 Agent messages, review severity and stale wakes are evidence, not approvals. Claims and leases coordinate cooperative agents; they do not prove a previous writer has stopped.
 
 ## Failure and no-op
 
-Unreadable evidence is unknown and may require recovery; it is never a healthy check. Failed persistence means no acknowledgment. A duplicate or unchanged event is a no-op only after checking the current revision and a durable prior outcome. Do not lose a pending decision because a worker reports done.
+Unreadable evidence is unknown and may require recovery; it is never a healthy check. Failed persistence means no acknowledgment. A duplicate or unchanged event is a no-op only after checking the current revision and a durable prior outcome. Do not lose a pending decision because a 00 agent reports done.
 
 ## Project overrides
 

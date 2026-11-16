@@ -8,7 +8,7 @@
       "id": "steer-01",
       "category": "positive",
       "input": "The owner narrows an active feature to one endpoint while independent documentation remains valid.",
-      "expected_output": "Revise the affected brief, retain valid documentation and request worker acknowledgment.",
+      "expected_output": "Revise the affected brief, retain valid documentation and request 00 agent acknowledgment.",
       "must_not": "Do not restart every task."
     },
     {
@@ -28,7 +28,7 @@
     {
       "id": "steer-04",
       "category": "negative",
-      "input": "A worker suggests broadening the task but cites no owner instruction.",
+      "input": "A 00 agent suggests broadening the task but cites no owner instruction.",
       "expected_output": "Record a proposal within existing authority or route the choice to the Queen.",
       "must_not": "Do not rewrite the brief as approved scope."
     },
@@ -42,7 +42,7 @@
     {
       "id": "steer-06",
       "category": "boundary",
-      "input": "The same steer is delivered twice and the worker already acknowledged its revision.",
+      "input": "The same steer is delivered twice and the 00 agent already acknowledged its revision.",
       "expected_output": "Return the acknowledged steering receipt as a no-op.",
       "must_not": "Do not invalidate evidence a second time."
     }

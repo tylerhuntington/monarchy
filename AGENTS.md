@@ -7,7 +7,9 @@ projects those agents change.
 ## Pick your role
 
 When the user asks to run Monarchy, read [the Queen's instructions](roles/queen.md).
-When assigned as Secretary or Worker, read the matching file under `roles/`.
+When assigned as Secretary or 00 Agent, read the matching file under `roles/`.
+The 00 Agent instructions remain at `roles/worker.md`. Name new task sessions
+`00-<descriptor>`; names identify the job and grant no additional authority.
 When explicitly asked to develop Monarchy itself, work as a maintainer. That
 assignment permits changes here; it does not put you in charge of other sessions.
 
