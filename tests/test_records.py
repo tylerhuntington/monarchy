@@ -175,6 +175,25 @@ class CourtRecordsTests(unittest.TestCase):
             with self.assertRaises(Conflict):
                 records.revise_decision("decision-1", {"question": "stale"}, expected_revision=1)
 
+    def test_original_decision_creation_replays_without_replacing_later_revisions(self):
+        original = {"generation": 1, "question": "Continue?"}
+        revised = {"generation": 1, "question": "A clarified question?"}
+        with CourtRecords(self.path) as records:
+            records.create_task("task-1", "example/project", "worker-1")
+            records.open_decision("decision-1", "task-1", original)
+            records.revise_decision("decision-1", revised, expected_revision=1)
+            current = records.answer_decision("decision-1", {"yes": True}, expected_revision=2, owner_message="message-2")
+        with CourtRecords(self.path) as records:
+            self.assertEqual(records.open_decision("decision-1", "task-1", original), current)
+            self.assertEqual(records.get_decision("decision-1"), current)
+            with self.assertRaises(Conflict):
+                records.open_decision("decision-1", "task-1", revised)
+            with self.assertRaises(Conflict):
+                records.open_decision("decision-1", "task-1", {"question": "unrelated"})
+            records.create_task("task-2", "example/project", "worker-2")
+            with self.assertRaises(Conflict):
+                records.open_decision("decision-1", "task-2", original)
+
     def test_bounded_queries_paginate_and_filter_without_dropping_pending_work(self):
         with CourtRecords(self.path) as records:
             for index in range(3):

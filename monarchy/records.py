@@ -537,17 +537,18 @@ class CourtRecords:
             return self._presentation(presentation_id)
 
     def open_decision(self, decision_id, task_id, payload):
+        """Replay immutable creation against revision one; return current state."""
         _identifier(decision_id, "decision_id")
         _identifier(task_id, "task_id")
         encoded = _payload(payload)
         with self._transaction():
             existing = self._connection.execute(
-                "SELECT * FROM decisions WHERE decision_id = ? ORDER BY revision DESC LIMIT 1", (decision_id,),
+                "SELECT * FROM decisions WHERE decision_id = ? ORDER BY revision ASC LIMIT 1", (decision_id,),
             ).fetchone()
             if existing:
                 if (existing["task_id"], existing["payload"]) != (task_id, encoded):
-                    raise Conflict("decision identity was reused with different content")
-                return self._decode(existing)
+                    raise Conflict("decision identity was reused with different creation content")
+                return self.get_decision(decision_id)
             self.get_task(task_id)
             self._connection.execute(
                 "INSERT INTO decisions VALUES (?, 1, ?, ?, 'pending', NULL, NULL, ?, NULL)",
