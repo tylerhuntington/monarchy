@@ -81,6 +81,14 @@ transaction. Reassignment is blocked while any operation on the task is
 from both proceeding. Callers must include the generation for assignment-bound
 actions; requests without it retain only the operation and reassignment fences.
 
+For an answer delivery, also include `decision_id` and `decision_revision` in the
+request. They must appear together and refer to a decision on that task. Admission
+checks the current revision is still answered in the same transaction. Revising
+that decision is blocked while its delivery is `in_flight` or `unknown`. A
+concurrent question revision and send therefore cannot both proceed. Callers
+must include these fields for decision-bound actions; text containing an answer
+does not establish that binding by itself.
+
 After a timeout or lost response, mark the operation `unknown` and read the
 native service to reconcile its stable ID. An `in_flight` operation found after
 restart needs the same reconciliation. Neither state can return to `prepared`
