@@ -103,17 +103,47 @@ class Court:
             if offset >= 10000:
                 raise RecordError('task history exceeds this pass budget; compact with reviewed migration')
 
+    def _all(self, method, **filters):
+        rows = []
+        for offset in range(0, 10000, 100):
+            page = method(limit=100, offset=offset, **filters)
+            rows.extend(page)
+            if len(page) < 100:
+                return rows
+        raise RecordError('task history exceeds this pass budget')
+
     def status(self, task_id):
         task = self.records.get_task(task_id)
+        decisions = self._all(self.records.list_decisions, task_id=task_id)
+        by_id = {d['decision_id']: d for d in decisions}
+        operations = self._all(self.records.list_operations, task_id=task_id)
+        active = []
+        for operation in operations:
+            request = operation['request']
+            if operation['state'] in {'prepared', 'failed'}:
+                if request.get('generation') != task['generation']:
+                    continue
+                decision = by_id.get(request.get('decision_id'))
+                if decision and request.get('decision_revision') != decision['revision']:
+                    continue
+            active.append(operation)
+        states = {o['state'] for o in active}
+        confirmed = {o['operation_id'] for o in operations if o['state'] == 'confirmed'}
+        undelivered = [d for d in decisions if d['state'] == 'answered' and
+                       identity('answer-operation', d['decision_id'] + ':' + str(d['revision'])) not in confirmed]
         complete = False
-        if self.records.list_decisions(task_id=task_id, state='pending', limit=1):
+        if any(d['state'] == 'pending' for d in decisions):
             next_action, owner = 'owner_decision', 'queen'
-        elif self.records.list_operations(task_id=task_id, states=['in_flight', 'unknown'], limit=1):
+        elif states & {'in_flight', 'unknown'}:
             next_action, owner = 'reconcile_delivery', 'secretary'
-        elif self.records.list_operations(task_id=task_id, states=['prepared'], limit=1):
+        elif 'prepared' in states:
             next_action, owner = 'deliver_prepared_operation', 'secretary'
-        elif self.records.list_operations(task_id=task_id, states=['failed'], limit=1):
+        elif 'failed' in states:
             next_action, owner = 'resolve_failed_delivery', 'secretary'
+        elif undelivered:
+            stale = any(d['payload'].get('generation') != task['generation'] for d in undelivered)
+            next_action = 'reconcile_prior_answer' if stale else 'deliver_answer'
+            owner = 'secretary'
         elif self.records.list_events(task_id=task_id, processed=False, limit=1):
             next_action, owner = 'triage_events', 'secretary'
         else:
@@ -180,7 +210,8 @@ class Court:
         operation = prepare_message(task['task_id'], binding, text,
                                     operation_id=identity('answer-operation', key),
                                     message_id=identity('answer-message', key))
-        operation['request']['generation'] = task['generation']
+        operation['request'].update(generation=task['generation'], decision_id=decision_id,
+                                    decision_revision=decision['revision'])
         return self.records.prepare_operation(operation['operation_id'], operation['task_id'],
                                                operation['kind'], operation['request'])
 
@@ -193,6 +224,10 @@ class Court:
         if (request.get('generation') != task['generation']
                 or request['binding']['session_id'] != task['owner']):
             raise StaleGeneration('delivery belongs to an earlier worker assignment')
+        if 'decision_id' in request:
+            decision = self.records.get_decision(request['decision_id'])
+            if decision['revision'] != request['decision_revision'] or decision['state'] != 'answered':
+                raise Conflict('delivery belongs to a superseded or unanswered decision')
         expected_state = operation['state']
         def persist(value):
             nonlocal expected_state
