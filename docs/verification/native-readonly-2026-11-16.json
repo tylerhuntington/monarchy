@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "qualification": "native-readonly",
+  "observed_date_utc": "2026-11-16",
+  "toolkit_revision": "9118e3927218cd248c5bc2f99e70005cca985c55",
+  "conductor_cli_version": "0.1.0",
+  "conductor_cli_sha256": "dc30d7aa180286f2f8ce10997ae9cbabd79666d92d30a3e2596a8312592e676a",
+  "requested_profile": {
+    "agent": "codex",
+    "model": "gpt-6-astra",
+    "effort": "ultra",
+    "fast_mode": true
+  },
+  "observed_profile": {
+    "model": "gpt-6-astra",
+    "effort": "ultra",
+    "fast_mode": true
+  },
+  "profile_unobserved": [
+    "agent"
+  ],
+  "project_repository": "sustainability-software-lab/project-pisces-frontend",
+  "worker_workspace_fingerprint": "23891165b9a71cd4074bcaa746c1b93c7778dfbb46546ceb4643c263143165dc",
+  "worker_session_fingerprint": "b2e38522149ff20e24ef3b7d701a4515b80581f9d65155044d7071b5c83a9448",
+  "separate_native_workspaces": true,
+  "dispatch": {
+    "operation_id": "51386d74-98fe-5861-8e94-41f5d7d96dfa",
+    "message_id": "ee467fdb-b648-574e-9978-6070bdb4d313",
+    "initial_state": "unknown",
+    "recovered_state": "confirmed",
+    "event_id": "7075d51d-3caa-4ea6-b7b8-f8764ac0eb95",
+    "same_request_identity": true
+  },
+  "reports": {
+    "accepted": 2,
+    "routine_reports": 1,
+    "completion_reports": 1,
+    "native_sender_checked": true,
+    "routine_created_queen_outcome": false,
+    "completion_report_alone_marked_complete": false
+  },
+  "verification": {
+    "source_revision": "54df6526125a2377ad8884e4116cee387819aaed",
+    "path": "README.md",
+    "sha256": "dde0e4039ab615cb0ee078d5322576835d6d83c0abead1557e7ce3b339f34e25",
+    "bytes": 11686,
+    "independent_git_object_match": true,
+    "worker_reported_tracked_tree_clean_before_and_after": true
+  },
+  "restart": {
+    "same_unprocessed_presentation": true,
+    "explicit_processing_then_empty_inbox": true
+  },
+  "final_complete": true,
+  "constraints": [
+    "Direct Monarchy workspace creation was rejected because that repository is not registered on this cloud machine; no workspace was created for that request.",
+    "Pilot used a fresh allowed PISCES workspace and the exact Monarchy toolkit clone under .context.",
+    "No live owner decision, authority authentication, native session-create adapter, deliberate native process crash, app test, host-loss restore or broad model evaluation was qualified.",
+    "No credentials, raw transcripts, account identities or host configuration are included in this public summary."
+  ]
+}

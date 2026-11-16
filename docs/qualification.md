@@ -6,8 +6,9 @@ the real supervision code. A fixture supplies native CLI responses so the tests
 can drop a reply or kill a process at the awkward moment.
 
 That is offline qualification. It does not launch a coding agent or prove that
-a live Conductor host behaves exactly like the fixture. Native qualification is
-**not yet run** for this suite.
+a live Conductor host behaves exactly like the fixture. A separate
+[read-only native pilot](native-qualification.md) passed on November 16, 2026 (UTC).
+Its receipt records the narrower guarantees observed on the actual host.
 
 ## The roundtrip
 
@@ -102,11 +103,10 @@ Neither test certifies compatibility with its Pi or tmux hosts. The
 
 ## What still needs a live host
 
-Native qualification needs its own recorded run with exact runtime version,
-workspace and session identities, selected model and effort, message IDs,
-operation receipts and source revision. It should demonstrate a real dispatch,
-worker report, Queen decision, answer delivery and verified result, including
-readback after a restart. A fixture pass is not that evidence.
+The [native pilot](native-qualification.md) records actual dispatch, cross-workspace
+reports, delayed readback recovery and independent result verification. The native
+owner decision and answer path still needs qualification with trusted host input.
+The fixture covers that record lifecycle without supplying human authentication.
 
 The CLI cannot express explicit fast mode off during session creation. The
 adapter therefore holds that creation path; existing-session reads and recovery
