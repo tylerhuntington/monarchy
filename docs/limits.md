@@ -30,8 +30,10 @@ requests with `fast_mode=False` are held. Workspace creation remains a host acti
 
 Offline tests use controlled transport fixtures and local databases. The upstream
 compatibility test runs First Mate's real outcome store in an isolated home.
-Neither establishes live Conductor delivery or unattended operation. Native
-qualification is a separate gate in [the adoption plan](planning/firstmate-adoption.md).
+The separate [native pilot](native-qualification.md) covers message delivery,
+cross-workspace reports and a verified read-only result. It does not qualify
+unattended operation or native owner authentication. These remain separate gates
+in [the adoption plan](planning/firstmate-adoption.md).
 
 The PISCES implementation has additional reporting, forwarding, hook, and delivery
 integrations. Those remain in PISCES. This release neither replaces them nor carries
