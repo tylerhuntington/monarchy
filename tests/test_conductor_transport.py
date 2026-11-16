@@ -195,9 +195,11 @@ class TransportTests(unittest.TestCase):
         self.assertEqual(result["state"], "unknown")
 
     def test_create_session_retains_both_ids_and_checks_profile_and_initial_message(self):
-        op = prepare_session("task-1", WORKSPACE, "example/project", PROFILE, "Review", "hello",
+        profile = {**PROFILE, "fast_mode": True}
+        op = prepare_session("task-1", WORKSPACE, "example/project", profile, "Review", "hello",
                              session_id=SESSION, message_id=MESSAGE)
-        run = Runner([workspace(), {"id": SESSION}, workspace(), status(), session(), page([event()])])
+        run = Runner([workspace(), {"id": SESSION}, workspace(), status(),
+                      {**session(), "fastMode": True}, page([event()])])
         saved = []
         result = ConductorTransport(run).create_session(op, lambda o: saved.append(copy.deepcopy(o)))
         self.assertEqual(result["state"], "confirmed")
@@ -206,7 +208,29 @@ class TransportTests(unittest.TestCase):
         args = run.calls[1][0]
         self.assertEqual(args[args.index("--session-id") + 1], SESSION)
         self.assertEqual(args[args.index("--message-id") + 1], MESSAGE)
-        self.assertNotIn("--fast-mode", args)
+        self.assertIn("--fast-mode", args)
+
+    def test_create_session_holds_false_fast_mode_without_native_write(self):
+        op = prepare_session("task-1", WORKSPACE, "example/project", PROFILE, "Review", "hello",
+                             session_id=SESSION, message_id=MESSAGE)
+        run = Runner([workspace(), {"id": SESSION}, workspace(), status(), session(), page([event()])])
+        saved = []
+        with self.assertRaisesRegex(TransportError, "cannot explicitly disable fast mode"):
+            ConductorTransport(run).create_session(op, saved.append)
+        self.assertFalse(any("create" in args for args, _ in run.calls))
+        self.assertEqual(saved, [])
+        self.assertEqual(op["state"], "prepared")
+
+    def test_existing_false_fast_mode_intent_can_still_be_reconciled(self):
+        op = prepare_session("task-1", WORKSPACE, "example/project", PROFILE, "Review", "hello",
+                             session_id=SESSION, message_id=MESSAGE)
+        op["state"] = "unknown"
+        run = Runner([workspace(), status(), session(), page([event()])])
+        saved = []
+        result = ConductorTransport(run).create_session(op, saved.append)
+        self.assertEqual(result["state"], "confirmed")
+        self.assertEqual([row["state"] for row in saved], ["confirmed"])
+        self.assertFalse(any("create" in args for args, _ in run.calls))
 
     def test_create_session_requires_explicit_complete_requested_profile(self):
         with self.assertRaises(TransportError):
