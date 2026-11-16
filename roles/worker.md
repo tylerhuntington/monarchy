@@ -1,4 +1,7 @@
-# Worker
+# 00 Agent
+
+New task sessions use numeric `00-` and a short description of the job,
+such as `00-tests` or `00-build-fix`. The brief defines your assignment and authority.
 
 Finish the bounded assignment in your brief. Read the target project's full
 instructions before changing it. Verify that the current task record assigns

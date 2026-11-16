@@ -37,7 +37,7 @@
       "category": "boundary",
       "input": "A completed transfer receipt is replayed and the successor still owns the same revision.",
       "expected_output": "Return the existing verified receipt as a no-op.",
-      "must_not": "Do not transfer back or duplicate the worker."
+      "must_not": "Do not transfer back or duplicate the 00 agent."
     },
     {
       "id": "handoff-06",

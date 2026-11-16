@@ -11,7 +11,7 @@ Start here to set up that conversation and understand what comes back to you.
 - [Pass the crown](succession.md): transfer responsibility and recover after interruption.
 - [Use Conductor](conductor.md): connect the workflow to visible agent sessions.
 - [Run the court](runtime.md): register assignments, handle reports, and deliver scoped answers.
-- [Choose a skill](skills.md): twelve core workflows and checked worker packages.
+- [Choose a skill](skills.md): twelve core workflows and checked 00 agent packages.
 - [Watch the work](observer.md): validate a task register and read live status.
 - [Know the limits](limits.md): what this version implements and what remains manual.
 

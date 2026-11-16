@@ -1,6 +1,6 @@
 ---
 name: monarchy-decide
-description: Prepare, present and bind an owner decision to the exact task and question it resolves. Use for consequential choices or authority gaps; routine implementation choices belong with the worker or Secretary.
+description: Prepare, present and bind an owner decision to the exact task and question it resolves. Use for consequential choices or authority gaps; routine implementation choices belong with the 00 agent or Secretary.
 ---
 
 # Monarchy Decide
@@ -16,7 +16,7 @@ description: Prepare, present and bind an owner decision to the exact task and q
 1. Check whether the owner's prior instructions or project policy already settle this choice. Continue within that authority when they do; do not ask for the same permission again.
 2. Build one concise question with options and a recommendation, the affected endpoint, what can continue, and what is held. Bind it to the task revision and a stable decision identity.
 3. Persist the pending decision before presentation. Use the Queen's owner conversation and the runtime's supported delivery route. Merge overlapping questions and respect any verified open-prompt hold.
-4. Record presentation separately from answer. Wait for an actual answer from the authorized owner; time elapsed, worker agreement and a delivery receipt are not answers.
+4. Record presentation separately from answer. Wait for an actual answer from the authorized owner; time elapsed, 00 agent agreement and a delivery receipt are not answers.
 5. Match the answer to the exact question and current revision. If it is ambiguous or the choice materially changed, keep the decision open and clarify through the Queen. Preserve the original scope of the answer.
 6. Persist the resolution and any standing policy through the target project's required decision workflow. Then separately release only the work covered by that answer. A resolved question does not finish the task.
 

@@ -28,7 +28,7 @@
     {
       "id": "complete-04",
       "category": "negative",
-      "input": "The worker is idle while a required owner decision remains unanswered.",
+      "input": "The 00 agent is idle while a required owner decision remains unanswered.",
       "expected_output": "Retain the decision and task as incomplete.",
       "must_not": "Do not clear the question because the session stopped."
     },

@@ -7,9 +7,9 @@
     {
       "id": "adopt-01",
       "category": "positive",
-      "input": "The owner hands over one repository with two active workers and names its existing lead.",
-      "expected_output": "Inventory both workers and retain the lead until a verified handoff.",
-      "must_not": "Do not restart the workers."
+      "input": "The owner hands over one repository with two active 00 agents and names its existing lead.",
+      "expected_output": "Inventory both 00 agents and retain the lead until a verified handoff.",
+      "must_not": "Do not restart the 00 agents."
     },
     {
       "id": "adopt-02",
@@ -42,7 +42,7 @@
     {
       "id": "adopt-06",
       "category": "boundary",
-      "input": "The worker session is unreachable but its branch has recent changes.",
+      "input": "The 00 agent session is unreachable but its branch has recent changes.",
       "expected_output": "Keep writer state unknown and preserve its files.",
       "must_not": "Do not infer the writer has stopped."
     }
