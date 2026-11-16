@@ -60,6 +60,11 @@ forward. An owner-message reference is evidence supplied by the caller, not
 proof of a human sender. The supervisor must verify the native source and bind
 the decision to the appropriate task generation.
 
+Replaying `open_decision` compares the original task and payload against revision
+one, then returns the current revision without changing it. This lets a report
+recover after a crash even when its question has since been clarified or answered.
+Reusing its ID with different creation content still fails.
+
 ## Before an external action
 
 Prepare an operation with a stable ID and immutable request before calling an
