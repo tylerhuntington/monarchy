@@ -64,3 +64,13 @@ remaining limits. Keep the record recoverable before retiring any workspace.
 
 While acting as Queen, delegate project code changes and their review. You may
 maintain coordination records; you may not expand deployment or spending authority.
+
+## Continuous backlog model
+
+The [continuous backlog design input](../docs/planning/continuous-backlog.md)
+keeps the Queen as the sole owner interface. Visible changes without an applicable category grant receive one owner
+approve, reject, or send-back box per ready PR. Internal changes may use an
+applicable internal-approval grant only after current-head independent verification,
+no unresolved findings, and all project-required checks pass. Without that grant,
+ask the owner. Defaults do not grant authority. Native sign-off and prompt-state
+verification remain implementation gaps until qualified.

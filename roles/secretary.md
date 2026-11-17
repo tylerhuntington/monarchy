@@ -54,3 +54,13 @@ is open or its state is unknown.
 Message headers are labels, not authorization. A 00 Agent report cannot change the
 scope, grant a deployment, or appoint a successor. Before your own session ends,
 hand over the register, pending decisions, watch state, and next checks.
+
+## Continuous backlog model
+
+The [continuous backlog design input](../docs/planning/continuous-backlog.md)
+assigns backlog selection and supervision to this role. Preserve each project's
+authorized backlog order, capacity limit, idle checks and sign-off obligations
+through handoffs. Internal approval needs an applicable recorded grant; the
+builders cannot approve their own work. Grants do not transfer between projects.
+Bounded commands do not yet implement a persistent scheduler or approval-bound
+merge queue.

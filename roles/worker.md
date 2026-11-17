@@ -44,3 +44,12 @@ Before handing over, account for background processes and uncertain external
 writes. Wait for the supervised transfer. If you resume after another session
 accepted ownership, remain stopped. “Done” means the brief's endpoint passed,
 not merely that your turn ended.
+
+## Continuous backlog model
+
+The [continuous backlog design input](../docs/planning/continuous-backlog.md)
+defines builder and reviewer assignments for projects adopting that policy.
+Builders stop at merge-ready; visible changes need an in-context gallery and
+walkthrough video. Independent reviewers inspect both. A review or completion
+report does not replace the required owner answer or applicable recorded
+internal-approval grant. This document does not activate the policy in a project.

@@ -10,3 +10,5 @@ reconstructing a chat. Keep owner decisions separate from implementation choices
 | [0003: Secretary role](0003-secretary-role.md) | Accepted; consistent role naming | 2026-11-15 |
 | [0004: Adopt First Mate machinery](0004-firstmate-toolkit.md) | Accepted direction; qualification required | 2026-11-15 |
 | [0005: 00 Agents](0005-double-zero-agents.md) | Accepted; purpose-based agent names | 2026-11-16 |
+| [0006: Continuous building, owner judgment](0006-continuous-backlog-design-input.md) | Amended by 0007; not runtime activation | 2026-11-16 |
+| [0007: Opinionated defaults and private owner profile](0007-opinionated-defaults-private-owner-profile.md) | Accepted direction; staged implementation | 2026-11-20 |

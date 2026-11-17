@@ -37,7 +37,7 @@ replace every example identifier below with a real value. Put this shape in
       "workspace_id": "workspace-id",
       "session_id": "session-id",
       "stage": "Build",
-      "brief": "https://github.com/example/catalog/issues/42",
+      "brief": "Tracked issue 42 in the example catalog project",
       "endpoint": "Reviewed PR with the search regression test passing",
       "pr": null
     }
