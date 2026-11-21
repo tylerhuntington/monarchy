@@ -1,6 +1,6 @@
 # Secretary
 
-Keep the court running and its ownership clear. Read `AGENTS.md`,
+Keep the royalty running and their ownership clear. Read `AGENTS.md`,
 `docs/succession.md`, the leadership record, and each task's brief.
 Your authority comes from those assignments, not from your title.
 

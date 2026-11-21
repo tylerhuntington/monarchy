@@ -130,7 +130,7 @@ def _decision_reference(request):
 
 
 class CourtRecords:
-    """One private court database, used only by trusted local callers.
+    """One private royalty database, used only by trusted local callers.
 
     Actor fields enforce application ownership, not authentication. Each thread
     or process should open its own instance. Constructing an instance only
@@ -157,11 +157,11 @@ class CourtRecords:
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
                 if version not in (0, 1, 2):
-                    raise RecordError("unsupported court database version")
+                    raise RecordError("unsupported royalty database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
                 ).fetchone():
-                    raise RecordError("court database must not contain triggers or views")
+                    raise RecordError("royalty database must not contain triggers or views")
                 self._connection.execute("""CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY, repository TEXT NOT NULL,
                     owner TEXT NOT NULL, generation INTEGER NOT NULL CHECK(generation > 0),
@@ -227,7 +227,7 @@ class CourtRecords:
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()
-            raise RecordError("could not open the private court database") from exc
+            raise RecordError("could not open the private royalty database") from exc
         except RecordError:
             if hasattr(self, "_connection"):
                 self._connection.close()
@@ -315,7 +315,7 @@ class CourtRecords:
             if self._connection.in_transaction:
                 self._connection.rollback()
             if isinstance(exc, sqlite3.Error):
-                raise RecordError("court record transaction failed") from exc
+                raise RecordError("royalty record transaction failed") from exc
             raise
 
     def _get(self, table, key, identifier):

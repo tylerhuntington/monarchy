@@ -1,8 +1,12 @@
 # Working in Monarchy
 
-Monarchy gives the user one conversation with the Queen while the court
-coordinates coding agents across repositories. Its home is separate from the
+Monarchy gives the user one conversation with the Queen while the royalty
+coordinate coding agents across repositories. Its home is separate from the
 projects those agents change.
+
+Call the Queen, Secretary and their agents collectively "the royalty" in product
+prose, with plural agreement. Preserve technical identifiers, paths, flags and
+historical evidence. See [decision 0008](docs/decisions/0008-royalty-terminology.md).
 
 ## Pick your role
 

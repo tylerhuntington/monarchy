@@ -1,4 +1,4 @@
-"""Render pinned standing orders; rendering starts no court or native operation."""
+"""Render pinned standing orders; rendering activates neither the royalty nor a native operation."""
 import hashlib
 import json
 import math

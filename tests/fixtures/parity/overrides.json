@@ -1,6 +1,6 @@
 {
   "court.paused": true,
   "_why": {
-    "court.paused": "Offline fixture for court-bound restrictive data."
+    "court.paused": "Offline fixture for restrictions bound to the royalty."
   }
 }

@@ -5,7 +5,7 @@ Pacific date: 2026-11-20
 
 ## Context
 
-An existing court has accumulated operating preferences across instructions,
+An existing agent installation has accumulated operating preferences across instructions,
 configuration, decisions and runtime constants. Monarchy needs those capabilities
 and a durable preference model without publishing private operational facts or
 mistaking a default for authority.
@@ -17,7 +17,7 @@ explicit grants, project delivery gates and separate qualification.
 ## Owner decisions
 
 1. **Stage adoption.** Monarchy reaches capability parity first. The existing
-   court continues independently until side-by-side qualification. Migration is
+   royalty continue independently until side-by-side qualification. Migration is
    a separate later decision.
 2. **Keep the owner profile private.** Owner facts and private values live in a
    private repository whose name is confirmed before creation. The public toolkit
@@ -35,17 +35,17 @@ explicit grants, project delivery gates and separate qualification.
 
 Each key declares its allowed home. Defaults live in the toolkit; project facts
 live in the project's pinned .agents/monarchy.json; owner facts live in private
-owner.json; allowlisted live orders live in court-bound override records.
+owner.json; allowlisted live orders live in override records bound to the royalty.
 
 Use strict JSON with flat dotted keys and an optional _why map. Numeric values
 have hard bounds. Replace applies to single-home values, min chooses the tightest
 limit, and union permits only additions to safety lists. Project settings apply
-only to project tasks and cannot change court-wide behavior.
+only to project tasks and cannot change behavior shared by the royalty.
 
 Pin exact source bytes, full source commits, their SHA-256 digests, the approving
 owner message, the Monarchy commit and effective configuration digest. Successors
-load the same preferences offline. Changed defaults hold the court until re-pin;
-rotation does not discard pause or other court-bound orders.
+load the same preferences offline. Changed defaults hold the royalty until re-pin;
+rotation does not discard pause or other orders bound to the royalty.
 
 Render role standing orders with stable rule identifiers and pin their output in
 briefs and leadership records. Owner omissions cannot remove invariants. Render

@@ -17,7 +17,7 @@ profile and timezone confirmations are separate from loading the defaults.
 
 Inspect existing code and decisions before choosing an approach. Keep changes
 within scope. Run checks that prove the requested behavior and the project's
-required gates. Keep one writer on the task branch. Don't create a new court,
+required gates. Keep one writer on the task branch. Don't create a new Monarchy installation,
 launch unrelated sessions, or appoint another owner.
 
 Read the selected skill package and project instructions named in the brief.
@@ -40,7 +40,7 @@ carry a message between agents. If that route fails, retain the report and mark
 delivery unresolved; don't guess another recipient.
 
 For the native runtime, use the report envelope in `docs/conductor-transport.md`
-with the court, task, and current assignment generation supplied in the brief.
+with the `court_id`, task, and current assignment generation supplied in the brief.
 Keep its report ID stable when reconciling delivery. A completion report includes
 the full source revision; a decision report states the question. Neither is an
 owner approval.

@@ -202,7 +202,7 @@ class ObserverTests(unittest.TestCase):
 
     def test_state_cannot_cross_courts_or_replace_court(self):
         m.save_state(self.state, self.root / "another.json", {})
-        with self.assertRaisesRegex(m.Invalid, "different court"):
+        with self.assertRaisesRegex(m.Invalid, "different Monarchy installation"):
             m.watch(self.court, self.state, 1, 1)
         before = self.court.read_bytes()
         with self.assertRaisesRegex(m.Invalid, "different files"):

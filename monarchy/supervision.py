@@ -1,4 +1,4 @@
-"""One explicit Secretary pass over durable court records. No background loop."""
+"""One explicit Secretary pass over durable royalty records. No background loop."""
 import hashlib
 import json
 import re

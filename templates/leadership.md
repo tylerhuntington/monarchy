@@ -1,6 +1,6 @@
 # Leadership Record
 
-Court scope and approved projects:
+Scope of the royalty and approved projects:
 Owner authority reference and trusted input route:
 Current Queen workspace/session:
 Current Secretary workspace/session:
@@ -21,7 +21,7 @@ Outgoing workspace/session:
 Designated incoming workspace/session:
 Authority for this transfer:
 Handoff reference and unsettled effects:
-Successor readback of the same pins, orders and court-bound controls:
+Successor readback of the same pins, orders and controls bound to the royalty:
 Recovery coordinator while transfer is pending:
 Successor verification and acceptance time:
 Superseded session's stop/readback evidence:

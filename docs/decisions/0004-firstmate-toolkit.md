@@ -16,7 +16,7 @@ Preserve an immutable upstream distribution and its license. Verify its integrit
 before extracting it into an isolated directory. Exercise real upstream machinery
 before claiming compatibility. The first integration boundary is Conductor cloud:
 separate worker filesystems, native identities, message readback, and a durable
-court record. Ports at that boundary must state their reason and retain regression
+royalty record. Ports at that boundary must state their reason and retain regression
 coverage. Upstream internal names need not be renamed for the royal interface.
 
 ## What stays unchanged
