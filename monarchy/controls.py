@@ -263,13 +263,23 @@ class Controls:
                         'has_more': bool(self.records.list_decisions(state='pending', limit=1, offset=len(pending)))}
             overrides = self.records.config_overrides()
             tasks = self.records.list_tasks()
+            line_limit = KEYS['voice.max_lines']['default']
+            held = False
+            if self.records.has_pins():
+                latest = self.records.latest_pin()
+                view = Preferences(self.records).show(latest['project'])
+                line_limit = view['config']['voice.max_lines']['value']
+                held = view['held']
             mode = ('stopped' if overrides.get('court.stopped') else 'paused' if overrides.get('court.paused')
                     else 'no pause or stop recorded')
-            return {'verb': verb, 'lines': ['Royalty controls: ' + mode + '.',
+            if held:
+                mode += '; configuration held'
+            lines = ['Royalty controls: ' + mode + '.',
                     'Owner away: ' + ('yes.' if overrides.get('court.away') else 'no.'),
                     'Pending decisions: ' + str(len(pending)) + (' or more.' if len(pending) == 100 else '.'),
                     'Recorded tasks: ' + str(len(tasks)) + (' or more.' if len(tasks) == 100 else '.'),
-                    'Controls record intent; native work remains separately governed.']}
+                    'Controls record intent; native work remains separately governed.']
+            return {'verb': verb, 'lines': lines[:line_limit]}
         command_id = _command_id(owner_message)
         with self.records._transaction():
             existing, state = self._existing(command_id, verb, request)
