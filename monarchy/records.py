@@ -156,7 +156,7 @@ class CourtRecords:
             self._connection.execute("PRAGMA trusted_schema = OFF")
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2):
+                if version not in (0, 1, 2, 3):
                     raise RecordError("unsupported court database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
@@ -223,7 +223,13 @@ class CourtRecords:
                     setting TEXT NOT NULL, value TEXT NOT NULL,
                     owner_message TEXT NOT NULL, created_at TEXT NOT NULL
                 )""")
-                self._connection.execute("PRAGMA user_version = 2")
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS prompt_observations (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL,
+                    prompt_id TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('open','closed','unknown')),
+                    observed_at TEXT NOT NULL
+                )""")
+                self._connection.execute("CREATE INDEX IF NOT EXISTS prompt_sessions ON prompt_observations(session_id,sequence)")
+                self._connection.execute("PRAGMA user_version = 3")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()
@@ -739,6 +745,8 @@ class CourtRecords:
             if state == "in_flight":
                 from .preferences import admission_check
                 admission_check(self, self.get_task(operation["task_id"]))
+                from .conversation import forward_admission_check
+                forward_admission_check(self, operation)
                 reference = _decision_reference(operation["request"])
                 if reference is not None:
                     decision = self.get_decision(reference[0])

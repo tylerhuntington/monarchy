@@ -88,6 +88,8 @@ class Court:
                                                meta['secretary_binding'], {task['owner']: member})
         envelope = result['envelope']
         report = envelope['report']
+        from .conversation import effective_config, lint_text
+        lint_text(report['summary'], effective_config(self.records, task['repository']), 'reports')
         kind = 'completed' if report['status'] == 'complete' else report['status']
         return self.records.record_event(envelope['report_id'], task_id, task['generation'],
                                          task['owner'], kind, report)
@@ -246,10 +248,14 @@ class Court:
         operation = self.records.get_operation(operation_id)
         task = self.records.get_task(operation['task_id'])
         request = operation['request']
-        if (request.get('generation') != task['generation']
-                or request['binding']['session_id'] != task['owner']):
-            raise StaleGeneration('delivery belongs to an earlier 00 Agent assignment')
-        if 'decision_id' in request:
+        if operation['state'] == 'prepared':
+            if request.get('route') == 'queen-forward':
+                from .conversation import validate_forward
+                validate_forward(self.records, operation)
+            elif (request.get('generation') != task['generation']
+                    or request['binding']['session_id'] != task['owner']):
+                raise StaleGeneration('delivery belongs to an earlier 00 Agent assignment')
+        if operation['state'] == 'prepared' and 'decision_id' in request:
             decision = self.records.get_decision(request['decision_id'])
             if decision['revision'] != request['decision_revision'] or decision['state'] != 'answered':
                 raise Conflict('delivery belongs to a superseded or unanswered decision')
