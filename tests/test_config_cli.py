@@ -1,4 +1,4 @@
-"""Preview and project CI validation never create a court database."""
+"""Preview and project CI validation never create a royalty database."""
 import json
 from pathlib import Path
 import subprocess

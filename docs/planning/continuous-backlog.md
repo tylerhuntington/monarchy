@@ -51,7 +51,7 @@ replace a writer. Keep selection bounded and read-only until dispatch is admitte
 
 ## Decisions follow grants
 
-Defaults choose how the court behaves. Grants choose whether authority-bearing
+Defaults choose how the royalty behave. Grants choose whether authority-bearing
 behavior may run. In particular, backlog activation, model profiles, delegation
 states and internal-PR approval require recorded owner answers.
 
@@ -126,7 +126,7 @@ finishing a watcher command is not continuing supervision.
   grants, missing visual evidence, reviewer findings, full capacity, pause/stop,
   restart and uncertain writes.
 
-Offline fixtures prove bounded code behavior. Native scratch-court evidence is
+Offline fixtures prove bounded code behavior. Native evidence from an isolated installation is
 separately required for prompt hold/release, idle pull, each sign-off disposition,
 profile-checked rotation and archive with salvage. No fixture or merged PR proves
 unattended operation by itself.
@@ -138,7 +138,7 @@ The never-delegable floor includes production approval or rollout, Terraform
 apply, IAM, secrets, spending, contacting or naming people and legal actions.
 Configuration can add restrictions; it cannot remove this floor.
 
-This design changes no existing court installation, starts no agents or hooks,
+This design changes no existing installation, starts no agents or hooks,
 activates no backlog grant and migrates no project. Parity and side-by-side
 qualification precede a separate migration decision. See the
 [runtime](../runtime.md) and [current limits](../limits.md) for implemented behavior.

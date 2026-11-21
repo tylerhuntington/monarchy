@@ -1,8 +1,8 @@
-# Meet the Court
+# Meet the royalty
 
-You follow one conversation with the Queen. The court coordinates the agents
-working on your request and brings back results, questions that need your
-judgment, and blockers it cannot resolve within your instructions.
+You follow one conversation with the Queen. The royalty coordinate the agents
+working on your request and bring back results, questions that need your
+judgment, and blockers they cannot resolve within your instructions.
 
 ## Your conversation with the Queen
 
@@ -12,7 +12,7 @@ the work through the Secretary.
 
 You shouldn't need to find the right 00 Agent, forward a review, or explain the
 same decision in several tabs. The Queen is responsible for carrying your
-direction into the court and bringing the result back. Other sessions remain
+direction into the royalty and bringing the result back. Other sessions remain
 available when you want to inspect the detail.
 
 ## What comes back to you
@@ -24,7 +24,7 @@ A choice comes back when it needs your judgment or authority. For example, a fix
 may require changing behavior outside the agreed scope, or work may need access
 you haven't granted. The Queen explains the situation, presents the tradeoff,
 recommends a path, and says what is waiting on your answer. She passes that answer
-back through the court; you don't have to repeat it to each 00 Agent.
+back through the royalty; you don't have to repeat it to each 00 Agent.
 
 An update should tell you what changed and what it means. A final result should
 say what was completed, what was checked, and what remains open. Evidence stays
@@ -52,11 +52,11 @@ of asking you to coordinate with the next agent.
 Suppose you ask the Queen to fix a broken CSV export and prepare a PR.
 
 1. You describe the problem and the result you want in the Queen's thread.
-2. Behind the scenes, the court assigns the fix, checks it, and arranges a fresh
+2. Behind the scenes, the royalty assign the fix, check it, and arrange a fresh
    review. 00 Agents resolve routine questions within the brief.
 3. If a decision exceeds that brief, the Queen brings it back with context and a
    recommendation. You answer in her thread.
-4. The court carries on within that answer's scope. The Queen returns the
+4. The royalty carry on within that answer's scope. The Queen returns the
    reviewed PR, verification results, and any remaining limits.
 
 Small changes can go through Build and Review; uncertain work starts with Plan.
@@ -65,7 +65,7 @@ rules still apply. Preparing a PR doesn't authorize deployment.
 
 ## Keep one point of contact through a handoff
 
-An agent session can run out of context or stop. The court's records preserve the
+An agent session can run out of context or stop. The royalty's records preserve the
 request, decisions, current owner, and next action so the successor can take over
 without asking you to reconstruct the work.
 
@@ -76,7 +76,7 @@ A replacement Queen verifies and accepts the handoff before continuing.
 The [runtime](runtime.md) keeps the assignments and receipts, handles reports,
 and delivers work only through explicit commands. Its inbox lets the Queen pick
 up decisions and checked results without a stream of routine messages. The
-[twelve skills](skills.md) guide the court through that work.
+[twelve skills](skills.md) guide the royalty through that work.
 
 Each runtime command exits after a bounded pass. The separate
 [observer](observer.md) reads session and PR changes. An active Secretary still

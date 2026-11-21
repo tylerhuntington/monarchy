@@ -267,7 +267,7 @@
   {
     "source": "config.project-scope",
     "class": "invariant",
-    "value": "Project input cannot set court-wide keys or affect other projects.",
+    "value": "Project input cannot set keys shared by the royalty or affect other projects.",
     "target": "pending:P1"
   },
   {
@@ -315,7 +315,7 @@
   {
     "source": "config.court-overrides",
     "class": "invariant",
-    "value": "Overrides belong to the court and survive leadership rotation.",
+    "value": "Overrides belong to the royalty and survive leadership rotation.",
     "target": "pending:P1"
   },
   {

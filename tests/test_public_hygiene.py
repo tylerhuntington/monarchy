@@ -41,7 +41,7 @@ def violations(text):
 
 def maintained_text(path):
     # Upstream source/licenses keep their legally required attribution. Private
-    # court state is gitignored and must never be added to the public repository.
+    # royalty state is gitignored and must never be added to the public repository.
     return (path.as_posix() != 'vendor/firstmate/LICENSE' and
             (path.suffix in {'.md', '.json', '.py', '.yaml', '.yml', '.sh', '.txt', '.toml'}
              or path.name in {'LICENSE', 'Makefile'}))

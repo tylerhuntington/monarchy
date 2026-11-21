@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Read-only Conductor/GitHub observations for a supervised Monarchy court."""
+"""Read-only Conductor/GitHub observations for a supervised Monarchy installation."""
 
 import argparse
 from contextlib import contextmanager
@@ -41,7 +41,7 @@ def load_court(path):
     if (not isinstance(court, dict) or set(court) != {"version", "tasks"}
             or type(court["version"]) is not int or court["version"] != 1
             or not isinstance(court["tasks"], list) or len(court["tasks"]) > 100):
-        raise Invalid("court requires version 1 and a tasks array of at most 100 entries")
+        raise Invalid("royalty configuration requires version 1 and a tasks array of at most 100 entries")
     ids, sessions = set(), set()
     for task in court["tasks"]:
         if not isinstance(task, dict) or set(task) != FIELDS:
@@ -50,7 +50,7 @@ def load_court(path):
             if not isinstance(task[field], str) or not ID.fullmatch(task[field]):
                 raise Invalid(f"task {field} must be an identifier of at most 128 characters")
         if task["id"] in ids or task["session_id"] in sessions:
-            raise Invalid("task IDs and session IDs must be unique within a court")
+            raise Invalid("task IDs and session IDs must be unique within a Monarchy installation")
         ids.add(task["id"])
         sessions.add(task["session_id"])
         if (not isinstance(task["repo"], str) or not REPO.fullmatch(task["repo"])
@@ -156,7 +156,7 @@ def load_state(path, court_path):
     if (not isinstance(state, dict) or type(state.get("version")) is not int or state["version"] != 1
             or state.get("court") != str(court_path.resolve())
             or not isinstance(state.get("tasks"), dict)):
-        raise Invalid("state is invalid or belongs to a different court; use a separate state file")
+        raise Invalid("state is invalid or belongs to a different Monarchy installation; use a separate state file")
     for task_id, row in state["tasks"].items():
         if (not isinstance(task_id, str) or not ID.fullmatch(task_id) or not isinstance(row, dict)
                 or set(row) != {"binding", "session", "pr", "errors"}
@@ -209,7 +209,7 @@ def report(reason, rows, changes=None, observed_at=None):
 def watch(court_path, state_path, interval, timeout):
     court_path, state_path = court_path.resolve(), state_path.resolve()
     if court_path.resolve() == state_path.resolve():
-        raise Invalid("court and state must be different files")
+        raise Invalid("configuration and state must be different files")
     deadline = time.monotonic() + timeout
     with state_lock(state_path):
         previous = load_state(state_path, court_path)

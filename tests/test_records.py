@@ -1,4 +1,4 @@
-"""Behavioral tests for private, durable court records."""
+"""Behavioral tests for private, durable royalty records."""
 
 from pathlib import Path
 from concurrent.futures import ThreadPoolExecutor
