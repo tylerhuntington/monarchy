@@ -121,6 +121,15 @@ class Preferences:
         bounded_orders(config)
         return config
 
+    def _effective_candidate(self, owner, project):
+        config = self._candidate(owner, project)
+        repository = config['project.repository']['value'] or ''
+        effective = resolve(owner=_source(owner, 'owner'),
+                            project=_source(project, 'project') if project else {},
+                            overrides=self.records.config_overrides(repository))
+        bounded_orders(effective)
+        return effective
+
     def _founding_specs(self, config):
         profiles = {role: config['profiles.' + role]['value'] for role in ('queen', 'secretary', 'worker')}
         zone = config['voice.zone']['value']
@@ -155,6 +164,7 @@ class Preferences:
 
     def founding(self, owner, project=None):
         config = self._candidate(owner, project)
+        self._effective_candidate(owner, project)
         try:
             self.records.get_task('court.config')
         except RecordError:
@@ -198,6 +208,7 @@ class Preferences:
                    'orders': {role: render(role, config)['sha256'] for role in ('queen', 'secretary', 'worker')},
                    'owner_message': owner_message}
         def approve():
+            self._effective_candidate(owner, project)
             self._approved(config)
             review = self._pin_review(owner, project, config)
             if review is not None:
@@ -223,6 +234,7 @@ class Preferences:
         config = resolve(owner=_source(payload['owner'], 'owner'),
                          project=_source(payload['project'], 'project') if payload['project'] else {},
                          overrides=overrides)
+        bounded_orders(config)
         return {'pin_id': pin['pin_id'], 'config': config, 'drift': drift, 'held': bool(drift),
                 'effective_digest': digest(config), 'sources': {'owner': payload['owner'], 'project': payload['project']},
                 'monarchy_revision': payload['monarchy_revision'], 'orders': payload['orders']}

@@ -254,3 +254,12 @@ class PreferenceTests(unittest.TestCase):
         data={'task_id':'large','repository':'example/project','owner':'worker',
               'metadata':{'brief':'x'*49152,'binding':{'session_id':'worker','repo':'example/project'}}}
         with self.assertRaises(ValueError):self.prefs.bind(data)
+
+    def test_pin_checks_existing_overrides_together_with_candidate(self):
+        self.prefs.override('voice.forbidden_characters',[chr(i) for i in range(0x500,0x540)],owner_message='restrict-characters')
+        owner={'voice.zone':'UTC','voice.forbidden_characters':[chr(i) for i in range(0x400,0x440)]}
+        (self.repo/'owner.json').write_text(json.dumps(owner))
+        self.git('commit','-am','More owner restrictions')
+        source=read_source(self.repo,self.git('rev-parse','HEAD'),'owner.json','owner')
+        with self.assertRaises(ValueError):self.prefs.founding(source,self.project)
+        self.assertFalse(self.records.has_pins())
