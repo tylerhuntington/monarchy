@@ -1,0 +1,13 @@
+{
+  "voice.zone": "UTC",
+  "voice.forbidden_characters": [],
+  "reports.max_chars": 2400,
+  "owner.slots": 4,
+  "owner.reserved_slots": 1,
+  "archive.protected_workspaces": ["fixture-protected"],
+  "orders.notes.queen": "This is a synthetic parity fixture, not a live owner profile.",
+  "_why": {
+    "voice.zone": "Use a neutral timezone for offline fixtures.",
+    "reports.max_chars": "The default ceiling still wins under the min rule."
+  }
+}

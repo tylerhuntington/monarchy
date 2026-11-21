@@ -368,39 +368,39 @@
     "source": "voice.plain-result-first",
     "class": "rule",
     "value": "Lead with the result in plain language; use tables for parallel workstreams.",
-    "target": "pending:P1"
+    "target": "rule:voice.plain-language"
   },
   {
     "source": "voice.owner-max-lines",
     "class": "default",
     "value": 5,
-    "target": "pending:P1"
+    "target": "key:voice.max_lines"
   },
   {
     "source": "voice.provenance-behind-links",
     "class": "rule",
     "value": "Keep build IDs, hashes and operational provenance in linked records rather than routine owner updates.",
-    "target": "pending:P1"
+    "target": "rule:voice.plain-language"
   },
   {
     "source": "voice.manual-steps",
     "class": "rule",
     "value": "Prefer automation; when owner work is necessary, give and verify one step at a time.",
-    "target": "pending:P1"
+    "target": "rule:voice.manual-steps"
   },
   {
     "source": "voice.forbidden-characters",
     "class": "default",
     "value": [
-      "U+2014"
+      "\u2014"
     ],
-    "target": "pending:P1"
+    "target": "key:voice.forbidden_characters"
   },
   {
     "source": "voice.timestamp-format",
     "class": "rule",
     "value": "Render human-facing timestamps in the confirmed owner zone as ISO 8601 with offset.",
-    "target": "pending:P1"
+    "target": "rule:voice.timestamp-and-characters"
   },
   {
     "source": "voice.owner-zone",
@@ -429,7 +429,7 @@
       "effort": "xhigh",
       "fast_mode": false
     },
-    "target": "pending:P1"
+    "target": "key:profiles.queen"
   },
   {
     "source": "profiles.secretary",
@@ -440,7 +440,7 @@
       "effort": "xhigh",
       "fast_mode": false
     },
-    "target": "pending:P1"
+    "target": "key:profiles.secretary"
   },
   {
     "source": "profiles.worker",
@@ -451,7 +451,7 @@
       "effort": "ultra",
       "fast_mode": true
     },
-    "target": "pending:P1"
+    "target": "key:profiles.worker"
   },
   {
     "source": "profiles.no-fallback",
@@ -503,25 +503,25 @@
     "source": "reports.max-lines",
     "class": "default",
     "value": 5,
-    "target": "pending:P1"
+    "target": "key:reports.max_lines"
   },
   {
     "source": "reports.max-characters",
     "class": "default",
     "value": 1200,
-    "target": "pending:P1"
+    "target": "key:reports.max_chars"
   },
   {
     "source": "forwards.max-lines",
     "class": "default",
     "value": 3,
-    "target": "pending:P1"
+    "target": "key:forwards.max_lines"
   },
   {
     "source": "forwards.max-characters",
     "class": "default",
     "value": 900,
-    "target": "pending:P1"
+    "target": "key:forwards.max_chars"
   },
   {
     "source": "forwards.operation-journal",
@@ -823,7 +823,7 @@
     "source": "cadence.identical-failures",
     "class": "default",
     "value": 2,
-    "target": "pending:P1"
+    "target": "key:failures.identical_limit"
   },
   {
     "source": "cadence.no-progress-attempts",
