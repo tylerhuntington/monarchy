@@ -38,8 +38,8 @@ class ControlTests(unittest.TestCase):
         self.records.close()
         self.tmp.cleanup()
 
-    def pin(self):
-        owner = source({'voice.zone': 'UTC'}, 'owner')
+    def pin(self, owner_values=None):
+        owner = source(dict({'voice.zone': 'UTC'}, **(owner_values or {})), 'owner')
         project = source({'project.repository': 'example/project'}, 'project')
         for box in self.prefs.founding(owner, project):
             self.answer(box)
@@ -56,6 +56,20 @@ class ControlTests(unittest.TestCase):
         before = self.records._connection.total_changes
         self.assertLessEqual(len(self.controls.command('bearings')['lines']), 5)
         self.assertEqual(self.controls.command('decisions')['decisions'], [])
+        self.assertEqual(self.records._connection.total_changes, before)
+
+    def test_bearings_uses_confirmed_line_cap_offline_even_during_drift(self):
+        self.pin({'voice.max_lines': 1})
+        self.records.close()
+        self.records = CourtRecords(self.path)
+        self.controls = Controls(self.records)
+        before = self.records._connection.total_changes
+        self.assertEqual(len(self.controls.command('bearings')['lines']), 1)
+        with patch('monarchy.preferences.defaults_digest', return_value='f' * 64):
+            lines = self.controls.command('bearings')['lines']
+            self.assertEqual(len(lines), 1)
+            self.assertIn('configuration held', lines[0])
+            self.assertNotIn('ready', lines[0])
         self.assertEqual(self.records._connection.total_changes, before)
 
     def test_restrictive_commands_persist_and_replay_exactly(self):
