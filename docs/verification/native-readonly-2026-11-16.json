@@ -19,7 +19,7 @@
   "profile_unobserved": [
     "agent"
   ],
-  "project_repository": "sustainability-software-lab/project-pisces-frontend",
+  "project_repository": "[private project redacted]",
   "worker_workspace_fingerprint": "23891165b9a71cd4074bcaa746c1b93c7778dfbb46546ceb4643c263143165dc",
   "worker_session_fingerprint": "b2e38522149ff20e24ef3b7d701a4515b80581f9d65155044d7071b5c83a9448",
   "separate_native_workspaces": true,
@@ -54,8 +54,9 @@
   "final_complete": true,
   "constraints": [
     "Direct Monarchy workspace creation was rejected because that repository is not registered on this cloud machine; no workspace was created for that request.",
-    "Pilot used a fresh allowed PISCES workspace and the exact Monarchy toolkit clone under .context.",
+    "Pilot used a fresh allowed private project workspace and the exact Monarchy toolkit clone under .context.",
     "No live owner decision, authority authentication, native session-create adapter, deliberate native process crash, app test, host-loss restore or broad model evaluation was qualified.",
     "No credentials, raw transcripts, account identities or host configuration are included in this public summary."
-  ]
+  ],
+  "redaction_note": "Project identity redacted from the published summary; historical qualification claims are unchanged."
 }

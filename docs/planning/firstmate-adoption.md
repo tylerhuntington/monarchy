@@ -54,3 +54,11 @@ Installing this release changes no running court. Revert an implementation PR to
 remove its code. Retain private state before changing versions; never delete
 unfinished operations to make a migration pass. Schema upgrades must be explicit
 and tested. If native qualification fails, keep that issue and this epic open.
+
+## Further design input
+
+[Continuous backlog building and owner judgment](continuous-backlog.md) records
+the next operating-model requirement. It builds on the bounded runtime without
+changing this milestone's qualification claims. The backlog loop, visual evidence
+pipeline, owner sign-off interface, and approval-bound merge coordination remain
+separate implementation work.

@@ -45,3 +45,14 @@ host settings during setup or tests.
 Record standing architecture or authority decisions in `docs/decisions/`.
 Document proposals as proposals, rather than attributing them to the user.
 Preserve PISCES capitalization when discussing the project's origins.
+
+## Continuous backlog design input
+
+Read `docs/planning/continuous-backlog.md` and decision 0006 when developing
+backlog supervision, review evidence, or owner sign-off. Preserve the distinction
+between source policy, proposed implementation requirements, and current runtime
+capabilities. Decision 0007 adopts opinionated defaults and private owner profiles.
+Defaults choose how; answered owner boxes grant whether authority-bearing behavior
+runs. The recommended eight-builder cap is not activation. Internal approval needs
+a current, applicable grant and verified checks. This input does not activate
+unattended operation or authorize builders to merge.

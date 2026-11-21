@@ -6,9 +6,10 @@ back to the Queen without you coordinating the 00 Agents.
 
 You need Python 3.9 or later on macOS or Linux, plus Bash and jq for the upstream
 compatibility test. Live work also needs the Conductor CLI with access to your
-cloud sessions. GitHub PR reads need an authenticated `gh` CLI. Choose an agent
-and model you already have access
-to; Monarchy supplies no subscription or model default.
+cloud sessions. GitHub PR reads need an authenticated `gh` CLI. Use agent and model access you already have. Decision 0007 adopts recommended
+model profiles with one founding confirmation; implementation is tracked in
+the configuration phase. Until that phase lands, provide the complete profile
+explicitly. Installing Monarchy supplies no subscription or runtime grant.
 
 ## 1. Check the package
 
