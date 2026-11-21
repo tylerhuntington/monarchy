@@ -186,19 +186,22 @@ class Court:
         task = self.records.get_task(task_id)
         meta = task['metadata']
         binding = meta['binding']
+        from .preferences import admission_check
+        admission_check(self.records, task)
         if binding['session_id'] != task['owner'] or binding['repo'] != task['repository']:
             raise Conflict('00 Agent binding differs from the current assignment')
         if not meta.get('authority_ref'):
             raise RecordError('dispatch requires the original user authority reference')
+        brief = meta['standing_orders'] + '\n\n' + meta['brief'] if meta.get('standing_orders') else meta['brief']
         key = task_id + ':' + str(task['generation'])
         ids = {'operation_id': identity('dispatch-operation', key),
                'message_id': identity('dispatch-message', key)}
         if new_session:
             operation = prepare_session(task_id, binding['workspace_id'], binding['repo'],
-                                        binding['profile'], agent_name(meta.get('agent_name', task_id)), meta['brief'],
+                                        binding['profile'], agent_name(meta.get('agent_name', task_id)), brief,
                                         session_id=binding['session_id'], **ids)
         else:
-            operation = prepare_message(task_id, binding, meta['brief'], **ids)
+            operation = prepare_message(task_id, binding, brief, **ids)
         operation['request']['generation'] = task['generation']
         if new_session:
             # A stored launch is immutable. A branding change must not replace

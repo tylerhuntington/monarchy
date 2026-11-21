@@ -6,6 +6,9 @@ from pathlib import Path
 from .records import CourtRecords, RecordError
 from .conductor import ConductorTransport, TransportError
 from .supervision import Court
+from .config import ConfigError, load, resolve
+from .preferences import Preferences, read_source, _git
+from .orders import render, OrdersError
 
 
 def document(path):
@@ -20,8 +23,27 @@ def document(path):
 
 def parser():
     p = argparse.ArgumentParser(description=__doc__)
-    p.add_argument('--state', required=True, help='private SQLite path outside the source checkout')
+    p.add_argument('--state', help='private SQLite path outside the source checkout')
     commands = p.add_subparsers(dest='command', required=True)
+    config = commands.add_parser('config', help='validate, preview or pin court preferences')
+    actions = config.add_subparsers(dest='config_action', required=True)
+    check = actions.add_parser('check')
+    check.add_argument('file'); check.add_argument('--layer', choices=('project', 'owner'), required=True)
+    show = actions.add_parser('show')
+    show.add_argument('key', nargs='?'); show.add_argument('--owner'); show.add_argument('--project')
+    for action in ('founding', 'pin'):
+        sub = actions.add_parser(action)
+        sub.add_argument('--owner-repo', required=True); sub.add_argument('--owner-commit', required=True)
+        sub.add_argument('--owner-file', default='owner.json')
+        sub.add_argument('--project-repo'); sub.add_argument('--project-commit')
+        sub.add_argument('--project-file', default='.agents/monarchy.json')
+        if action == 'pin': sub.add_argument('--owner-message', required=True)
+    override = actions.add_parser('override')
+    override.add_argument('key'); override.add_argument('file')
+    override.add_argument('--owner-message', required=True); override.add_argument('--project', default='')
+    orders = commands.add_parser('orders', help='render hash-pinned role standing orders')
+    orders.add_argument('role', choices=('queen', 'secretary', 'worker'))
+    orders.add_argument('--owner'); orders.add_argument('--project')
     register = commands.add_parser('register', help='record a task and its explicit native binding')
     register.add_argument('file')
     for name in ('tick', 'status'):
@@ -48,15 +70,74 @@ def parser():
     return p
 
 
+def preview(args):
+    owner = load(Path(args.owner).read_bytes(), 'owner') if args.owner else None
+    project = load(Path(args.project).read_bytes(), 'project') if args.project else None
+    return {'config': resolve(owner=owner, project=project), 'preview': True, 'held': False}
+
+
+def sources(args):
+    owner = read_source(args.owner_repo, args.owner_commit, args.owner_file, 'owner')
+    if bool(args.project_repo) != bool(args.project_commit):
+        raise ConfigError('project requires repository and commit together')
+    project = read_source(args.project_repo, args.project_commit, args.project_file, 'project') if args.project_repo else None
+    return owner, project
+
+
+def output(value):
+    print(json.dumps(value, sort_keys=True, indent=2))
+
+
 def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
     try:
+        if args.command == 'config' and args.config_action == 'check':
+            load(Path(args.file).read_bytes(), args.layer)
+            output({'valid': True, 'layer': args.layer})
+            return
+        is_view = args.command == 'orders' or (args.command == 'config' and args.config_action == 'show')
+        if is_view:
+            if args.owner or not args.state:
+                view = preview(args)
+            else:
+                with CourtRecords(args.state) as records:
+                    view = Preferences(records).show(args.project or '')
+                # Show effective values and provenance, not unrelated raw private files.
+                view.pop('sources', None)
+            if args.command == 'orders':
+                if view['held']: raise ConfigError('configuration drift holds standing orders')
+                output(render(args.role, view['config']))
+            else:
+                if args.key:
+                    if args.key not in view['config']: raise ConfigError('unknown configuration key')
+                    view['config'] = {args.key: view['config'][args.key]}
+                output(view)
+            return
+        if not args.state:
+            p.error('--state is required for court record commands')
         with CourtRecords(args.state) as records:
             court = Court(records, ConductorTransport())
             command = args.command
-            if command == 'register':
-                data = document(args.file)
+            if command == 'config':
+                prefs = Preferences(records)
+                if args.config_action == 'override':
+                    values = load(Path(args.file).read_bytes(), 'overrides')
+                    if set(values) != {args.key}: raise ConfigError('override file requires exactly one setting')
+                    prefs.override(args.key, values[args.key], owner_message=args.owner_message, project=args.project)
+                    result = {'recorded': True}
+                else:
+                    owner, project = sources(args)
+                    if args.config_action == 'founding': result = {'decisions': prefs.founding(owner, project)}
+                    else:
+                        root = Path(__file__).resolve().parents[1]
+                        if _git(root, 'status', '--porcelain'):
+                            raise ConfigError('commit toolkit changes before pinning its revision')
+                        revision = _git(root, 'rev-parse', 'HEAD').decode().strip()
+                        result = prefs.pin(owner, project, owner_message=args.owner_message, monarchy_revision=revision)
+                        result = {'pin_id': result['pin_id'], 'project': result['project']}
+            elif command == 'register':
+                data = Preferences(records).bind(document(args.file))
                 result = records.create_task(data['task_id'], data['repository'], data['owner'],
                                              metadata=data['metadata'])
             elif command == 'tick': result = court.tick(args.task)
@@ -73,7 +154,9 @@ def main(argv=None):
                 result = court.prepare_dispatch(args.task, new_session=args.new_session)
             elif command == 'deliver': result = court.deliver(args.operation_id)
             elif command == 'verify': result = court.verify(args.task, **document(args.file))
-            print(json.dumps(result, sort_keys=True, indent=2))
+            output(result)
+    except (ConfigError, OrdersError) as exc:
+        p.exit(1, str(exc) + '\n')
     except (RecordError, TransportError, OSError, ValueError, KeyError, TypeError):
         # Input may contain private messages; never echo it in diagnostics.
         p.exit(1, 'Court command failed. Check the input, current assignment and private journal.\n')

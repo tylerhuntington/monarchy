@@ -13,6 +13,9 @@ Run commands from this checkout with Python 3.9 or newer. Keep the database and
 input files in a private directory outside the repository. The examples use
 `/path/to/private/court.db`; replace it with your own path.
 
+First [confirm and pin the project configuration](configuration.md#found-and-pin).
+New registration uses its approved role profile and standing orders.
+
 Write a task JSON file with these fields:
 
 ```json
@@ -28,8 +31,7 @@ Write a task JSON file with these fields:
     "binding": {
       "workspace_id": "11111111-1111-4111-8111-111111111111",
       "session_id": "22222222-2222-4222-8222-222222222222",
-      "repo": "example/project",
-      "profile": {"agent": "codex", "model": "explicitly-selected-model", "effort": "high", "fast_mode": false}
+      "repo": "example/project"
     },
     "secretary_binding": {
       "workspace_id": "33333333-3333-4333-8333-333333333333",
@@ -46,7 +48,9 @@ For a new task session, `metadata.agent_name` supplies its readable descriptor.
 prefix. Omit it to derive the name from the task ID. Existing session names and
 native identities are preserved when sending another assignment.
 
-Use actual native IDs and the profile the user selected. The 00 agent binding must
+Use actual native IDs. Registration fills the worker profile from its founding
+confirmation; a supplied profile must match it exactly. The Secretary destination
+profile must describe its actual confirmed session. The 00 agent binding must
 match the task owner and repository. The Secretary may live in another workspace
 or repository. Give the 00 agent the court ID, task ID, assignment generation and
 Secretary destination, plus the project's own rules and selected

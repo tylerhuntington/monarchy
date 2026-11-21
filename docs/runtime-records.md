@@ -2,7 +2,9 @@
 
 `monarchy.records.CourtRecords` keeps task assignments, incoming reports,
 decisions, results, and external-operation receipts in one private SQLite
-database. It uses only Python's standard library. Opening the database starts
+database. Version 2 adds immutable configuration pins and durable restrictive
+overrides, preserving version 1 tasks and unresolved operations in one transaction.
+See [configuration custody](configuration.md). It uses only Python's standard library. Opening the database starts
 no agents, installs no hooks, and sends no messages.
 
 ```python

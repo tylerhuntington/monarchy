@@ -156,7 +156,7 @@ class CourtRecords:
             self._connection.execute("PRAGMA trusted_schema = OFF")
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1):
+                if version not in (0, 1, 2):
                     raise RecordError("unsupported court database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
@@ -214,7 +214,16 @@ class CourtRecords:
                     state TEXT NOT NULL CHECK(state IN ('prepared', 'in_flight', 'unknown', 'confirmed', 'failed')),
                     result TEXT, created_at TEXT NOT NULL, updated_at TEXT NOT NULL
                 )""")
-                self._connection.execute("PRAGMA user_version = 1")
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS pins (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, pin_id TEXT NOT NULL UNIQUE,
+                    project TEXT NOT NULL, payload TEXT NOT NULL, created_at TEXT NOT NULL
+                )""")
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS overrides (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, project TEXT NOT NULL,
+                    setting TEXT NOT NULL, value TEXT NOT NULL,
+                    owner_message TEXT NOT NULL, created_at TEXT NOT NULL
+                )""")
+                self._connection.execute("PRAGMA user_version = 2")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()
@@ -223,6 +232,68 @@ class CourtRecords:
             if hasattr(self, "_connection"):
                 self._connection.close()
             raise
+
+    def put_pin(self, pin_id, project, payload, *, approve):
+        """Atomically recheck answered decisions and retain immutable source bytes."""
+        _identifier(pin_id, 'pin_id')
+        encoded = _payload(payload)
+        with self._transaction():
+            approve()
+            old = self._connection.execute('SELECT * FROM pins WHERE pin_id=?', (pin_id,)).fetchone()
+            if old:
+                if old['project'] != project or old['payload'] != encoded:
+                    raise Conflict('pin identity already has different content')
+                return self._pin(old)
+            self._connection.execute('INSERT INTO pins(pin_id,project,payload,created_at) VALUES(?,?,?,?)',
+                                     (pin_id, project, encoded, _now()))
+            return self.get_pin(pin_id)
+
+    @staticmethod
+    def _pin(row):
+        if row is None:
+            raise RecordError('no approved configuration pin')
+        result = dict(row)
+        result['payload'] = json.loads(result['payload'])
+        return result
+
+    def get_pin(self, pin_id):
+        return self._pin(self._connection.execute('SELECT * FROM pins WHERE pin_id=?', (pin_id,)).fetchone())
+
+    def latest_pin(self, project=None):
+        query = 'SELECT * FROM pins'
+        args = ()
+        if project is not None:
+            query += ' WHERE project=?'
+            args = (project,)
+        return self._pin(self._connection.execute(query + ' ORDER BY sequence DESC LIMIT 1', args).fetchone())
+
+    def has_pins(self):
+        return self._connection.execute('SELECT 1 FROM pins LIMIT 1').fetchone() is not None
+
+    def put_override(self, setting, value, project, owner_message):
+        _identifier(owner_message, 'owner_message')
+        encoded = _payload({'value': value})
+        with self._transaction():
+            self._connection.execute(
+                'INSERT INTO overrides(project,setting,value,owner_message,created_at) VALUES(?,?,?,?,?)',
+                (project, setting, encoded, owner_message, _now()))
+
+    def config_overrides(self, project=''):
+        rows = self._connection.execute(
+            'SELECT * FROM overrides WHERE project IN (?,?) ORDER BY sequence', ('', project)).fetchall()
+        from .config import KEYS
+        result = {}
+        for row in rows:
+            key = row['setting']
+            value = json.loads(row['value'])['value']
+            if key not in KEYS:
+                raise RecordError('stored override has unknown setting')
+            if key in result and KEYS[key]['merge'] == 'min':
+                value = min(result[key], value)
+            elif key in result and KEYS[key]['merge'] == 'union':
+                value = sorted(set(result[key]) | set(value))
+            result[key] = value
+        return result
 
     def __enter__(self):
         return self
@@ -665,6 +736,8 @@ class CourtRecords:
                 if generation != self.get_task(operation["task_id"])["generation"]:
                     raise StaleGeneration("operation belongs to a stale assignment generation")
             if state == "in_flight":
+                from .preferences import admission_check
+                admission_check(self, self.get_task(operation["task_id"]))
                 reference = _decision_reference(operation["request"])
                 if reference is not None:
                     decision = self.get_decision(reference[0])
