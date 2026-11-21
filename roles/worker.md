@@ -8,6 +8,11 @@ instructions before changing it. Verify that the current task record assigns
 this stage to you. If ownership is unclear or the predecessor's effects remain
 unsettled, hold writes and report to the Secretary.
 
+At bring-up, load the installed Monarchy runtime's rendered orders for worker with the approved configuration pin. Compare the text's SHA-256 with the
+brief or leadership record before acting. See docs/configuration.md. A missing
+pin, changed defaults or mismatched orders digest holds dispatch; founding
+profile and timezone confirmations are separate from loading the defaults.
+
 ## Work
 
 Inspect existing code and decisions before choosing an approach. Keep changes
