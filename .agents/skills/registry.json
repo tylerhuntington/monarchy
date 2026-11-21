@@ -1,15 +1,15 @@
 {
   "schema_version": 1,
-  "package_version": "0.1.0",
+  "package_version": "0.1.1",
   "skills": [
     {
       "name": "monarchy-intake",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-intake/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-intake/SKILL.md",
-          "sha256": "d7f5b410daadc66593787a371fd0c199d75ae39a7579198a90a47e409ad9d025"
+          "sha256": "47812e50aa58f9be1a267fd1967b1ff808eb5d6aef57997eddd29a6259043b24"
         },
         {
           "path": ".agents/skills/monarchy-intake/agents/openai.yaml",
@@ -27,12 +27,12 @@
     },
     {
       "name": "monarchy-adopt",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-adopt/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-adopt/SKILL.md",
-          "sha256": "74f4ceb6d098ad810d0718b54f38a8b9ddd14103375750e65f7d4530b34c3b64"
+          "sha256": "e1352f1dbf501ab17c484f6ad051d926c6f312c441843f9e7e681e0915aac50b"
         },
         {
           "path": ".agents/skills/monarchy-adopt/agents/openai.yaml",
@@ -50,12 +50,12 @@
     },
     {
       "name": "monarchy-compose",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-compose/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-compose/SKILL.md",
-          "sha256": "5e9b9c6d93e36b42b2efde6c3140f41da922a62baec5a4cc48aa1637eb73b1c1"
+          "sha256": "dbb7977e5b8d957ae054e08f231428e6f7d9d26f2a20a4ba6556433307f6ad52"
         },
         {
           "path": ".agents/skills/monarchy-compose/agents/openai.yaml",
@@ -73,12 +73,12 @@
     },
     {
       "name": "monarchy-dispatch",
-      "version": "1.0.1",
+      "version": "1.0.2",
       "entrypoint": ".agents/skills/monarchy-dispatch/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-dispatch/SKILL.md",
-          "sha256": "fb59cabb5c8fcb5e6acb15abb17a9fe02581dc66d571a3576963acff8cb4980c"
+          "sha256": "35282f7b6fce2bf4e9db6df47f6124a6a05fc30a4b4ff224591d090e433d58fd"
         },
         {
           "path": ".agents/skills/monarchy-dispatch/agents/openai.yaml",
@@ -96,12 +96,12 @@
     },
     {
       "name": "monarchy-supervise",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-supervise/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-supervise/SKILL.md",
-          "sha256": "d464ec70518fa326e260ae1102a06a3f0bfa0c4966d30f4957b4fe31e9e5dbf4"
+          "sha256": "7e06aff5622b9f25bfc5f2e210eb03492019a187ab43bad9d19357bc4549b7a2"
         },
         {
           "path": ".agents/skills/monarchy-supervise/agents/openai.yaml",
@@ -119,12 +119,12 @@
     },
     {
       "name": "monarchy-decide",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-decide/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-decide/SKILL.md",
-          "sha256": "229ae70d2f5c96b9af2372bdf9d4a7760e6cb11930cd967f89a46f383f75deee"
+          "sha256": "0b27b6a799eed364374e871976d09e650b847fcc26f461daccbc0a7dd0d424f3"
         },
         {
           "path": ".agents/skills/monarchy-decide/agents/openai.yaml",
@@ -142,12 +142,12 @@
     },
     {
       "name": "monarchy-steer",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-steer/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-steer/SKILL.md",
-          "sha256": "fe1ea41358b932849d53bb8fd32208053d9b29097896219a090b6105a4cfb814"
+          "sha256": "6060181465c046be6304303a7d5622eaf93ef180abe071e22c947cf9f4e50d7a"
         },
         {
           "path": ".agents/skills/monarchy-steer/agents/openai.yaml",
@@ -165,12 +165,12 @@
     },
     {
       "name": "monarchy-checkpoint",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-checkpoint/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-checkpoint/SKILL.md",
-          "sha256": "179f094fd001b1155a527e0760b0e4c068ef42bdb9d35b270b4c9e728935e096"
+          "sha256": "63a6b31ceb8b7bd97f554f152b66e568089d96087dc66cbb0f089e213565060f"
         },
         {
           "path": ".agents/skills/monarchy-checkpoint/agents/openai.yaml",
@@ -188,12 +188,12 @@
     },
     {
       "name": "monarchy-handoff",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-handoff/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-handoff/SKILL.md",
-          "sha256": "c3024f18c2dea388bde0f7ac5097fab68ef15b3ef7646582a45dd9fd29d08e22"
+          "sha256": "97150cb5d205b059c6246a7eb35d996c998e44e3d95e98e08ca91da77991d217"
         },
         {
           "path": ".agents/skills/monarchy-handoff/agents/openai.yaml",
@@ -211,12 +211,12 @@
     },
     {
       "name": "monarchy-recover",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-recover/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-recover/SKILL.md",
-          "sha256": "db66879f23a2c6fa648724e6aa95dfb70d6e1396e597a72dfb2d843acd5a7672"
+          "sha256": "01ed7046c839049311537f4baf8f699bcc0d5fe41f68ea316d2f2b8d0778a628"
         },
         {
           "path": ".agents/skills/monarchy-recover/agents/openai.yaml",
@@ -234,12 +234,12 @@
     },
     {
       "name": "monarchy-verify",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-verify/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-verify/SKILL.md",
-          "sha256": "4a0656a91d821b01b781d69271e706a0baaee7543c1101ec61b39e4823e9c497"
+          "sha256": "f0b4724d015bd918cfd9121735aebb59d357ab839fd31acf88d89d7a02dedded"
         },
         {
           "path": ".agents/skills/monarchy-verify/agents/openai.yaml",
@@ -257,12 +257,12 @@
     },
     {
       "name": "monarchy-complete",
-      "version": "1.0.0",
+      "version": "1.0.1",
       "entrypoint": ".agents/skills/monarchy-complete/SKILL.md",
       "files": [
         {
           "path": ".agents/skills/monarchy-complete/SKILL.md",
-          "sha256": "ee48d7c5bc1673ec1f935f03a3558e15ee52b1feaabfd83104d214a5ccd9cc87"
+          "sha256": "13a8feea15ee10bcf58d32b53845eb028560a05cba5d9ebdfba101b44cf787db"
         },
         {
           "path": ".agents/skills/monarchy-complete/agents/openai.yaml",
