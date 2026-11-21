@@ -1,7 +1,7 @@
 # What This Version Does
 
-Monarchy supplies role instructions, twelve core skills, and an opt-in court
-runtime. You still need an active Secretary to coordinate the work. Installing
+Monarchy supplies role instructions, twelve core skills, and an opt-in runtime for
+the royalty. You still need an active Secretary to coordinate the work. Installing
 the package starts no agents, hooks, or background service.
 
 | Included | Boundary |
@@ -10,11 +10,11 @@ the package starts no agents, hooks, or background service.
 | Twelve core skills and checked 00 agent packages | Package tests check integrity and contracts; model-driven skill scenarios remain unrun. |
 | Private SQLite records for tasks, reports, decisions, and outcomes | Survive local process restarts; host-loss recovery needs a separate backup or durable volume. |
 | Assignment generations and operation admission | Fence stale writes through the record API; do not stop native sessions or subprocesses. |
-| Conductor message delivery and native report ingestion | Require explicit commands and verified court membership; do not authenticate new owner authority. |
+| Conductor message delivery and native report ingestion | Require explicit commands and verified membership of the royalty; do not authenticate new owner authority. |
 | Queen and Secretary pull inboxes | Presenting a result does not acknowledge it. No automatic prompt-safe forwarding. |
 | Source-bound completion review | Checks the submitted evidence contract; the reviewer must perform the actual checks. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |
-| Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the Monarchy court. |
+| Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the royalty. |
 
 The [runtime](runtime.md) processes one bounded command at a time. Preparing a
 dispatch saves an intent; `deliver` performs or reconciles the native action.
@@ -35,10 +35,10 @@ cross-workspace reports and a verified read-only result. It does not qualify
 unattended operation or native owner authentication. These remain separate gates
 in [the adoption plan](planning/firstmate-adoption.md).
 
-The source court has additional reporting, forwarding, hook, and delivery
+The source royalty have additional reporting, forwarding, hook, and delivery
 integrations. Decision 0007 adopts their behavior as a staged parity target, with
 opinionated defaults and private owner/project facts. The configuration layer now provides strict validation, owner confirmations,
-immutable pins and rendered orders. It does not migrate the source court. Existing authority
+immutable pins and rendered orders. It does not migrate the source royalty. Existing authority
 grants, credentials, staging limits and production permissions never transfer
 through defaults.
 

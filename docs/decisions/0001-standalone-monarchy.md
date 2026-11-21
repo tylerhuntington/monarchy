@@ -47,4 +47,4 @@ authority is granted here. Project review and delivery rules remain project-owne
 Monarchy can evolve independently of PISCES. A new session has an explicit
 succession protocol and a place to recover its obligations. Mechanical ownership
 enforcement, authenticated approval, automatic wakeups, and migration of existing
-courts require separate implementation and verification.
+Monarchy installations require separate implementation and verification.

@@ -2,7 +2,7 @@
   <img src="assets/keep-calm-and-dm-the-queen-square.png" width="400" alt="A red poster with a white crown and the words Keep Calm and DM the Queen.">
 </p>
 
-Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy streamlines agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. Her royal court delegates tasks to 00 agents and supervises them through planning, implementation and review. Results and decisions that need your input come back to the
+Managing dozens of coding agents can be a royal pain. But it doesn't have to be. Monarchy streamlines agent orchestration by letting you command agent empires through a single chat. Just talk to the Queen, and let Monarchy handle the rest. The royalty delegate tasks to 00 agents and supervise them through planning, implementation and review. Results and decisions that need your input come back to the
 throne for sign-off. Simplicity and hierarchy keep order in the kingdom. Once the Crown is at your service, you'll never look back.
 
 ## Talk to the Queen
@@ -12,8 +12,8 @@ Secretary keeps the 00 agents moving and takes care of the follow-ups.
 
 - **Ask in one chat.** New requests and follow-ups all go to the Queen. She
   keeps track of what you've asked for as the work moves between agents.
-- **Leave the legwork to the royal court.** The Secretary assigns tasks, follows up
-  when 00 agents get stuck, and gets their work reviewed. The court passes along
+- **Leave the legwork to the royalty.** The Secretary assigns tasks, follows up
+  when 00 agents get stuck, and gets their work reviewed. The royalty pass along
   the context each agent needs.
 - **Make the decisions that matter.** When a decision needs your judgment or
   permission, the Queen explains the tradeoffs and recommends a way forward.
@@ -24,7 +24,7 @@ Secretary keeps the 00 agents moving and takes care of the follow-ups.
 You can still peek into the other sessions whenever you like.
 [How the conversation works →](docs/how-it-works.md)
 
-## Meet the Royal Court
+## Meet the royalty
 
 | Role | What they do |
 | --- | --- |
@@ -36,7 +36,7 @@ Each 00 Agent gets a name that says what it does: `00-tests`, `00-docs`,
 or `00-build-fix`. The two zeros are a small nod to the
 [disputed royal-spy legend behind 007](https://www.rcp.ac.uk/news-and-media/news-and-opinion/code-making-and-code-breaking-john-dee-and-the-art-of-cryptography/).
 
-Even a monarchy has ground rules. The court handles routine questions within
+Even a monarchy has ground rules. The royalty handle routine questions within
 your instructions. Changes to scope, spending, or actions you've reserved for
 yourself come back to you. Each project keeps its own review and delivery rules.
 
@@ -46,7 +46,7 @@ On PISCES, every new agent meant another conversation to keep up with. A fix
 needed review, a reviewer needed context, and someone was waiting on an answer
 buried in another tab. We kept carrying messages between agents.
 
-So we gave that job to the court. Tell the Queen what you want, follow one
+So we gave that job to the royalty. Tell the Queen what you want, follow one
 conversation, and let the agents sort out who does what.
 [First Mate](https://github.com/kunchenguid/firstmate) helped shape the idea:
 one agent to talk to, a team working behind the scenes, and important decisions
@@ -62,13 +62,13 @@ Its successor checks the handoff before taking over. Your decisions carry
 over too.
 [How succession works →](docs/succession.md)
 
-## Start a court
+## Set up the royalty
 
 Follow [the quickstart](docs/quickstart.md) to set up your Queen and give her
-one task. Let the court do the coordination, then check the result in your
+one task. Let the royalty do the coordination, then check the result in your
 conversation with her.
 
-The court has [twelve core skills](docs/skills.md) for taking requests, dividing
+The royalty have [twelve core skills](docs/skills.md) for taking requests, dividing
 work, handling decisions, and passing the crown. 00 Agents carry the skills and
 project instructions they need in a checked package.
 
@@ -76,7 +76,7 @@ The [opt-in runtime](docs/runtime.md) keeps assignments, reports, decisions, and
 delivery receipts in one private journal. The Secretary takes a bounded pass
 through incoming reports; the Queen reads the decisions and checked results in
 her inbox. Explicit delivery commands send work to Conductor sessions. Nothing
-starts when you clone the repo, and no background service keeps the court running.
+starts when you clone the repo, and no background service keeps the royalty running.
 
 A separate [watcher](docs/observer.md) reads session and pull request status.
 The bundled First Mate source is a pinned reference and compatibility fixture;
@@ -87,5 +87,5 @@ You can use Monarchy's instructions with any project. **Conductor cloud is the
 first runtime integration**; other runtimes need their own integration and
 verification. Cloning this repository doesn't migrate the existing PISCES setup.
 
-[Get started](docs/quickstart.md) · [Meet the Royal Court](docs/how-it-works.md) ·
+[Get started](docs/quickstart.md) · [Meet the royalty](docs/how-it-works.md) ·
 [Pass the crown](docs/succession.md) · [Read the limits](docs/limits.md)

@@ -13,7 +13,7 @@ description: Adopt an existing project or workstream into Monarchy after an expl
 
 ## Workflow
 
-1. Verify that the handover names this project or workstream. Nearby workspaces are not part of the Queen's court by proximity.
+1. Verify that the handover names this project or workstream. Nearby workspaces are not part of the royalty by proximity.
 2. Inventory existing leads, live sessions, worktrees, validation runs, open changes and decisions. Read native sources and label unreachable evidence as unknown.
 3. Compare the inventory with the canonical task index. Preserve existing task identities and single-writer claims; map older records to the same task instead of forking them.
 4. Agree the custody boundary with the existing lead through the authorized coordination route. Until an explicit handoff completes, the current writer remains the writer.

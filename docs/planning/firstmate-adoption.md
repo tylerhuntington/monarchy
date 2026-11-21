@@ -1,7 +1,7 @@
 # First Mate Adoption
 
 Implementation epic: [#1](https://github.com/tylerhuntington/monarchy/issues/1).
-Milestone: [Qualified Court](https://github.com/tylerhuntington/monarchy/milestone/1).
+Milestone: [Qualification milestone](https://github.com/tylerhuntington/monarchy/milestone/1).
 
 The acceptance loop is request → assignment → worker event → Secretary triage →
 Queen decision → scoped answer → verified result. Queen, Secretary, and Workers
@@ -50,7 +50,7 @@ skills first, selecting project-native methods for the actual coding work.
 
 ## Recovery and rollback
 
-Installing this release changes no running court. Revert an implementation PR to
+Installing this release changes no running installation. Revert an implementation PR to
 remove its code. Retain private state before changing versions; never delete
 unfinished operations to make a migration pass. Schema upgrades must be explicit
 and tested. If native qualification fails, keep that issue and this epic open.
