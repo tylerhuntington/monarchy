@@ -1,7 +1,7 @@
 """Strict preference data, not authority grants or external side effects.
 
-Defaults recommend behavior. The court separately confirms profiles/timezone and
-records authority. A validated file is not permission to dispatch or delegate.
+Defaults recommend behavior. The royalty confirm profiles/timezone and
+record authority. A validated file is not permission to dispatch or delegate.
 """
 import copy
 import hashlib

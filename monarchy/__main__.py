@@ -1,4 +1,4 @@
-"""Explicit court commands. Reading help never opens state or starts agents."""
+"""Explicit commands for the royalty. Reading help never opens state or starts agents."""
 import argparse
 import json
 from pathlib import Path
@@ -25,7 +25,7 @@ def parser():
     p = argparse.ArgumentParser(description=__doc__)
     p.add_argument('--state', help='private SQLite path outside the source checkout')
     commands = p.add_subparsers(dest='command', required=True)
-    config = commands.add_parser('config', help='validate, preview or pin court preferences')
+    config = commands.add_parser('config', help='validate, preview or pin royalty preferences')
     actions = config.add_subparsers(dest='config_action', required=True)
     check = actions.add_parser('check')
     check.add_argument('file'); check.add_argument('--layer', choices=('project', 'owner'), required=True)
@@ -115,7 +115,7 @@ def main(argv=None):
                 output(view)
             return
         if not args.state:
-            p.error('--state is required for court record commands')
+            p.error('--state is required for royalty record commands')
         with CourtRecords(args.state) as records:
             court = Court(records, ConductorTransport())
             command = args.command
@@ -159,7 +159,7 @@ def main(argv=None):
         p.exit(1, str(exc) + '\n')
     except (RecordError, TransportError, OSError, ValueError, KeyError, TypeError):
         # Input may contain private messages; never echo it in diagnostics.
-        p.exit(1, 'Court command failed. Check the input, current assignment and private journal.\n')
+        p.exit(1, 'Royalty command failed. Check the input, current assignment and private journal.\n')
 
 
 if __name__ == '__main__':
