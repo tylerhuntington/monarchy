@@ -1,4 +1,4 @@
-# Run the court
+# Run the royalty
 
 The Secretary has a desk now: one private SQLite journal for assignments,
 reports, decisions and delivery receipts. Each command does one job and exits.
@@ -52,7 +52,7 @@ Use actual native IDs. Registration fills the worker profile from its founding
 confirmation; a supplied profile must match it exactly. The Secretary destination
 profile must describe its actual confirmed session. The 00 agent binding must
 match the task owner and repository. The Secretary may live in another workspace
-or repository. Give the 00 agent the court ID, task ID, assignment generation and
+or repository. Give the 00 agent the `court_id` value, task ID, assignment generation and
 Secretary destination, plus the project's own rules and selected
 [skill package](skills.md). A reference to permission does not broaden it.
 
@@ -154,5 +154,5 @@ operation using its original native identity; it does not send it again.
 An unknown result stays unknown until readback proves otherwise. Do not delete
 it, replace its ID, or start a second 00 agent to make the warning go away. Session
 idle status alone proves neither completion nor that subprocesses have stopped.
-Keep one Secretary writer for a court. These cooperative records do not isolate
+Keep one Secretary writer for a Monarchy installation. These cooperative records do not isolate
 hostile processes running as the same operating-system user.

@@ -7,7 +7,7 @@ Pacific date: 2026-11-15
 
 The initial Monarchy documentation led with continuity of context and ownership.
 That explained handoffs but obscured the experience the framework is meant to
-provide: one conversation at the top of the court.
+provide: one conversation with the Queen.
 
 ## Owner decision
 

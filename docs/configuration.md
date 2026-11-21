@@ -1,6 +1,6 @@
-# Configure a Court
+# Configure the royalty
 
-Configuration chooses how the court behaves. It does not grant backlog work,
+Configuration chooses how the royalty behave. It does not grant backlog work,
 delegation, spending, production actions or contact with people. This phase adds
 strict configuration, confirmed profiles, durable pins and standing orders.
 Later phases implement conversation, delegation and continuous supervision.
@@ -11,12 +11,12 @@ Later phases implement conversation, delegation and continuous supervision.
 | --- | --- | --- |
 | defaults | `monarchy/config.py` `KEYS` | Reusable recommendations and bounds |
 | project | `.agents/monarchy.json` in a project repository | That project's facts and allowed restrictive limits |
-| owner | `owner.json` in a private repository | Court preferences and private owner facts |
-| overrides | Private court records | Allowlisted live restrictions |
+| owner | `owner.json` in a private repository | Preferences for the royalty and private owner facts |
+| overrides | Private royalty records | Allowlisted live restrictions |
 
 Each key has explicit allowed homes. Replace values have a single writable home;
 min takes the tightest limit; union adds safety restrictions. A project cannot
-set court voice, profiles or another project's values. The invariant floor cannot
+set the royalty's voice, profiles or another project's values. The invariant floor cannot
 be removed. Keys are flat dotted names. Profile values are explicitly typed
 objects; other arbitrary nested configuration is rejected. Files may contain a
 `_why` map keyed by settings present in that file.
@@ -29,7 +29,7 @@ fail with safe diagnostics. Python 3.9's standard library is sufficient.
 A minimal owner file:
 
 ```json
-{"voice.zone":"UTC","_why":{"voice.zone":"Confirmed court timezone"}}
+{"voice.zone":"UTC","_why":{"voice.zone":"Confirmed timezone for the royalty"}}
 ```
 
 A minimal project file:
@@ -108,10 +108,10 @@ them without source checkouts or network access. `config show` reports drift;
 new dispatch/admission holds until the configuration is approved again. Changed
 project facts, removed checks, changed defaults/orders or owner sources require
 an exact configuration-change decision returned by `config founding` before
-re-pinning. A new project cannot silently restore an older court owner profile.
+re-pinning. A new project cannot silently restore an older owner profile for the royalty.
 Profile and timezone answers are reused when their exact values are unchanged.
 
-Changing the court owner source can put other project pins on hold. Re-pin them
+Changing the owner source for the royalty can put other project pins on hold. Re-pin them
 against the newly approved owner source. Re-bind existing tasks with an explicit
 assignment-generation change using the records API after reconciling uncertain
 operations; never edit a retained brief or delete pending operations to pass a gate.
@@ -127,8 +127,8 @@ orders integrity and pause/stop inside the journal transaction. Readback of an
 already uncertain operation remains available while new actions are held.
 
 Existing v1 databases migrate transactionally to v2 with `pins` and `overrides`.
-Legacy explicitly bound courts remain recoverable before configuration adoption.
-After a court adopts pins, legacy tasks need an approved configuration binding
+Legacy explicitly bound Monarchy installations remain recoverable before configuration adoption.
+After a Monarchy installation adopts pins, legacy tasks need an approved configuration binding
 before another external action. Pending decisions and uncertain operations survive
 the migration.
 
@@ -151,10 +151,10 @@ python3 -m monarchy --state /path/to/private/court.db config override court.paus
   /path/to/private/pause.json --owner-message TRUSTED_OWNER_MESSAGE
 ```
 
-Overrides belong to the court, not the current session. Pause and stop also hold
+Overrides belong to the royalty, not the current session. Pause and stop also hold
 legacy task admissions before the first configuration pin. An accumulated override
 that violates bounds or cannot render is rejected in the same transaction. Min and union restrictions
-accumulate without losing earlier restrictions, including court/project limits.
+accumulate without losing earlier restrictions, including limits shared by the royalty and project-specific limits.
 `--project example/project` accepts only project-scoped keys. Arbitrary model
 changes, grants, false control values and removal of protected entries fail.
 Confirmed resume and other widening owner verbs are a later conversation phase;

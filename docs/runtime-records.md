@@ -1,4 +1,4 @@
-# The court keeps its receipts
+# The royalty keep their receipts
 
 `monarchy.records.CourtRecords` keeps task assignments, incoming reports,
 decisions, results, and external-operation receipts in one private SQLite

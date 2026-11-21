@@ -1,6 +1,6 @@
 """Integrated offline qualification: real records and adapter, simulated native CLI.
 
-The native fixture persists separately from the court so a process can die after
+The native fixture persists separately from the runtime so a process can die after
 remote acceptance and before a local receipt. It never launches a real agent.
 """
 

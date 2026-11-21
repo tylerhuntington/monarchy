@@ -32,7 +32,7 @@
       "files": [
         {
           "path": ".agents/skills/monarchy-adopt/SKILL.md",
-          "sha256": "e1352f1dbf501ab17c484f6ad051d926c6f312c441843f9e7e681e0915aac50b"
+          "sha256": "e723eed8d69cbddd25ceda20baa178bf10511e25eea888663fab1ee18882652d"
         },
         {
           "path": ".agents/skills/monarchy-adopt/agents/openai.yaml",

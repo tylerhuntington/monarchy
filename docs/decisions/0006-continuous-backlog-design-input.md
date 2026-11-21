@@ -49,7 +49,7 @@ whether authority-bearing behavior runs.
 
 Each project retains its policy, custody, delivery gates and authorization.
 Installation grants no merge or production authority and starts no background
-service, agent or hook. Existing court installations are not migrated. The
+service, agent or hook. Existing installations are not migrated. The
 never-delegable floor and trusted owner route must be enforced in code as the
 implementation phases land.
 
