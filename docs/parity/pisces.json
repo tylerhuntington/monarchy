@@ -1,0 +1,1097 @@
+[
+  {
+    "source": "preference.box-framing",
+    "class": "rule",
+    "value": "Present decisions in a box after plain-language framing; explain each option and why the first is recommended.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.reopen-cancelled-box",
+    "class": "rule",
+    "value": "Reopen a cancelled unanswered decision box on the next turn; do not replace it with a prose decision list.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.single-owner-conversation",
+    "class": "rule",
+    "value": "Keep owner interaction with the Queen and routine coordination with the Secretary; hold forwards during an owner box.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.idle-ladder",
+    "class": "rule",
+    "value": {
+      "sweep_minutes": 30,
+      "steps": [
+        "concrete-action-and-deadline",
+        "sharper-steer",
+        "blocker"
+      ],
+      "idle_requires_named_watched_event": true
+    },
+    "target": "pending:P4"
+  },
+  {
+    "source": "preference.project-design-direction",
+    "class": "project",
+    "value": "Private project design priorities and shared research findings.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.thought-routing",
+    "class": "rule",
+    "value": "Record thoughts, obtain independent routing judgments, reconcile disagreement and confirm new scope; acknowledge each thought.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.one-question-per-box",
+    "class": "rule",
+    "value": {
+      "questions_per_box": 1,
+      "blank_answer_is_consent": false
+    },
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.requested-decision-prompt",
+    "class": "rule",
+    "value": "When asked about an open decision, present its box immediately with brief framing.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.no-decisions-hidden-in-prose",
+    "class": "rule",
+    "value": "Mentioned open or parked decisions receive a box in the same turn; report no pending decisions only when none remain.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.routine-cleanup",
+    "class": "rule",
+    "value": "Include authorized closeout and archival candidates in routine cleanup sweeps.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.archive-sweep-and-protection",
+    "class": "rule",
+    "value": "Every sweep evaluates authorized archive candidates, retention, idle state, readback and visibility hold; protected workspaces are excluded.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.bounded-bundled-approval",
+    "class": "rule",
+    "value": "Prefer one bounded approval covering the remaining steps of a work item without widening scope or bypassing reserved gates.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "preference.archive-salvage",
+    "class": "rule",
+    "value": "Archive only after valuable work and findings are retained on GitHub, commits are pushed, unmerged work has a PR and each PR links an issue.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.tracking-lifecycle",
+    "class": "rule",
+    "value": "Track the outcome before work, record status and findings during work, and salvage before detaching a workspace.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.untracked-work-sweep",
+    "class": "rule",
+    "value": "Every routine sweep flags active workspaces that lack issue tracking.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.precise-project-names",
+    "class": "project",
+    "value": "publish.brand_terms and project-specific prohibited ambiguous surface names.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.precise-project-names-repeat",
+    "class": "project",
+    "value": "publish.brand_terms and project-specific prohibited ambiguous surface names.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.superseded-session-tidy",
+    "class": "rule",
+    "value": "Retire superseded sessions after handoff and preserve the builder and latest reviewer until workspace archive.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.session-tidy-guards",
+    "class": "rule",
+    "value": "Archive finished stage sessions only after durable results and post-handoff messages are handled; never archive working or protected sessions.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.parked-pr-disposition",
+    "class": "rule",
+    "value": "Preserve wanted unfinished work with a parked PR linked from its issue; use wontfix with a reason for abandoned work.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "preference.production-handoff-template",
+    "class": "project",
+    "value": "Project-owned human approval command template and console link; agents do not execute approval.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.production-handoff-route",
+    "class": "project",
+    "value": "Human approval instructions use the owner-authenticated environment and a safe file-writing route.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.one-current-role-holder",
+    "class": "invariant",
+    "value": "One current holder per leadership role; rename, transfer custody, handle late messages and retire the prior session with readback.",
+    "target": "pending:P8"
+  },
+  {
+    "source": "preference.local-bridge-restriction",
+    "class": "owner",
+    "value": "owner.local_bridge_policy",
+    "target": "pending:P10"
+  },
+  {
+    "source": "preference.visible-evidence-coverage",
+    "class": "rule",
+    "value": "Show captioned inline evidence for every changed surface, including error, blocked, help and narrow-layout states, with recordings alongside.",
+    "target": "pending:P6"
+  },
+  {
+    "source": "preference.visible-evidence-real-route",
+    "class": "rule",
+    "value": "Capture full running application routes in context; show the gallery before the owner decision box.",
+    "target": "pending:P6"
+  },
+  {
+    "source": "preference.priority-idle-pull",
+    "class": "rule",
+    "value": {
+      "idle_minutes": 20,
+      "requires_no_watched_event": true,
+      "selection": "highest-priority tracked work in configured dependency order"
+    },
+    "target": "pending:P5"
+  },
+  {
+    "source": "preference.ready-for-signoff",
+    "class": "rule",
+    "value": "Keep reviewed green candidates in priority order with plain-language summaries; visible changes need a real-route gallery and video before owner sign-off.",
+    "target": "pending:P6"
+  },
+  {
+    "source": "preference.internal-pr-approval",
+    "class": "grant",
+    "value": "Recommend delegated internal-PR approval only for current-head verified outcomes with no unresolved findings and all project required checks green.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "preference.digest-builder-census",
+    "class": "rule",
+    "value": "Every digest lists working or idle state for each authorized builder slot.",
+    "target": "pending:P4"
+  },
+  {
+    "source": "preference.owner-priority-followups",
+    "class": "rule",
+    "value": "Track urgent requests, user bug reports and access outcomes with deadlines; preserve them through rotation/digests and escalate missed proof deadlines.",
+    "target": "pending:P7"
+  },
+  {
+    "source": "preference.record-before-relay",
+    "class": "invariant",
+    "value": "Persist an approval with its actual authority and source before relaying it.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "design.staged-adoption",
+    "class": "rule",
+    "value": "Reach parity, qualify side by side, then seek a separate migration decision.",
+    "target": "pending:P0"
+  },
+  {
+    "source": "design.private-owner-profile",
+    "class": "owner",
+    "value": "owner.profile_source",
+    "target": "pending:P10"
+  },
+  {
+    "source": "design.opinionated-defaults",
+    "class": "rule",
+    "value": "Publish reusable preferences as defaults after removing private identifiers.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "design.layers",
+    "class": "default",
+    "value": [
+      "defaults",
+      "project",
+      "owner",
+      "overrides"
+    ],
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.one-home",
+    "class": "invariant",
+    "value": "Each key declares its allowed home; project and owner values do not compete by precedence.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.merge-rules",
+    "class": "invariant",
+    "value": {
+      "replace": "single home",
+      "min": "tightest limit",
+      "union": "add restrictions only"
+    },
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.strict-json",
+    "class": "invariant",
+    "value": {
+      "flat_dotted_keys": true,
+      "optional_why": true,
+      "reject_duplicates": true,
+      "reject_nonfinite": true,
+      "reject_unknown": true,
+      "numeric_hard_bounds": true
+    },
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.project-scope",
+    "class": "invariant",
+    "value": "Project input cannot set court-wide keys or affect other projects.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.grants-separate",
+    "class": "invariant",
+    "value": "Defaults recommend how; recorded owner answers authorize whether.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.override-allowlist",
+    "class": "invariant",
+    "value": "Only explicitly allowlisted keys accept live overrides.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.safe-errors",
+    "class": "invariant",
+    "value": "ConfigError identifies known setting keys without echoing private values.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.pin-bytes",
+    "class": "invariant",
+    "value": "Retain exact owner/project bytes, full source commits, SHA-256 and owner approval reference.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.pin-effective",
+    "class": "invariant",
+    "value": "Retain Monarchy revision and effective-config SHA-256 for offline succession.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.object-id-reads",
+    "class": "invariant",
+    "value": "Read pinned sources by immutable object ID, never a moving branch.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.default-drift-hold",
+    "class": "invariant",
+    "value": "Changed defaults hold until explicitly re-pinned.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.court-overrides",
+    "class": "invariant",
+    "value": "Overrides belong to the court and survive leadership rotation.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.promote-standing-override",
+    "class": "rule",
+    "value": "Offer a standing override for promotion into its durable owner home.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "config.succession-pins",
+    "class": "invariant",
+    "value": "Leadership records and rotation briefs carry configuration pins.",
+    "target": "pending:P8"
+  },
+  {
+    "source": "orders.role-templates",
+    "class": "rule",
+    "value": [
+      "queen",
+      "secretary",
+      "worker"
+    ],
+    "target": "pending:P1"
+  },
+  {
+    "source": "orders.rule-markers",
+    "class": "invariant",
+    "value": "Every rendered rule has a stable marker and output hash pinned in the brief.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "orders.omissions",
+    "class": "owner",
+    "value": "orders.omit",
+    "target": "pending:P10"
+  },
+  {
+    "source": "orders.role-notes",
+    "class": "owner",
+    "value": "orders.role_notes",
+    "target": "pending:P10"
+  },
+  {
+    "source": "orders.project-data",
+    "class": "invariant",
+    "value": "Render project strings as labeled capped data, never instructions.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.plain-result-first",
+    "class": "rule",
+    "value": "Lead with the result in plain language; use tables for parallel workstreams.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.owner-max-lines",
+    "class": "default",
+    "value": 5,
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.provenance-behind-links",
+    "class": "rule",
+    "value": "Keep build IDs, hashes and operational provenance in linked records rather than routine owner updates.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.manual-steps",
+    "class": "rule",
+    "value": "Prefer automation; when owner work is necessary, give and verify one step at a time.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.forbidden-characters",
+    "class": "default",
+    "value": [
+      "U+2014"
+    ],
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.timestamp-format",
+    "class": "rule",
+    "value": "Render human-facing timestamps in the confirmed owner zone as ISO 8601 with offset.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "voice.owner-zone",
+    "class": "owner",
+    "value": "voice.zone",
+    "target": "pending:P10"
+  },
+  {
+    "source": "founding.timezone-confirmation",
+    "class": "grant",
+    "value": "Confirm timezone once at founding in its own owner box.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "founding.profile-confirmation",
+    "class": "grant",
+    "value": "Show role profiles together once at founding; successors retain the answer.",
+    "target": "pending:P1"
+  },
+  {
+    "source": "profiles.queen",
+    "class": "default",
+    "value": {
+      "agent": "claude",
+      "model": "opus-5-5-1m",
+      "effort": "xhigh",
+      "fast_mode": false
+    },
+    "target": "pending:P1"
+  },
+  {
+    "source": "profiles.secretary",
+    "class": "default",
+    "value": {
+      "agent": "claude",
+      "model": "opus-5-5-1m",
+      "effort": "xhigh",
+      "fast_mode": false
+    },
+    "target": "pending:P1"
+  },
+  {
+    "source": "profiles.worker",
+    "class": "default",
+    "value": {
+      "agent": "codex",
+      "model": "gpt-6-astra",
+      "effort": "ultra",
+      "fast_mode": true
+    },
+    "target": "pending:P1"
+  },
+  {
+    "source": "profiles.no-fallback",
+    "class": "invariant",
+    "value": {
+      "automatic_model_substitution": false,
+      "metered_fallback": false,
+      "unavailable": "hold"
+    },
+    "target": "pending:P1"
+  },
+  {
+    "source": "profiles.create-readback",
+    "class": "invariant",
+    "value": "Create without a Fast Mode flag when false, then read back the profile and hold on drift.",
+    "target": "pending:P8"
+  },
+  {
+    "source": "profiles.unobserved",
+    "class": "invariant",
+    "value": "Missing profile fields remain unobserved, never a successful match.",
+    "target": "pending:P8"
+  },
+  {
+    "source": "owner.slots",
+    "class": "owner",
+    "value": "owner.capacity.slots",
+    "target": "pending:P10"
+  },
+  {
+    "source": "owner.reserved-slots",
+    "class": "owner",
+    "value": "owner.capacity.reserved_slots",
+    "target": "pending:P10"
+  },
+  {
+    "source": "owner.account-facts",
+    "class": "owner",
+    "value": "owner.account_facts",
+    "target": "pending:P10"
+  },
+  {
+    "source": "owner.protected-workspaces",
+    "class": "owner",
+    "value": "archive.protected_workspaces",
+    "target": "pending:P10"
+  },
+  {
+    "source": "reports.max-lines",
+    "class": "default",
+    "value": 5,
+    "target": "pending:P1"
+  },
+  {
+    "source": "reports.max-characters",
+    "class": "default",
+    "value": 1200,
+    "target": "pending:P1"
+  },
+  {
+    "source": "forwards.max-lines",
+    "class": "default",
+    "value": 3,
+    "target": "pending:P1"
+  },
+  {
+    "source": "forwards.max-characters",
+    "class": "default",
+    "value": 900,
+    "target": "pending:P1"
+  },
+  {
+    "source": "forwards.operation-journal",
+    "class": "invariant",
+    "value": "Persist forward intent and reconcile uncertain delivery without blind resend.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "forwards.secretary-header",
+    "class": "invariant",
+    "value": "[secretary]",
+    "target": "pending:P2"
+  },
+  {
+    "source": "forwards.character-lint",
+    "class": "invariant",
+    "value": "Apply the configured additive forbidden-character list before forwarding.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "prompts.abandoned-minutes",
+    "class": "default",
+    "value": 60,
+    "target": "pending:P2"
+  },
+  {
+    "source": "prompts.known-open-only",
+    "class": "invariant",
+    "value": "Apply abandoned-prompt timeout only to known-open state; unknown state holds.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "prompts.opt-in-hooks",
+    "class": "rule",
+    "value": "Print an optional prompt hook/settings snippet; never install it silently.",
+    "target": "pending:P2"
+  },
+  {
+    "source": "boxes.option-bounds",
+    "class": "default",
+    "value": {
+      "minimum": 2,
+      "maximum": 4,
+      "recommended_first": true
+    },
+    "target": "pending:P2"
+  },
+  {
+    "source": "owner.verbs",
+    "class": "default",
+    "value": [
+      "bearings",
+      "decisions",
+      "away",
+      "pause",
+      "stop",
+      "resume",
+      "model",
+      "handoff"
+    ],
+    "target": "pending:P2"
+  },
+  {
+    "source": "owner.verb-classification",
+    "class": "invariant",
+    "value": {
+      "restrictive": [
+        "bearings",
+        "decisions",
+        "away",
+        "pause",
+        "stop"
+      ],
+      "confirmation_required": [
+        "resume",
+        "model",
+        "handoff"
+      ]
+    },
+    "target": "pending:P2"
+  },
+  {
+    "source": "owner.bearings-lines",
+    "class": "default",
+    "value": 5,
+    "target": "pending:P2"
+  },
+  {
+    "source": "authority.trusted-owner-route",
+    "class": "invariant",
+    "value": "Neither message headers nor unmarked native messages prove authority; new authority needs the trusted owner route.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "authority.one-writer",
+    "class": "invariant",
+    "value": "One current writer per branch with explicit custody and uncertain-write reconciliation.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "authority.never-delegable-floor",
+    "class": "invariant",
+    "value": [
+      "production-approval-or-rollout",
+      "terraform-apply",
+      "iam",
+      "secrets",
+      "spending",
+      "contacting-or-naming-people",
+      "legal"
+    ],
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.states",
+    "class": "grant",
+    "value": [
+      "ask",
+      "delegated",
+      "ask-again-later"
+    ],
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.revocation",
+    "class": "rule",
+    "value": "Accept one-line revocation and enforce it at admission.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.followup-box",
+    "class": "rule",
+    "value": "Follow a reserved category answer with its delegation follow-up box.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.answer-provenance",
+    "class": "invariant",
+    "value": "Record answered_by as owner or the exact grant identity.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.required-checks",
+    "class": "project",
+    "value": "project.required_checks",
+    "target": "pending:P10"
+  },
+  {
+    "source": "delegation.category-additions",
+    "class": "project",
+    "value": "project.delegation_categories",
+    "target": "pending:P10"
+  },
+  {
+    "source": "delegation.internal-approval-category",
+    "class": "default",
+    "value": "internal-pr-approval",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.precedent-check",
+    "class": "invariant",
+    "value": "A delegated decision needs a clear permitted precedent match, no new risk and no unresolved flag; otherwise ask.",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.adr-record-of-owner-decision",
+    "class": "default",
+    "value": "adr-record-of-owner-decision",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.ci-rerun-at-approved-head",
+    "class": "default",
+    "value": "ci-rerun-at-approved-head",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.resubmission-fixing-send-back-points",
+    "class": "default",
+    "value": "resubmission-fixing-send-back-points",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.staging-only-one-time-recovery-retry",
+    "class": "default",
+    "value": "staging-only-one-time-recovery-retry",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.ui-signoff-small-copy-or-layout-fix",
+    "class": "default",
+    "value": "ui-signoff-small-copy-or-layout-fix",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.plan-or-date-acceptance",
+    "class": "default",
+    "value": "plan-or-date-acceptance",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.rebase-only-reapproval-identical-patch",
+    "class": "default",
+    "value": "rebase-only-reapproval-identical-patch",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.evidence-storage-move-verified",
+    "class": "default",
+    "value": "evidence-storage-move-verified",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.ui-signoff-new-feature",
+    "class": "default",
+    "value": "ui-signoff-new-feature",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.research-closure",
+    "class": "default",
+    "value": "research-closure",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.additive-database-change",
+    "class": "default",
+    "value": "additive-database-change",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.delivery-or-watcher-control-change",
+    "class": "default",
+    "value": "delivery-or-watcher-control-change",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.backlog-cleanup-with-notifications",
+    "class": "default",
+    "value": "backlog-cleanup-with-notifications",
+    "target": "pending:P3"
+  },
+  {
+    "source": "delegation.taxonomy.new-standing-rule-or-policy",
+    "class": "default",
+    "value": "new-standing-rule-or-policy",
+    "target": "pending:P3"
+  },
+  {
+    "source": "cadence.sweep-minutes",
+    "class": "default",
+    "value": 30,
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.report-overdue-minutes",
+    "class": "default",
+    "value": 20,
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.status-minutes",
+    "class": "default",
+    "value": 30,
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.status-stale-minutes",
+    "class": "default",
+    "value": 60,
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.digest-time",
+    "class": "default",
+    "value": "06:57",
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.daytime-reminder-minutes",
+    "class": "default",
+    "value": 120,
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.check-records",
+    "class": "invariant",
+    "value": "Persist due checks and perform bounded due/wait passes.",
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.opt-in-rearm",
+    "class": "rule",
+    "value": "Offer supported opt-in Stop hook re-arm; never install or activate silently.",
+    "target": "pending:P4"
+  },
+  {
+    "source": "cadence.identical-failures",
+    "class": "default",
+    "value": 2,
+    "target": "pending:P1"
+  },
+  {
+    "source": "cadence.no-progress-attempts",
+    "class": "default",
+    "value": 2,
+    "target": "pending:P4"
+  },
+  {
+    "source": "backlog.activation",
+    "class": "grant",
+    "value": "Per-project owner activation is required before continuous backlog dispatch.",
+    "target": "pending:P5"
+  },
+  {
+    "source": "backlog.builder-cap",
+    "class": "default",
+    "value": 8,
+    "target": "pending:P5"
+  },
+  {
+    "source": "backlog.idle-minutes",
+    "class": "default",
+    "value": 20,
+    "target": "pending:P5"
+  },
+  {
+    "source": "backlog.review-hours",
+    "class": "default",
+    "value": 48,
+    "target": "pending:P5"
+  },
+  {
+    "source": "backlog.selection-order",
+    "class": "default",
+    "value": [
+      "open-prs",
+      "wanted-parked-prs",
+      "priority-epics",
+      "user-reported-bugs",
+      "other-bugs",
+      "remaining-priority-smallest-first"
+    ],
+    "target": "pending:P5"
+  },
+  {
+    "source": "backlog.selection-readonly",
+    "class": "invariant",
+    "value": "Read GitHub candidates without mutating records until authorized dispatch.",
+    "target": "pending:P5"
+  },
+  {
+    "source": "backlog.metrics",
+    "class": "default",
+    "value": [
+      "merged-prs-per-day",
+      "ci-cost",
+      "review-latency",
+      "signoff-queue-size"
+    ],
+    "target": "pending:P5"
+  },
+  {
+    "source": "signoff.candidate-binding",
+    "class": "invariant",
+    "value": "Bind decisions to the full current head and evidence digest; drift invalidates readiness.",
+    "target": "pending:P6"
+  },
+  {
+    "source": "signoff.queue-order",
+    "class": "rule",
+    "value": "Present candidates by priority, one box per PR.",
+    "target": "pending:P6"
+  },
+  {
+    "source": "signoff.dispositions",
+    "class": "default",
+    "value": [
+      "approve",
+      "reject-parked",
+      "reject-wontfix",
+      "send-back"
+    ],
+    "target": "pending:P6"
+  },
+  {
+    "source": "signoff.visible-evidence",
+    "class": "rule",
+    "value": "Real-route gallery, walkthrough video and plain-language result shown inline before the decision box.",
+    "target": "pending:P6"
+  },
+  {
+    "source": "priority.check-minutes",
+    "class": "default",
+    "value": 15,
+    "target": "pending:P7"
+  },
+  {
+    "source": "priority.incident-minutes",
+    "class": "default",
+    "value": 30,
+    "target": "pending:P7"
+  },
+  {
+    "source": "priority.proof-minutes",
+    "class": "default",
+    "value": 60,
+    "target": "pending:P7"
+  },
+  {
+    "source": "priority.feed-mode",
+    "class": "invariant",
+    "value": "forward-only",
+    "target": "pending:P7"
+  },
+  {
+    "source": "priority.milestone-names",
+    "class": "project",
+    "value": "project.priority_milestones",
+    "target": "pending:P10"
+  },
+  {
+    "source": "priority.feed-location",
+    "class": "project",
+    "value": "project.priority_feed",
+    "target": "pending:P10"
+  },
+  {
+    "source": "rotation.local-time",
+    "class": "default",
+    "value": "04:00",
+    "target": "pending:P8"
+  },
+  {
+    "source": "rotation.long-conversation",
+    "class": "rule",
+    "value": "Rotate after a long conversation with retained obligations and current pins.",
+    "target": "pending:P8"
+  },
+  {
+    "source": "rotation.owner-name-template",
+    "class": "default",
+    "value": "Queen · YYYY-MM-DD",
+    "target": "pending:P8"
+  },
+  {
+    "source": "rotation.retired-name-template",
+    "class": "default",
+    "value": "retired (old Queen <date>)",
+    "target": "pending:P8"
+  },
+  {
+    "source": "rotation.sidebar-labels",
+    "class": "default",
+    "value": "Semantic labels for Queen, Needs You and Ready to Archive.",
+    "target": "pending:P8"
+  },
+  {
+    "source": "archive.visibility-hold-hours",
+    "class": "default",
+    "value": 24,
+    "target": "pending:P9"
+  },
+  {
+    "source": "archive.protected-union",
+    "class": "invariant",
+    "value": "Protected lists may only add workspace exclusions.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "archive.operation-journal",
+    "class": "invariant",
+    "value": "Archive is a journaled operation with salvage prerequisites and native readback.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "archive.idle-and-custody",
+    "class": "invariant",
+    "value": "Require completed task/PR disposition, all sessions idle, no background processes or unresolved custody, and retained durable records.",
+    "target": "pending:P9"
+  },
+  {
+    "source": "project.repository",
+    "class": "project",
+    "value": "project.repository",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.required-checks",
+    "class": "project",
+    "value": "project.required_checks",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.merge-labels",
+    "class": "project",
+    "value": "project.merge_labels",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.brand-terms",
+    "class": "project",
+    "value": "publish.brand_terms",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.priority-surfaces",
+    "class": "project",
+    "value": "project.priority_surfaces",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.evidence-capture",
+    "class": "project",
+    "value": "project.evidence_capture_command",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.ledger-location",
+    "class": "project",
+    "value": "project.ledger_location",
+    "target": "pending:P10"
+  },
+  {
+    "source": "project.production-template",
+    "class": "project",
+    "value": "project.production_approval_template",
+    "target": "pending:P10"
+  },
+  {
+    "source": "legacy.workspace-naming",
+    "class": "rule",
+    "value": "Legacy issue-number workspace naming.",
+    "target": "dropped:replaced-by-purpose-based-double-zero-names"
+  },
+  {
+    "source": "legacy.stage-naming",
+    "class": "rule",
+    "value": "Legacy numbered stage-tab naming.",
+    "target": "dropped:replaced-by-purpose-based-double-zero-names"
+  },
+  {
+    "source": "legacy.forward-header",
+    "class": "rule",
+    "value": "Legacy coordinating-role forward header.",
+    "target": "dropped:replaced-by-secretary-header"
+  },
+  {
+    "source": "legacy.delegate-helper",
+    "class": "rule",
+    "value": "Project-specific delegate helper.",
+    "target": "dropped:explicitly-outside-toolkit-scope"
+  },
+  {
+    "source": "qualification.no-pending",
+    "class": "invariant",
+    "value": "Zero pending parity rows must be proven before parity is declared.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "qualification.preference-drift",
+    "class": "invariant",
+    "value": "Compare a fresh authorized preference read with the last mapped entry; a historical snapshot does not prove zero live drift.",
+    "target": "pending:P10"
+  },
+  {
+    "source": "qualification.side-by-side-plan",
+    "class": "rule",
+    "value": "Prepare qualification for a later migration decision without migrating the existing installation.",
+    "target": "pending:P10"
+  }
+]

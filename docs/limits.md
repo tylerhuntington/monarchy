@@ -35,10 +35,12 @@ cross-workspace reports and a verified read-only result. It does not qualify
 unattended operation or native owner authentication. These remain separate gates
 in [the adoption plan](planning/firstmate-adoption.md).
 
-The PISCES implementation has additional reporting, forwarding, hook, and delivery
-integrations. Those remain in PISCES. This release neither replaces them nor carries
-over their authority grants, credentials, model choices, staging limits, or
-production permissions.
+The source court has additional reporting, forwarding, hook, and delivery
+integrations. Decision 0007 adopts their behavior as a staged parity target, with
+opinionated defaults and private owner/project facts. This release does not
+implement that configuration layer or migrate the source court. Existing authority
+grants, credentials, staging limits and production permissions never transfer
+through defaults.
 
 Keep the runtime database outside the source checkout and retain it with a
 SQLite-consistent backup procedure. Private handoffs and the observer's
@@ -48,3 +50,8 @@ place for private task state.
 No production release, infrastructure change, model subscription, or personal
 outreach is authorized by installing Monarchy. Those permissions belong to the
 owner and each project.
+
+The [continuous backlog model](planning/continuous-backlog.md) is a design input.
+This release does not implement its 24/7 scheduler, gallery/video pipeline, native
+owner sign-off boxes, or approval-bound merge coordination. Project adoption and
+native qualification must precede unattended use.
