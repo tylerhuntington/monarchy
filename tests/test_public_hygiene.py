@@ -27,14 +27,14 @@ def violations(text):
         if match.group() == 'git' + '@github.com' and text[match.end():].startswith(':'):
             continue  # SSH URL syntax, not a personal email address.
         errors.add('email address')
-    tokens = re.findall(r'[\w@.+/-]+', text.casefold())
+    tokens = [token.strip('.') for token in re.findall(r'[\w@.+/-]+', text.casefold())]
     for index in range(len(tokens)):
         for length in range(1, 5):
             phrase = ' '.join(tokens[index:index + length])
             if hashlib.sha256(phrase.encode()).hexdigest() in PRIVATE_DIGESTS:
                 errors.add('private identifier')
         for part in tokens[index].split('/'):
-            if hashlib.sha256(part.encode()).hexdigest() in PRIVATE_DIGESTS:
+            if hashlib.sha256(part.strip('.').encode()).hexdigest() in PRIVATE_DIGESTS:
                 errors.add('private identifier')
     return errors
 
@@ -86,5 +86,7 @@ class PublicHygieneTests(unittest.TestCase):
         PRIVATE_DIGESTS.add(digest)
         try:
             self.assertIn('private identifier', violations(synthetic))
+            self.assertIn('private identifier', violations('Do not publish ' + synthetic + '.'))
+            self.assertIn('private identifier', violations('A path: owner/' + synthetic + '.'))
         finally:
             PRIVATE_DIGESTS.remove(digest)

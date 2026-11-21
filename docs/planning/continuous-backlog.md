@@ -82,8 +82,10 @@ The sign-off procedure is:
 2. An independent reviewer examines the exact revision and resolves findings
    through changes and fresh review.
 3. The Secretary records readiness, priority, full head and evidence digest.
-4. The Queen evaluates a current delegation grant for eligible internal work;
-   other candidates receive one owner decision box per PR, in priority order.
+4. The Queen evaluates a current grant for the candidate category, retaining
+   the internal-approval checks and visible-evidence requirements where applicable.
+   Candidates without an applicable grant receive one owner box per PR, in
+   priority order.
 5. Record approve, reject or send-back with its actual answering authority.
    Rejected work retains a parked or wontfix disposition. Send-back returns to
    the builder and independent review.
