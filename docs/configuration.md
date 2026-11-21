@@ -135,7 +135,9 @@ the migration.
 Every order has a stable rule marker. The owner may omit named taste rules through
 `orders.omit` and add bounded `orders.notes.queen`, `.secretary` or `.worker` notes.
 Invariants cannot be omitted. Project values render as labeled, escaped JSON data,
-not instruction text. Worker briefs exclude unrelated private leadership facts.
+not instruction text. Worker briefs exclude unrelated private leadership facts. Pinning rejects orders
+that exceed the transport budget, and registration checks orders plus the complete
+brief without truncating user text.
 The renderer consumes forwarding/report limits and identical-failure limits;
 mechanical forwarding, cadence and failure-policy automation arrive in later phases.
 
@@ -149,7 +151,9 @@ python3 -m monarchy --state /path/to/private/court.db config override court.paus
   /path/to/private/pause.json --owner-message TRUSTED_OWNER_MESSAGE
 ```
 
-Overrides belong to the court, not the current session. Min and union restrictions
+Overrides belong to the court, not the current session. Pause and stop also hold
+legacy task admissions before the first configuration pin. An accumulated override
+that violates bounds or cannot render is rejected in the same transaction. Min and union restrictions
 accumulate without losing earlier restrictions, including court/project limits.
 `--project example/project` accepts only project-scoped keys. Arbitrary model
 changes, grants, false control values and removal of protected entries fail.

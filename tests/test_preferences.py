@@ -222,3 +222,35 @@ class PreferenceTests(unittest.TestCase):
         self.git('commit','-am','Replacement bytes')
         self.git('replace',self.sha,self.git('rev-parse','HEAD'))
         self.assertEqual(read_source(self.repo,self.sha,'owner.json','owner')['bytes'],self.owner['bytes'])
+
+    def test_oversized_cumulative_override_is_rolled_back(self):
+        self.pin()
+        protected=['scratch-{}'.format(i) for i in range(64)]
+        self.prefs.override('archive.protected_workspaces',protected,owner_message='protect-existing')
+        with self.assertRaises(ValueError):
+            self.prefs.override('archive.protected_workspaces',['extra-scratch'],owner_message='invalid-growth')
+        self.assertEqual(self.prefs.show('example/project')['config']['archive.protected_workspaces']['value'],protected)
+
+    def test_pause_before_adoption_blocks_legacy_admission(self):
+        self.records.create_task('legacy','example/project','worker',metadata={})
+        self.records.prepare_operation('legacy-op','legacy','send_message',{'generation':1})
+        self.prefs.override('court.paused',True,owner_message='pause-before-adoption')
+        with self.assertRaises(ValueError):
+            self.records.set_operation_state('legacy-op','in_flight',expected_state='prepared')
+
+    def test_oversized_orders_fail_before_founding(self):
+        value=lambda prefix,count:[prefix+str(i).zfill(2)+'x'*253 for i in range(count)]
+        data={'project.repository':'example/project','project.required_checks':value('c',64),
+              'project.merge_labels':value('m',64),'project.priority_surfaces':value('p',40)}
+        (self.repo/'project.json').write_text(json.dumps(data))
+        self.git('commit','-am','Large project data')
+        self.git('update-ref','refs/remotes/origin/main',self.git('rev-parse','HEAD'))
+        project=read_source(self.repo,self.git('rev-parse','HEAD'),'project.json','project')
+        with self.assertRaises(ValueError):self.prefs.founding(self.owner,project)
+        self.assertFalse(self.records.has_pins())
+
+    def test_combined_brief_and_orders_must_fit_before_registration(self):
+        self.pin()
+        data={'task_id':'large','repository':'example/project','owner':'worker',
+              'metadata':{'brief':'x'*49152,'binding':{'session_id':'worker','repo':'example/project'}}}
+        with self.assertRaises(ValueError):self.prefs.bind(data)

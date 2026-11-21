@@ -270,13 +270,14 @@ class CourtRecords:
     def has_pins(self):
         return self._connection.execute('SELECT 1 FROM pins LIMIT 1').fetchone() is not None
 
-    def put_override(self, setting, value, project, owner_message):
+    def put_override(self, setting, value, project, owner_message, *, validate):
         _identifier(owner_message, 'owner_message')
         encoded = _payload({'value': value})
         with self._transaction():
             self._connection.execute(
                 'INSERT INTO overrides(project,setting,value,owner_message,created_at) VALUES(?,?,?,?,?)',
                 (project, setting, encoded, owner_message, _now()))
+            validate()  # Roll back the new history row if its folded state is unusable.
 
     def config_overrides(self, project=''):
         rows = self._connection.execute(

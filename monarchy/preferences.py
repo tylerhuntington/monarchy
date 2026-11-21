@@ -7,6 +7,7 @@ import subprocess
 
 from .config import ConfigError, KEYS, defaults_digest, load, resolve, widening
 from .orders import render
+from .conductor import MAX_TEXT_BYTES
 from .records import Conflict, RecordError
 
 REVISION = re.compile(r'(?:[0-9a-f]{40}|[0-9a-f]{64})\Z')
@@ -93,6 +94,13 @@ def _source(source, layer):
     return values
 
 
+def bounded_orders(config):
+    result = {role: render(role, config) for role in ('queen', 'secretary', 'worker')}
+    if any(len(row['text'].encode('utf-8')) > MAX_TEXT_BYTES - 3 for row in result.values()):
+        raise ConfigError('standing orders exceed the delivery budget')
+    return result
+
+
 def accepted(answer):
     return type(answer) is dict and set(answer) == {'accept'} and answer['accept'] is True
 
@@ -109,7 +117,9 @@ class Preferences:
     def _candidate(self, owner, project):
         owner_data = _source(owner, 'owner')
         project_data = _source(project, 'project') if project is not None else {}
-        return resolve(owner=owner_data, project=project_data)
+        config = resolve(owner=owner_data, project=project_data)
+        bounded_orders(config)
+        return config
 
     def _founding_specs(self, config):
         profiles = {role: config['profiles.' + role]['value'] for role in ('queen', 'secretary', 'worker')}
@@ -229,7 +239,25 @@ class Preferences:
         if project and KEYS[key]['home'] != 'project':
             raise ConfigError('project cannot set court override')
         load(json.dumps({key: value}), 'overrides')
-        self.records.put_override(key, value, project, owner_message)
+        def validate():
+            # An override must be usable by every affected current project, not
+            # merely valid as an isolated JSON fragment. Reads see the tentative
+            # insertion under the same transaction; failure rolls it back.
+            projects = [r[0] for r in self.records._connection.execute(
+                'SELECT DISTINCT project FROM pins LIMIT 1001').fetchall()]
+            if len(projects) > 1000: raise ConfigError('court project bound exceeded')
+            affected = [project] if project else list(set(projects) | {''})
+            for scope in affected:
+                overrides = self.records.config_overrides(scope)
+                if scope in projects:
+                    pin = self.records.latest_pin(scope)['payload']
+                    config = resolve(owner=_source(pin['owner'], 'owner'),
+                                     project=_source(pin['project'], 'project') if pin['project'] else {},
+                                     overrides=overrides)
+                else:
+                    config = resolve(overrides=overrides)
+                bounded_orders(config)
+        self.records.put_override(key, value, project, owner_message, validate=validate)
 
     def bind(self, data):
         """Bind new task context to approved profiles and hash-pinned orders."""
@@ -248,6 +276,11 @@ class Preferences:
             raise Conflict('task binding differs from assignment')
         binding['profile'] = profile
         orders = render(role, view['config'])
+        brief = meta.get('brief')
+        if not isinstance(brief, str) or not brief.strip():
+            raise ConfigError('task brief must be nonempty text')
+        if len((orders['text'] + '\n\n' + brief).encode('utf-8')) > MAX_TEXT_BYTES:
+            raise ConfigError('standing orders and task brief exceed the delivery budget')
         meta.update(config_pin=view['pin_id'], profile_role=role, orders_sha256=orders['sha256'])
         # Keep exact standing orders with the brief; they are authoritative toolkit
         # text. Project facts are separately encoded as bounded data by render().
@@ -257,6 +290,9 @@ class Preferences:
 
 def admission_check(records, task):
     """Called inside operation admission's transaction; holds never stop readback."""
+    restrictions = resolve(overrides=records.config_overrides(task['repository']))
+    if any(restrictions[k]['value'] for k in ('court.paused', 'court.stopped')):
+        raise Conflict('court configuration is held')
     if not records.has_pins():
         if task['metadata'].get('config_pin'):
             raise Conflict('task configuration pin is missing')
