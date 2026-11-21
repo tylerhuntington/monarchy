@@ -286,21 +286,13 @@ class CourtRecords:
             validate()  # Roll back the new history row if its folded state is unusable.
 
     def config_overrides(self, project=''):
-        rows = self._connection.execute(
-            'SELECT * FROM overrides WHERE project IN (?,?) ORDER BY sequence', ('', project)).fetchall()
-        from .config import KEYS
-        result = {}
-        for row in rows:
-            key = row['setting']
-            value = json.loads(row['value'])['value']
-            if key not in KEYS:
-                raise RecordError('stored override has unknown setting')
-            if key in result and KEYS[key]['merge'] == 'min':
-                value = min(result[key], value)
-            elif key in result and KEYS[key]['merge'] == 'union':
-                value = sorted(set(result[key]) | set(value))
-            result[key] = value
-        return result
+        from .controls import fold_overrides
+        return fold_overrides(self, project)['config']
+
+    def model_overrides(self):
+        """Approved model receipts remain distinct from config-file input."""
+        from .controls import fold_overrides
+        return fold_overrides(self)['models']
 
     def __enter__(self):
         return self
