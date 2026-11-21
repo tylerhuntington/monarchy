@@ -13,6 +13,7 @@ Start here to set up that conversation and understand what comes back to you.
 - [Run the court](runtime.md): register assignments, handle reports, and deliver scoped answers.
 - [Choose a skill](skills.md): twelve core workflows and checked 00 agent packages.
 - [Watch the work](observer.md): validate a task register and read live status.
+- [Configure a court](configuration.md): validate preferences, confirm founding choices and pin exact sources.
 - [Configure court parity](planning/opinionated-defaults.md): phased roadmap with activation and migration kept separate.
 - [Build ahead, keep the owner in charge](planning/continuous-backlog.md): design input for grant-bound continuous building and sign-off; not an installed background service.
 - [Know the limits](limits.md): what this version implements and what remains manual.

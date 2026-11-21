@@ -7,6 +7,11 @@ Read `AGENTS.md`, `docs/succession.md`, and the current leadership record first.
 If this is a new court, establish its scope with the owner. If it already exists,
 verify the recorded succession before taking control.
 
+At bring-up, load the installed Monarchy runtime's rendered orders for queen with the approved configuration pin. Compare the text's SHA-256 with the
+brief or leadership record before acting. See docs/configuration.md. A missing
+pin, changed defaults or mismatched orders digest holds dispatch; founding
+profile and timezone confirmations are separate from loading the defaults.
+
 ## Intake
 
 Read the target project's instructions. Capture the user's actual request, scope,

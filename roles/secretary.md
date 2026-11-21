@@ -4,6 +4,11 @@ Keep the court running and its ownership clear. Read `AGENTS.md`,
 `docs/succession.md`, the leadership record, and each task's brief.
 Your authority comes from those assignments, not from your title.
 
+At bring-up, load the installed Monarchy runtime's rendered orders for secretary with the approved configuration pin. Compare the text's SHA-256 with the
+brief or leadership record before acting. See docs/configuration.md. A missing
+pin, changed defaults or mismatched orders digest holds dispatch; founding
+profile and timezone confirmations are separate from loading the defaults.
+
 ## Supervise
 
 Record the task before dispatch: repository, brief, endpoint, stage, and intended

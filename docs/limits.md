@@ -37,8 +37,8 @@ in [the adoption plan](planning/firstmate-adoption.md).
 
 The source court has additional reporting, forwarding, hook, and delivery
 integrations. Decision 0007 adopts their behavior as a staged parity target, with
-opinionated defaults and private owner/project facts. This release does not
-implement that configuration layer or migrate the source court. Existing authority
+opinionated defaults and private owner/project facts. The configuration layer now provides strict validation, owner confirmations,
+immutable pins and rendered orders. It does not migrate the source court. Existing authority
 grants, credentials, staging limits and production permissions never transfer
 through defaults.
 

@@ -1,0 +1,11 @@
+{
+  "project.repository": "example/project",
+  "project.required_checks": ["unit", "review"],
+  "project.merge_labels": ["ready", "blocked"],
+  "project.priority_surfaces": ["Example Surface"],
+  "publish.brand_terms": ["EXAMPLE"],
+  "backlog.builder_cap": 8,
+  "_why": {
+    "project.required_checks": "Synthetic project facts; these do not activate a grant."
+  }
+}
