@@ -126,7 +126,8 @@ user-authored brief. Operation admission rechecks the current pin, profile,
 orders integrity and pause/stop inside the journal transaction. Readback of an
 already uncertain operation remains available while new actions are held.
 
-Existing v1 databases migrate transactionally to v2 with `pins` and `overrides`.
+Existing databases migrate transactionally through v2 (`pins` and `overrides`)
+to v3 (`prompt_observations`).
 Legacy explicitly bound Monarchy installations remain recoverable before configuration adoption.
 After a Monarchy installation adopts pins, legacy tasks need an approved configuration binding
 before another external action. Pending decisions and uncertain operations survive
@@ -138,12 +139,13 @@ Invariants cannot be omitted. Project values render as labeled, escaped JSON dat
 not instruction text. Worker briefs exclude unrelated private leadership facts. Pinning rejects orders
 that exceed the transport budget, and registration checks orders plus the complete
 brief without truncating user text.
-The renderer consumes forwarding/report limits and identical-failure limits;
-mechanical forwarding, cadence and failure-policy automation arrive in later phases.
+The renderer consumes forwarding/report limits and identical-failure limits.
+The conversation adapter enforces forward and native report-summary caps.
+Cadence and failure-policy automation arrive in later phases.
 
 ## Restrictive overrides
 
-Only allowlisted restrictions are admitted in this phase. For example, save
+Configuration files admit only allowlisted restrictions. For example, save
 `{"court.paused":true}` to a private file, then:
 
 ```sh
@@ -157,5 +159,7 @@ that violates bounds or cannot render is rejected in the same transaction. Min a
 accumulate without losing earlier restrictions, including limits shared by the royalty and project-specific limits.
 `--project example/project` accepts only project-scoped keys. Arbitrary model
 changes, grants, false control values and removal of protected entries fail.
-Confirmed resume and other widening owner verbs are a later conversation phase;
-do not write around this restriction directly in SQLite.
+Confirmed resume, model and handoff commands use separate answered decisions and
+approved receipts; they never become permissive config-file values. See the
+[conversation contract](conversation.md). Do not write around these boundaries
+directly in SQLite.

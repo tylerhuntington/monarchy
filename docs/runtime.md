@@ -96,10 +96,11 @@ Opening an inbox does not clear it. When you have handled specific outcomes, use
 `ack PRESENTATION_ID OUTCOME_ID...`, with the same actor. Acknowledging a displayed
 question does not answer its decision record.
 
-The runtime uses a pull inbox. It does not inject routine messages into the
-Queen's conversation. A host that adds notifications must hold them while the
-owner has an open prompt, or while prompt state is unknown. The current native
-CLI does not prove that prompt state.
+The runtime retains a pull inbox and adds explicit, journaled Secretary forwards.
+The [conversation contract](conversation.md) enforces the registered route,
+message caps and prompt holds. The native CLI does not prove prompt state;
+[opt-in hooks](prompt-hooks.md) provide observations after separate host
+qualification. Unknown state holds indefinitely.
 
 ## Take an answer back to the 00 agent
 

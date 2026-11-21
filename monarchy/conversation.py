@@ -135,8 +135,6 @@ class Conversation:
             previous = connection.execute(
                 'SELECT 1 FROM prompt_observations WHERE session_id=? AND prompt_id=? AND state=? LIMIT 1',
                 (session, prompt_id, state)).fetchone()
-            if previous:
-                return current
             if action == 'open':
                 for offset in range(0, 10000, 100):
                     operations = self.records.list_operations(states=['in_flight', 'unknown'],
@@ -150,6 +148,14 @@ class Conversation:
                         break
                 else:
                     raise RecordError('unresolved operation budget exceeded')
+                if previous:
+                    if current['prompt_id'] == prompt_id and current['state'] == 'open':
+                        return current
+                    raise Conflict('completed or ambiguous prompt identity cannot reopen')
+                if current['prompt_id'] is not None and current['state'] in {'open', 'unknown'}:
+                    raise Conflict('resolve the current prompt before opening another')
+            elif previous:
+                return current
             elif current['prompt_id'] != prompt_id:
                 # Stale callbacks cannot clear a newer prompt. With no open event,
                 # there is no evidence of a closed prompt at all.

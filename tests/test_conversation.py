@@ -97,10 +97,26 @@ class ConversationTests(unittest.TestCase):
     def test_stale_close_cannot_release_newer_box_and_duplicate_open_does_not_reset_age(self):
         first = self.conversation.observe(QUEEN, 'first', 'open')
         self.assertEqual(self.conversation.observe(QUEEN, 'first', 'open'), first)
+        self.conversation.observe(QUEEN, 'first', 'close')
         self.conversation.observe(QUEEN, 'second', 'open')
         self.conversation.observe(QUEEN, 'first', 'close')
         self.assertEqual(self.conversation.status(QUEEN)['prompt_id'], 'second')
         self.assertEqual(self.conversation.status(QUEEN)['state'], 'open')
+
+    def test_overlapping_open_cannot_hide_the_first_box(self):
+        self.conversation.observe(QUEEN, 'first', 'open')
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'second', 'open')
+        self.conversation.observe(QUEEN, 'second', 'close')
+        with self.assertRaises(Conflict): self.court.deliver(self.prepare()['operation_id'])
+        self.assertEqual(self.transport.writes, 0)
+
+    def test_replayed_pre_hook_cannot_resurrect_a_completed_prompt(self):
+        self.closed()
+        operation = self.prepare()
+        self.records.set_operation_state(operation['operation_id'], 'in_flight', expected_state='prepared')
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'box', 'open')
+        self.court.deliver(operation['operation_id'])
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'box', 'open')
 
     def test_failed_close_becomes_unknown_and_duplicate_close_cannot_clear_it(self):
         self.closed()
@@ -120,6 +136,16 @@ class ConversationTests(unittest.TestCase):
         self.closed()
         self.conversation.observe(QUEEN, 'unseen', 'unknown')
         self.assertEqual(self.conversation.status(QUEEN)['state'], 'unknown')
+
+    def test_uncorrelated_callback_cannot_inherit_known_open_expiry(self):
+        self.conversation.observe(QUEEN, 'first', 'open')
+        old = (datetime.now(timezone.utc) - timedelta(minutes=61)).isoformat()
+        self.records._connection.execute('UPDATE prompt_observations SET observed_at=?', (old,))
+        self.conversation.observe(QUEEN, 'unseen', 'unknown')
+        self.assertEqual(self.conversation.status(QUEEN)['state'], 'unknown')
+        with self.assertRaises(Conflict): self.court.deliver(self.prepare()['operation_id'])
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'next', 'open')
+        self.assertEqual(self.transport.writes, 0)
 
     def test_prompt_open_between_prepare_and_admission_holds_delivery(self):
         self.closed()

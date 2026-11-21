@@ -61,7 +61,7 @@ Each observation invokes the existing runtime CLI using an argument array:
 python -m monarchy --state PATH prompt open|close|unknown --session SESSION_ID --prompt-id TOOL_USE_ID
 ```
 
-The CLI owns current-holder checks, durable timestamps, matching IDs, and the
+The CLI checks the Queen session registered in task metadata, durable timestamps, matching IDs, and the
 transaction excluding a forward already in flight or uncertain. A failed open
 exits 2 and blocks the question. A failed close attempts one same-ID `unknown`
 observation, then exits 2. If recording still fails, the adapter cannot promise
@@ -81,8 +81,10 @@ callbacks therefore do not establish closed state. See the
 An unknown prompt holds indefinitely. A known-open prompt's admission hold can
 expire at the configured abandoned-prompt limit; expiry does not store a close
 or answer a decision. Replaying an old close after an unknown observation must
-not release the hold. Reconcile using fresh native evidence through the royalty's
-current-holder workflow. Reopen a cancelled decision for an actual owner answer.
+not release the hold. Ambiguous-state repair requires operator investigation and
+fresh native evidence; this phase has no force-close command. Recover before
+reopening a cancelled decision for an actual owner answer. The
+[conversation contract](conversation.md) explains delivery and owner controls.
 
 ## Verify before enabling
 

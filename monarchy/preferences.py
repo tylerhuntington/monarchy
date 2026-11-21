@@ -162,7 +162,7 @@ class Preferences:
         before_project = prior['payload']['project'] if prior else None
         changes = widening(_source(before_project, 'project') if before_project else {},
                            _source(project, 'project') if project else {}, layer='project')
-        # Court-owner changes bind the latest global pin, even for a brand new
+        # Owner-profile changes for the royalty bind the latest global pin, even for a brand new
         # project. Recheck this under the pin transaction to fence racing updates.
         return {'prior_pin': prior['pin_id'] if prior else None,
                 'prior_owner_pin': current['pin_id'] if owner_change else None,
@@ -249,14 +249,14 @@ class Preferences:
     def require_current(self, project=''):
         view = self.show(project)
         if view['held'] or any(view['config'][k]['value'] for k in ('court.paused', 'court.stopped')):
-            raise Conflict('court configuration is held')
+            raise Conflict('royalty configuration is held')
         return view
 
     def override(self, key, value, *, owner_message, project=''):
         if key not in KEYS:
             raise ConfigError('unknown override key')
         if project and KEYS[key]['home'] != 'project':
-            raise ConfigError('project cannot set court override')
+            raise ConfigError('project cannot set an override for the royalty')
         load(json.dumps({key: value}), 'overrides')
         self.records.put_override(key, value, project, owner_message,
                                   validate=lambda: self.validate_current_overrides(project))
@@ -312,11 +312,11 @@ def admission_check(records, task):
     """Called inside operation admission's transaction; holds never stop readback."""
     restrictions = resolve(overrides=records.config_overrides(task['repository']))
     if any(restrictions[k]['value'] for k in ('court.paused', 'court.stopped')):
-        raise Conflict('court configuration is held')
+        raise Conflict('royalty configuration is held')
     if not records.has_pins():
         if task['metadata'].get('config_pin'):
             raise Conflict('task configuration pin is missing')
-        return  # Existing explicit v1 courts remain readable and recoverable.
+        return  # Existing explicit v1 installations remain readable and recoverable.
     view = Preferences(records).require_current(task['repository'])
     meta = task['metadata']
     if meta.get('config_pin') != view['pin_id']:
