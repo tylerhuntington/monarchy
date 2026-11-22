@@ -9,8 +9,9 @@ from pathlib import Path
 import re
 import unittest
 
-from monarchy.config import KEYS, load, resolve
+from monarchy.config import KEYS, NEVER_DELEGABLE, load, resolve
 from monarchy.controls import RESTRICTIONS, WIDENING
+from monarchy.delegation import STATES, TAXONOMY
 from monarchy.orders import INVARIANT_RULE_IDS, MARKER, ROLES, render, rule_ids
 from monarchy.prompt_hooks import HookError, lint_box
 
@@ -75,12 +76,24 @@ P2_INVARIANTS = {
 P2_TARGETS = {**{source: 'key:' + key for source, key in P2_KEYS.items()},
               **{source: 'rule:' + rule for source, (_, rule, _) in P2_RULES.items()},
               **{source: 'invariant:' + rule for source, rule in P2_INVARIANTS.items()}}
+P3_TARGETS = {
+    'preference.internal-pr-approval': 'rule:review.internal-approval',
+    'preference.record-before-relay': 'invariant:invariant.owner-route',
+    'authority.trusted-owner-route': 'invariant:invariant.owner-route',
+    'authority.never-delegable-floor': 'invariant:invariant.never-delegable',
+    'delegation.states': 'rule:delegation.owner-boxes',
+    'delegation.revocation': 'rule:delegation.revocation',
+    'delegation.followup-box': 'rule:delegation.owner-boxes',
+    'delegation.answer-provenance': 'invariant:invariant.owner-route',
+    'delegation.internal-approval-category': 'rule:delegation.taxonomy',
+    'delegation.precedent-check': 'invariant:invariant.grants',
+    **{'delegation.taxonomy.' + category: 'rule:delegation.taxonomy'
+       for category in TAXONOMY if category != 'internal-pr-approval'},
+}
 # These rows represent runtime behavior, not the mere existence of a setting or
 # standing-order paragraph. Remove entries only with the phase's runtime proof.
 PENDING_RUNTIME = {
-    'authority.trusted-owner-route': 'P3',
-    'authority.never-delegable-floor': 'P3',
-    'delegation.answer-provenance': 'P3',
+    'authority.one-writer': 'P3',
     'cadence.check-records': 'P4',
     'backlog.activation': 'P5',
     'signoff.candidate-binding': 'P6',
@@ -214,6 +227,34 @@ class ParityTests(unittest.TestCase):
             with self.subTest(source=source):
                 self.assertEqual(rows[source]['target'], 'pending:' + phase)
         self.assertGreater(sum(row['target'].startswith('pending:') for row in rows.values()), 0)
+
+    def test_p3_mapped_targets_retain_the_branch_custody_gap(self):
+        rows = catalog()
+        by_source = {row['source']: row for row in rows}
+        self.assertEqual(len(P3_TARGETS), 24)
+        for source, target in P3_TARGETS.items():
+            with self.subTest(source=source):
+                self.assertEqual(by_source[source]['target'], target)
+        self.assertEqual([row['source'] for row in rows if row['target'] == 'pending:P3'],
+                         ['authority.one-writer'])
+        self.assert_catalog(rows)
+
+    def test_p3_category_inventory_matches_executable_vocabulary(self):
+        rows = catalog()
+        categories = [row['value'] for row in rows
+                      if row['source'].startswith('delegation.taxonomy.')
+                      or row['source'] == 'delegation.internal-approval-category']
+        self.assertEqual(len(categories), len(set(categories)))
+        self.assertEqual(set(categories), set(TAXONOMY))
+        bodies = rule_bodies(self.rendered['queen']['text'])
+        for category in categories:
+            self.assertRegex(bodies['delegation.taxonomy'],
+                             r'(?<![a-z0-9-])' + re.escape(category) + r'(?![a-z0-9-])')
+
+    def test_p3_state_and_floor_inventory_match_runtime_constraints(self):
+        rows = {row['source']: row for row in catalog()}
+        self.assertEqual(rows['delegation.states']['value'], list(STATES))
+        self.assertEqual(set(rows['authority.never-delegable-floor']['value']), set(NEVER_DELEGABLE))
 
     def test_fixture_exercises_each_layer_without_activating_authority(self):
         self.assertEqual(self.config['profiles.worker']['layers'], ['defaults'])
