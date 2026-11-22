@@ -1,9 +1,10 @@
 # Configure the royalty
 
 Configuration chooses how the royalty behave. It does not grant backlog work,
-delegation, spending, production actions or contact with people. This phase adds
+delegation, spending, production actions or contact with people. It provides
 strict configuration, confirmed profiles, durable pins and standing orders.
-Later phases implement conversation, delegation and continuous supervision.
+The [conversation](conversation.md) and [delegation](delegation.md) contracts read
+these settings; continuous supervision remains a later phase.
 
 ## Four layers
 
@@ -127,8 +128,10 @@ orders integrity and pause/stop inside the journal transaction. Readback of an
 already uncertain operation remains available while new actions are held.
 
 Existing databases migrate transactionally through v2 (`pins` and `overrides`)
-to v3 (`prompt_observations`) and v4 (nullable prompt cancellation reasons).
+to v3 (`prompt_observations`), v4 (nullable prompt cancellation reasons), and v5
+(answer provenance and append-only delegation history).
 Existing ambiguous prompt observations remain unknown with no cancellation reason.
+Existing owner answers retain their provenance; migration activates no category grant.
 Legacy explicitly bound Monarchy installations remain recoverable before configuration adoption.
 After a Monarchy installation adopts pins, legacy tasks need an approved configuration binding
 before another external action. Pending decisions and uncertain operations survive

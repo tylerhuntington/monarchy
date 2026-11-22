@@ -2,8 +2,10 @@
 
 `monarchy.records.CourtRecords` keeps task assignments, incoming reports,
 decisions, results, and external-operation receipts in one private SQLite
-database. Version 2 adds immutable configuration pins and durable restrictive
-overrides, preserving version 1 tasks and unresolved operations in one transaction.
+database. Schema upgrades retain existing records: version 2 adds configuration
+pins and restrictive overrides, versions 3 and 4 add prompt observations and
+cancellation reasons, and version 5 adds answer provenance and append-only
+delegation history. Migration activates no category grant.
 See [configuration custody](configuration.md). It uses only Python's standard library. Opening the database starts
 no agents, installs no hooks, and sends no messages.
 
@@ -56,7 +58,11 @@ survive restart. Recording a result, acknowledging an event, or receiving a
 00 agent's `done` report never answers a pending decision.
 
 Decisions retain an independent revision history. An answer names the expected
-revision and the owner's message reference. Revising the question creates a new
+revision and records `answered_by` as `owner` or the exact `grant:<id>`. Owner
+answers retain their message reference; delegated answers do not impersonate one.
+The v5 migration labels historical answers with owner references as owner-origin;
+it does not authenticate their sender retroactively. Pending decisions acquire no
+answering authority. Revising the question creates a new
 pending revision, preserving the old answer without carrying its authority
 forward. An owner-message reference is evidence supplied by the caller, not
 proof of a human sender. The supervisor must verify the native source and bind
@@ -96,6 +102,12 @@ concurrent question revision and send therefore cannot both proceed. Callers
 must include these fields for decision-bound actions; text containing an answer
 does not establish that binding by itself.
 
+For a delegated answer, preparation and admission additionally validate the
+current project/category grant, exact permitted precedent and configuration.
+Internal approval requires a fresh `current_head` at both stages. Revocation
+holds a prepared relay, while already uncertain writes retain read-only recovery.
+See [delegation](delegation.md) for the caller-trust and evidence boundaries.
+
 After a timeout or lost response, mark the operation `unknown` and read the
 native service to reconcile its stable ID. An `in_flight` operation found after
 restart needs the same reconciliation. Neither state can return to `prepared`
@@ -120,10 +132,10 @@ import interface; databases containing triggers or views are rejected.
 | Reports | `record_event(event_id, task_id, generation, actor, kind, payload)`, `get_event(event_id)`, `claim_events(actor, task_id, limit=100)`, `ack_events(claim_id, actor, event_ids)` |
 | Results | `record_outcome(outcome_id, task_id, payload, recipient="queen")`, `get_outcome(outcome_id)`, `present_outcomes(actor, limit=100)`, `process_outcomes(presentation_id, actor, outcome_ids)` |
 | Decisions | `open_decision(decision_id, task_id, payload)`, `get_decision(decision_id, revision=None)`, `answer_decision(decision_id, answer, expected_revision=..., owner_message=...)`, `revise_decision(decision_id, payload, expected_revision=...)` |
-| Operations | `prepare_operation(operation_id, task_id, kind, request)`, `get_operation(operation_id)`, `set_operation_state(operation_id, state, expected_state=..., result=None)` |
+| Operations | `prepare_operation(operation_id, task_id, kind, request, current_head=None)`, `get_operation(operation_id)`, `set_operation_state(operation_id, state, expected_state=..., result=None, current_head=None)` |
 
 The metadata, recipient, expected generation/revision/state, owner-message, and
-result arguments shown above are keyword-only. Task metadata stays unchanged
+result and current-head arguments shown above are keyword-only. Task metadata stays unchanged
 until a successful reassignment; supplying new metadata replaces the whole object.
 Generation and revision counters start at one. Claim and presentation IDs are
 generated once with UUIDs and persisted; other IDs come from the caller.
@@ -162,9 +174,10 @@ recovery needs a separate backup or durable-volume policy and a tested restore;
 this module supplies neither. Do not copy a live database file without a
 SQLite-consistent backup procedure.
 
-Actors and recipients are trusted caller assertions. The store does not
-authenticate native sessions, inspect owner authority, verify code, enforce
-project policy, or determine whether a task is complete. File permissions also
+Actors, recipients and review facts are trusted caller assertions. The store does
+not authenticate native sessions, prove human authority, run checks, or determine
+whether a task is complete. Grant and project-policy checks validate the supplied
+record contract; they do not establish external facts. File permissions also
 do not isolate another process running as the same OS user. Do not treat an
 untrusted database file as a safe import format.
 
