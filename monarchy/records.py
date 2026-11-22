@@ -129,6 +129,12 @@ def _decision_reference(request):
             _generation(request["decision_revision"]))
 
 
+def owner_answered(decision):
+    """Provenance check for an already authenticated trusted-local owner route."""
+    return (decision['state'] == 'answered' and decision.get('answered_by') == 'owner'
+            and bool(decision.get('owner_message')) and decision.get('answer') is not None)
+
+
 class CourtRecords:
     """One private royalty database, used only by trusted local callers.
 
@@ -156,16 +162,20 @@ class CourtRecords:
             self._connection.execute("PRAGMA trusted_schema = OFF")
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2, 3, 4):
+                if version not in (0, 1, 2, 3, 4, 5):
                     raise RecordError("unsupported royalty database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
                 ).fetchone():
                     raise RecordError("royalty database must not contain triggers or views")
-                if version in (3, 4) and not self._connection.execute(
+                if version in (3, 4, 5) and not self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='prompt_observations'"
                 ).fetchone():
                     raise RecordError('royalty database is missing prompt history')
+                if version == 5 and not self._connection.execute(
+                    "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='delegation_events'"
+                ).fetchone():
+                    raise RecordError('royalty database is missing delegation history')
                 self._connection.execute("""CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY, repository TEXT NOT NULL,
                     owner TEXT NOT NULL, generation INTEGER NOT NULL CHECK(generation > 0),
@@ -210,8 +220,28 @@ class CourtRecords:
                     task_id TEXT NOT NULL REFERENCES tasks(task_id), payload TEXT NOT NULL,
                     state TEXT NOT NULL CHECK(state IN ('pending', 'answered', 'superseded')),
                     answer TEXT, owner_message TEXT, created_at TEXT NOT NULL, answered_at TEXT,
+                    answered_by TEXT,
                     PRIMARY KEY(decision_id, revision)
                 )""")
+                decision_columns = {row['name'] for row in self._connection.execute('PRAGMA table_info(decisions)')}
+                if 'answered_by' not in decision_columns:
+                    if version == 5:
+                        raise RecordError('royalty database is missing answer provenance')
+                    self._connection.execute('ALTER TABLE decisions ADD COLUMN answered_by TEXT')
+                    for legacy in self._connection.execute(
+                        "SELECT decision_id,revision,owner_message FROM decisions WHERE state IN ('answered','superseded') "
+                        'AND answer IS NOT NULL AND owner_message IS NOT NULL').fetchall():
+                        if type(legacy['owner_message']) is str and _ID.fullmatch(legacy['owner_message']):
+                            self._connection.execute("UPDATE decisions SET answered_by='owner' "
+                                'WHERE decision_id=? AND revision=?', (legacy['decision_id'], legacy['revision']))
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS delegation_events (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT NOT NULL UNIQUE,
+                    project TEXT NOT NULL, category TEXT NOT NULL,
+                    state TEXT NOT NULL CHECK(state IN ('ask','delegated','ask-again-later')),
+                    payload TEXT NOT NULL, created_at TEXT NOT NULL
+                )""")
+                self._connection.execute('CREATE INDEX IF NOT EXISTS delegation_scope '
+                                         'ON delegation_events(project,category,sequence)')
                 self._connection.execute("""CREATE TABLE IF NOT EXISTS operations (
                     operation_id TEXT PRIMARY KEY, task_id TEXT NOT NULL REFERENCES tasks(task_id),
                     kind TEXT NOT NULL, request TEXT NOT NULL,
@@ -238,7 +268,7 @@ class CourtRecords:
                 columns = {row['name'] for row in self._connection.execute(
                     'PRAGMA table_info(prompt_observations)')}
                 if 'reason' not in columns:
-                    if version == 4:
+                    if version in (4, 5):
                         raise RecordError('royalty database is missing prompt cancellation metadata')
                     # Old unknown rows stay ambiguous. No historical callback is
                     # inferred to be a native cancellation during migration.
@@ -247,7 +277,7 @@ class CourtRecords:
                             (reason='native-cancelled' AND state='unknown') OR
                             (reason='answer-required' AND state='open'))""")
                 self._connection.execute("CREATE INDEX IF NOT EXISTS prompt_sessions ON prompt_observations(session_id,sequence)")
-                self._connection.execute("PRAGMA user_version = 4")
+                self._connection.execute("PRAGMA user_version = 5")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()
@@ -365,6 +395,17 @@ class CourtRecords:
                 except (ValueError, TypeError, RecursionError, UnicodeError) as exc:
                     raise RecordError("stored record contains invalid JSON") from exc
                 result[field] = decoded
+        if 'answered_by' in result:
+            authority = result['answered_by']
+            if result['answer'] is None:
+                valid = authority is None and result['owner_message'] is None
+            elif authority == 'owner':
+                valid = bool(result['owner_message'])
+            else:
+                valid = (type(authority) is str and authority.startswith('grant:')
+                         and bool(_ID.fullmatch(authority[6:])) and result['owner_message'] is None)
+            if not valid:
+                raise RecordError('stored decision has invalid answer provenance')
         return result
 
     def _list(self, table, *, conditions=(), values=(), order, limit, offset):
@@ -639,7 +680,7 @@ class CourtRecords:
                 return self.get_decision(decision_id)
             self.get_task(task_id)
             self._connection.execute(
-                "INSERT INTO decisions VALUES (?, 1, ?, ?, 'pending', NULL, NULL, ?, NULL)",
+                "INSERT INTO decisions(decision_id,revision,task_id,payload,state,created_at) VALUES (?, 1, ?, ?, 'pending', ?)",
                 (decision_id, task_id, encoded, _now()),
             )
             return self.get_decision(decision_id)
@@ -657,25 +698,37 @@ class CourtRecords:
         return self._decode(row)
 
     def answer_decision(self, decision_id, answer, *, expected_revision, owner_message):
+        """Record an actual owner answer supplied by a trusted local adapter."""
+        with self._transaction():
+            return self._answer_decision(decision_id, answer, expected_revision=expected_revision,
+                                         owner_message=owner_message, answered_by='owner')
+
+    def _answer_decision(self, decision_id, answer, *, expected_revision, owner_message, answered_by):
+        if not self._connection.in_transaction:
+            raise RecordError('answer requires a record transaction')
         _identifier(decision_id, "decision_id")
-        _identifier(owner_message, "owner_message")
+        if answered_by == 'owner':
+            _identifier(owner_message, 'owner_message')
+        elif (type(answered_by) is not str or not answered_by.startswith('grant:')
+              or not _ID.fullmatch(answered_by[6:]) or owner_message is not None):
+            raise RecordError('answer provenance is invalid')
         _generation(expected_revision)
         encoded = _payload(answer)
-        with self._transaction():
-            decision = self.get_decision(decision_id)
-            if decision["revision"] != expected_revision:
-                raise Conflict("decision changed before the answer was recorded")
-            if decision["state"] == "answered":
-                if _payload(decision["answer"]) != encoded or decision["owner_message"] != owner_message:
-                    raise Conflict("decision already has a different answer or owner message")
-                return decision
-            if decision["state"] != "pending":
-                raise Conflict("decision is not pending")
-            self._connection.execute(
-                "UPDATE decisions SET state = 'answered', answer = ?, owner_message = ?, answered_at = ? WHERE decision_id = ? AND revision = ?",
-                (encoded, owner_message, _now(), decision_id, expected_revision),
-            )
-            return self.get_decision(decision_id)
+        decision = self.get_decision(decision_id)
+        if decision['revision'] != expected_revision:
+            raise Conflict('decision changed before the answer was recorded')
+        if decision['state'] == 'answered':
+            if (_payload(decision['answer']) != encoded or decision['owner_message'] != owner_message
+                    or decision['answered_by'] != answered_by):
+                raise Conflict('decision already has a different answer or authority')
+            return decision
+        if decision['state'] != 'pending':
+            raise Conflict('decision is not pending')
+        self._connection.execute(
+            "UPDATE decisions SET state='answered',answer=?,owner_message=?,answered_at=?,answered_by=? "
+            'WHERE decision_id=? AND revision=?',
+            (encoded, owner_message, _now(), answered_by, decision_id, expected_revision))
+        return self.get_decision(decision_id)
 
     def revise_decision(self, decision_id, payload, *, expected_revision):
         _identifier(decision_id, "decision_id")
@@ -700,12 +753,12 @@ class CourtRecords:
                 (decision_id, expected_revision),
             )
             self._connection.execute(
-                "INSERT INTO decisions VALUES (?, ?, ?, ?, 'pending', NULL, NULL, ?, NULL)",
+                "INSERT INTO decisions(decision_id,revision,task_id,payload,state,created_at) VALUES (?, ?, ?, ?, 'pending', ?)",
                 (decision_id, expected_revision + 1, decision["task_id"], encoded, _now()),
             )
             return self.get_decision(decision_id)
 
-    def prepare_operation(self, operation_id, task_id, kind, request):
+    def prepare_operation(self, operation_id, task_id, kind, request, *, current_head=None):
         _identifier(operation_id, "operation_id")
         _identifier(task_id, "task_id")
         _identifier(kind, "kind")
@@ -722,6 +775,10 @@ class CourtRecords:
                 decision = self.get_decision(decision_reference[0])
                 if decision["task_id"] != task_id:
                     raise Conflict("operation decision belongs to another task")
+                if (decision.get('answered_by') or '').startswith('grant:'):
+                    from .delegation import answer_admission_check
+                    answer_admission_check(self, {'task_id': task_id, 'kind': kind, 'request': request},
+                                           current_head=current_head)
             now = _now()
             self._connection.execute(
                 "INSERT INTO operations VALUES (?, ?, ?, ?, 'prepared', NULL, ?, ?)",
@@ -732,7 +789,7 @@ class CourtRecords:
     def get_operation(self, operation_id):
         return self._get("operations", "operation_id", _identifier(operation_id, "operation_id"))
 
-    def set_operation_state(self, operation_id, state, *, expected_state, result=None):
+    def set_operation_state(self, operation_id, state, *, expected_state, result=None, current_head=None):
         _identifier(operation_id, "operation_id")
         if type(state) is not str or state not in _OPERATION_TRANSITIONS:
             raise RecordError("unrecognized operation state")
@@ -763,6 +820,8 @@ class CourtRecords:
                     if (decision["task_id"] != operation["task_id"]
                             or decision["revision"] != reference[1] or decision["state"] != "answered"):
                         raise Conflict("operation requires the current answered decision revision")
+                    from .delegation import answer_admission_check
+                    answer_admission_check(self, operation, current_head=current_head)
             self._connection.execute(
                 "UPDATE operations SET state = ?, result = ?, updated_at = ? WHERE operation_id = ?",
                 (state, encoded, _now(), operation_id),

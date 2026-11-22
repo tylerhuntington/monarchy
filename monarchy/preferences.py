@@ -8,7 +8,7 @@ import subprocess
 from .config import ConfigError, KEYS, defaults_digest, load, resolve, widening
 from .orders import render
 from .conductor import MAX_TEXT_BYTES
-from .records import Conflict, RecordError
+from .records import Conflict, RecordError, owner_answered
 
 REVISION = re.compile(r'(?:[0-9a-f]{40}|[0-9a-f]{64})\Z')
 SOURCE_FIELDS = {'commit', 'path', 'blob', 'sha256', 'bytes', 'layer', 'repository'}
@@ -183,7 +183,7 @@ class Preferences:
                 'kind': 'founding.' + category, 'proposed': value,
                 'question': 'Use these role profiles?' if category == 'profiles' else 'Use this timezone?',
                 'options': ['Confirm (Recommended)', 'Choose Different Values'], 'generation': 1})
-            if decision['state'] == 'answered' and accepted(decision['answer']):
+            if owner_answered(decision) and accepted(decision['answer']):
                 continue
             boxes.append(decision)
         review = self._pin_review(owner, project, config)
@@ -192,15 +192,14 @@ class Preferences:
                 'kind': 'config.pin-review', 'proposed': review, 'generation': 1,
                 'question': 'Approve these exact configuration sources and changes?',
                 'options': ['Confirm Changes (Recommended)', 'Keep Current Pin']})
-            if row['state'] != 'answered' or not accepted(row['answer']): boxes.append(row)
+            if not owner_answered(row) or not accepted(row['answer']): boxes.append(row)
         return boxes
 
     def _approved(self, config):
         for category, value in self._founding_specs(config):
             row = self.records.get_decision(self._decision(category, value))
             if (row['task_id'] != 'court.config' or row['payload'].get('proposed') != value
-                    or row['state'] != 'answered' or not accepted(row['answer'])
-                    or not row['owner_message']):
+                    or not owner_answered(row) or not accepted(row['answer'])):
                 raise Conflict('founding confirmation is required')
 
     def pin(self, owner, project=None, *, owner_message, monarchy_revision):
@@ -219,8 +218,8 @@ class Preferences:
             review = self._pin_review(owner, project, config)
             if review is not None:
                 row = self.records.get_decision(self._decision('pin', review))
-                if (row['state'] != 'answered' or not accepted(row['answer'])
-                        or row['payload'].get('proposed') != review or not row['owner_message']):
+                if (not owner_answered(row) or not accepted(row['answer'])
+                        or row['payload'].get('proposed') != review):
                     raise Conflict('configuration change needs an answered owner box')
         return self.records.put_pin(digest(payload), repository, payload, approve=approve)
 

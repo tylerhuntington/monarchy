@@ -108,7 +108,7 @@ def _checked_proposal(row):
 def _approved(row):
     proposal = _checked_proposal(row)
     if (row['state'] != 'answered' or not accepted(row['answer']) or not row['owner_message']
-            or row.get('answered_by', 'owner') != 'owner'):
+            or row.get('answered_by') != 'owner'):
         raise Conflict('owner control needs its exact answered owner box')
     return proposal
 
