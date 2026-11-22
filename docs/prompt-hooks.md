@@ -77,8 +77,10 @@ lines, and the same strict content envelope. A prefix, interruption flag, timeou
 or failure event is insufficient. Native cancellation can result from steering,
 shutdown, or interaction delivery failure as well as a UI cancellation; it does
 not establish that the owner clicked Cancel. The observer retains only the state
-reason, never the cancellation text or the question. This source-tested path
-still needs a native cancellation and reopening exercise on the intended host.
+reason, never the cancellation text or the question. The
+[qualification report](verification/conversation-contract.md) records native
+cancellation, reopening, and continued hold. The post-reopen answer/release
+cycle remains offline coverage only.
 
 Each observation invokes the existing runtime CLI using an argument array:
 

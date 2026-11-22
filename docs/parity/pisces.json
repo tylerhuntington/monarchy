@@ -9,7 +9,7 @@
     "source": "preference.reopen-cancelled-box",
     "class": "rule",
     "value": "Reopen a cancelled unanswered decision box on the next turn; do not replace it with a prose decision list.",
-    "target": "pending:P2"
+    "target": "rule:conversation.no-prose-decisions"
   },
   {
     "source": "preference.single-owner-conversation",

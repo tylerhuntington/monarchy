@@ -54,8 +54,10 @@ unanswered decision on the next turn with a tool ID absent from the entire promp
 history. That fresh `open` carries reason `answer-required`; its hold cannot expire.
 Only a matching successful answer clears it. Repeated cancellations keep the
 obligation. The observer does not invoke the next question, compare its meaning,
-or treat the eventual answer as approval for an operation. Native cancellation
-and reopening remain unqualified until separately exercised on the host.
+or treat the eventual answer as approval for an operation. The
+[qualification report](verification/conversation-contract.md) records the native
+cancellation, reopening, and continued hold. Native release after an answer to a
+reopened prompt remains untested.
 
 Otherwise, opening a second prompt while one is unresolved is rejected. An open replay is
 accepted only for the same current open tool ID and never resets its age.

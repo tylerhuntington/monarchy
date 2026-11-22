@@ -75,9 +75,6 @@ P2_INVARIANTS = {
 P2_TARGETS = {**{source: 'key:' + key for source, key in P2_KEYS.items()},
               **{source: 'rule:' + rule for source, (_, rule, _) in P2_RULES.items()},
               **{source: 'invariant:' + rule for source, rule in P2_INVARIANTS.items()}}
-# Prepared targets are not native proof. Remove pending entries only after the
-# qualification report records the relevant observed behavior.
-P2_PENDING = {'preference.reopen-cancelled-box'}
 # These rows represent runtime behavior, not the mere existence of a setting or
 # standing-order paragraph. Remove entries only with the phase's runtime proof.
 PENDING_RUNTIME = {
@@ -169,13 +166,9 @@ class ParityTests(unittest.TestCase):
     def test_p2_targets_match_the_qualified_scope_and_resolve_offline(self):
         rows = catalog()
         by_source = {row['source']: row for row in rows}
-        self.assertLessEqual(P2_PENDING, set(P2_TARGETS))
         for source, target in P2_TARGETS.items():
             with self.subTest(source=source):
-                self.assertEqual(by_source[source]['target'],
-                    'pending:P2' if source in P2_PENDING else target)
-                # Check the prepared mapping without claiming it is qualified.
-                by_source[source]['target'] = target
+                self.assertEqual(by_source[source]['target'], target)
         self.assert_catalog(rows)
 
     def test_p2_rule_targets_preserve_the_declared_conversation_contract(self):
