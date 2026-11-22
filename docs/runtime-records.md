@@ -4,8 +4,9 @@
 decisions, results, and external-operation receipts in one private SQLite
 database. Schema upgrades retain existing records: version 2 adds configuration
 pins and restrictive overrides, versions 3 and 4 add prompt observations and
-cancellation reasons, and version 5 adds answer provenance and append-only
-delegation history. Migration activates no category grant.
+cancellation reasons, version 5 adds answer provenance and append-only
+delegation history, and version 6 adds durable cadence checks and their evidence.
+Migration activates no category grant or hook.
 See [configuration custody](configuration.md). It uses only Python's standard library. Opening the database starts
 no agents, installs no hooks, and sends no messages.
 
@@ -107,6 +108,13 @@ current project/category grant, exact permitted precedent and configuration.
 Internal approval requires a fresh `current_head` at both stages. Revocation
 holds a prepared relay, while already uncertain writes retain read-only recovery.
 See [delegation](delegation.md) for the caller-trust and evidence boundaries.
+
+Cadence checks keep their own identities and receipts. Listing a due check,
+recording an observation, or preparing a wake notice does not acknowledge the
+check. A supported completion receipt must match its task, generation and kind.
+The [cadence contract](cadence.md) explains current holds, explicit census inputs,
+bounded wait behavior and uncertain wake recovery. These records do not by
+themselves prove native observation, message delivery or owner authority.
 
 After a timeout or lost response, mark the operation `unknown` and read the
 native service to reconcile its stable ID. An `in_flight` operation found after

@@ -14,6 +14,7 @@ the package starts no agents, hooks, or background service.
 | Queen and Secretary pull inboxes and explicit bounded forwards | Presenting a result does not acknowledge it. Forwarding requires a known prompt state and qualified opt-in hooks. |
 | Durable owner controls | Widening controls require exact answered proposals; handoff records intent only. |
 | Category grants and actual answer provenance | Owner-confirmed scope, revocation and current evidence checks; no native owner authentication or GitHub approval/merge action. |
+| Durable cadence checks, receipts and builder census | Bounded due/wait passes; roster and observations come from trusted adapters, not the builder cap. |
 | Source-bound completion review | Checks the submitted evidence contract; the reviewer must perform the actual checks. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |
 | Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the royalty. |
@@ -23,6 +24,14 @@ dispatch saves an intent; `deliver` performs or reconciles the native action.
 After an uncertain result, it reads the original identities rather than sending
 again. The separate observer only polls. Neither command keeps supervision alive
 after it exits.
+
+The [cadence](cadence.md) wait prepares a durable wake intent; it does not prove
+the host woke a session or complete the underlying check. Its Claude re-arm
+snippet is explicitly opt-in and has no native qualification claim. A timeout
+ends that bounded wait. Pause, Stop and configuration drift hold new action;
+Queen prompt holds and owner absence preserve internal Secretary supervision.
+Repair limits reach agents through standing orders; the runtime does not execute
+or count arbitrary repair commands.
 
 The [delegation contract](delegation.md) checks typed action classification and
 owner-origin precedents. Trusted adapters supply those facts, current heads and

@@ -31,9 +31,25 @@ authenticate a person or verify GitHub remotely. No native P3 exercise is claime
 
 `authority.one-writer` remains `pending:P3`. Current ownership fences one task
 and generation; it does not enforce shared branch custody across distinct tasks.
-That gap must close before final zero-pending qualification. P4 through P10 rows
-retain their existing targets, and the inventory still makes no full-source or
-live preference-drift claim.
+That gap must close before final zero-pending qualification.
+
+P4 maps 11 rows to the [cadence contract](../cadence.md), including seven setting
+values, three standing-order rules and the non-omittable check-custody invariant.
+`tests/test_cadence.py` covers durable identities and receipts, source-bound
+delivery admission, retained uncertain attempts, current report/observation
+evidence, calendar occurrences and explicit census coverage.
+`tests/test_rearm.py` and `tests/test_cadence_cli.py` exercise bounded waits,
+process persistence, owner holds and internal Secretary supervision without
+installing a hook or calling a native service.
+
+The no-progress key proves the default and rendered stop policy, as the earlier
+identical-failure key does. Neither mapping claims that Monarchy executes or
+counts arbitrary agent repairs. Re-arm is opt-in and depends on a supported
+host; a prepared notice is an attempt, not confirmed delivery or completion.
+There is no native P4 or unattended-operation qualification claim. Reminder
+window hours are documented implementation defaults, not recovered private
+source facts. P5 through P10 rows retain their existing targets, and the inventory
+still makes no full-source or live preference-drift claim.
 
 The public hygiene test scans maintained text, including first-party vendor
 wrapper documentation. It preserves the pinned upstream archive and its legal

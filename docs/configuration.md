@@ -3,8 +3,9 @@
 Configuration chooses how the royalty behave. It does not grant backlog work,
 delegation, spending, production actions or contact with people. It provides
 strict configuration, confirmed profiles, durable pins and standing orders.
-The [conversation](conversation.md) and [delegation](delegation.md) contracts read
-these settings; continuous supervision remains a later phase.
+The [conversation](conversation.md), [delegation](delegation.md) and
+[cadence](cadence.md) contracts read these settings. Commands remain bounded;
+printing configuration or rendering orders starts no background service.
 
 ## Four layers
 
