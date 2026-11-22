@@ -85,6 +85,16 @@ class ConversationTests(unittest.TestCase):
         self.court.deliver(operation['operation_id'])
         self.assertEqual(self.transport.writes, 1)
 
+    def test_away_explicitly_holds_legacy_queen_forwards(self):
+        from monarchy.preferences import Preferences
+        self.closed()
+        operation=self.prepare()
+        Preferences(self.records).override('court.away', True, owner_message='owner-away')
+        with self.assertRaises(Conflict):
+            self.court.deliver(operation['operation_id'])
+        self.assertEqual(self.transport.writes,0)
+        self.assertEqual(self.records.get_operation(operation['operation_id'])['state'],'prepared')
+
     def test_expiry_only_applies_to_known_open_and_valid_past_timestamp(self):
         for state, delta, expected in [('open', 59, 'hold'), ('open', 60, 'available'),
                                        ('unknown', 600, 'hold'), ('closed', 0, 'available'),
@@ -268,7 +278,7 @@ class ConversationTests(unittest.TestCase):
             legacy.execute('PRAGMA user_version=3')
         self.records = CourtRecords(self.path)
         self.conversation = Conversation(self.records)
-        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 5)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 6)
         observation = self.conversation.status(QUEEN)
         self.assertEqual((observation['state'], observation['reason']), ('unknown', None))
         self.assertEqual(self.records.get_operation(operation['operation_id']), operation)

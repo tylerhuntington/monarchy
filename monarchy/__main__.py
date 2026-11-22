@@ -1,5 +1,6 @@
 """Explicit commands for the royalty. Reading help never opens state or starts agents."""
 import argparse
+from datetime import datetime, timezone
 import json
 from pathlib import Path
 
@@ -22,6 +23,17 @@ def document(path):
     value = _json(raw)
     _payload(value)
     return value
+
+
+def cadence_document(path, required, optional=()):
+    value = document(path)
+    if type(value) is not dict or not set(required) <= set(value) or not set(value) <= set(required) | set(optional):
+        raise RecordError('cadence input requires the expected fields')
+    return value
+
+
+def now_string(value=None):
+    return value if value is not None else datetime.now(timezone.utc).isoformat()
 
 
 def parser():
@@ -56,6 +68,26 @@ def parser():
     box.add_argument('file')
     forward = commands.add_parser('prepare-forward', help='journal a bounded Secretary summary without sending')
     forward.add_argument('outcome_id'); forward.add_argument('file')
+    cadence = commands.add_parser('cadence', help='record observations and exact check receipts')
+    check_actions = cadence.add_subparsers(dest='cadence_action', required=True)
+    for action in ('observe', 'expect', 'census'):
+        check_actions.add_parser(action).add_argument('file')
+    check_actions.add_parser('get').add_argument('check_id')
+    complete = check_actions.add_parser('complete')
+    complete.add_argument('check_id'); complete.add_argument('file')
+    complete.add_argument('--receipt-id', required=True); complete.add_argument('--completed-at')
+    digest = check_actions.add_parser('digest')
+    digest.add_argument('project'); digest.add_argument('--now')
+    due = commands.add_parser('due', help='persist and list due checks without sending or completing them')
+    due.add_argument('--project'); due.add_argument('--now'); due.add_argument('--limit', type=int, default=100)
+    due.add_argument('--offset', type=int, default=0)
+    wait = commands.add_parser('wait', help='perform one bounded Secretary wait without native actions')
+    wait.add_argument('--project', required=True); wait.add_argument('--secretary-session', required=True)
+    wait.add_argument('--max-seconds', type=int, default=6600)
+    wait.add_argument('--poll-seconds', type=int, default=30)
+    rearm = commands.add_parser('rearm-settings', help='print opt-in Secretary hook settings without installing them')
+    rearm.add_argument('--script', required=True); rearm.add_argument('--state-path', required=True)
+    rearm.add_argument('--project', required=True); rearm.add_argument('--secretary-session', required=True)
     delegation = commands.add_parser('delegation', help='record scoped grants without activating them by default')
     grant_actions = delegation.add_subparsers(dest='delegation_action', required=True)
     grant_actions.add_parser('categories').add_argument('project')
@@ -131,6 +163,10 @@ def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
     try:
+        if args.command == 'rearm-settings':
+            from .rearm import settings_snippet as rearm_settings
+            output(rearm_settings(args.script, args.state_path, args.project, args.secretary_session))
+            return
         if args.command == 'prompt-settings':
             output(settings_snippet(args.script, args.state_path))
             return
@@ -168,7 +204,34 @@ def main(argv=None):
         with CourtRecords(args.state) as records:
             court = Court(records, ConductorTransport())
             command = args.command
-            if command == 'delegation':
+            if command in ('cadence', 'due'):
+                from .cadence import Cadence
+                cadence = Cadence(records)
+                if command == 'due':
+                    result = cadence.due(now=now_string(args.now), limit=args.limit,
+                                         project=args.project, offset=args.offset)
+                elif args.cadence_action == 'observe':
+                    result = cadence.observe(**cadence_document(args.file,
+                        {'task_id', 'observation_id', 'generation', 'observed_at', 'native_status'},
+                        {'watched_event', 'report_expected_since', 'progress_ref'}))
+                elif args.cadence_action == 'expect':
+                    result = cadence.expect(**cadence_document(args.file,
+                        {'task_id', 'expectation_id', 'generation', 'since', 'source_ref'}))
+                elif args.cadence_action == 'census':
+                    result = cadence.census(**cadence_document(args.file,
+                        {'project', 'census_id', 'observed_at', 'authority_ref', 'slots'}))
+                elif args.cadence_action == 'get':
+                    result = cadence.get(args.check_id)
+                elif args.cadence_action == 'complete':
+                    result = cadence.complete(args.check_id, args.receipt_id, document(args.file),
+                                              completed_at=now_string(args.completed_at))
+                elif args.cadence_action == 'digest':
+                    result = cadence.digest(args.project, now=now_string(args.now))
+            elif command == 'wait':
+                from .rearm import wait as wait_for_checks
+                result = wait_for_checks(records, project=args.project, secretary_session=args.secretary_session,
+                    max_seconds=args.max_seconds, poll_seconds=args.poll_seconds)
+            elif command == 'delegation':
                 from .delegation import Delegation
                 grants = Delegation(records)
                 action = args.delegation_action

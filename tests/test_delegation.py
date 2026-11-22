@@ -374,7 +374,7 @@ class DelegationTests(unittest.TestCase):
                                                     (identity,)).fetchone()
             self.assertIsNone(raw[0])
             with self.assertRaises(RecordError): self.records.get_decision(identity)
-        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 5)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 6)
 
 
 if __name__ == '__main__':

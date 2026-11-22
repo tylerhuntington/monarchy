@@ -22,7 +22,7 @@ TEMPLATE_INVARIANT_RULE_IDS = frozenset({
     'invariant.never-delegable', 'invariant.owner-route', 'invariant.one-writer',
     'invariant.no-fallback', 'invariant.agent-names', 'invariant.headers',
     'invariant.prompt-state', 'invariant.verb-classification', 'invariant.grants',
-    'invariant.runtime-boundary', 'invariant.config-custody',
+    'invariant.runtime-boundary', 'invariant.config-custody', 'invariant.check-custody',
 })
 DATA_RULE_IDS = frozenset({
     'invariant.effective-settings', 'invariant.project-data', 'invariant.owner-notes',
@@ -30,12 +30,13 @@ DATA_RULE_IDS = frozenset({
 INVARIANT_RULE_IDS = TEMPLATE_INVARIANT_RULE_IDS | DATA_RULE_IDS
 SETTING_KEYS = (
     'voice.max_lines', 'voice.zone', 'voice.forbidden_characters', 'forwards.max_lines', 'forwards.max_chars',
-    'reports.max_lines', 'reports.max_chars', 'failures.identical_limit',
+    'reports.max_lines', 'reports.max_chars', 'failures.identical_limit', 'failures.no_progress_limit',
     'court.paused', 'court.stopped', 'court.away', 'owner.local_bridge_policy',
 )
 LEADERSHIP_KEYS = (
     'prompts.abandoned_minutes', 'cadence.sweep_minutes', 'cadence.report_overdue_minutes',
     'cadence.status_minutes', 'cadence.stale_minutes', 'cadence.reminder_minutes',
+    'cadence.reminder_start', 'cadence.reminder_end',
     'cadence.digest_time', 'backlog.builder_cap', 'backlog.idle_minutes',
     'backlog.review_hours', 'backlog.selection_order', 'priority.check_minutes',
     'priority.incident_minutes', 'priority.proof_minutes', 'rotation.time',

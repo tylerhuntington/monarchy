@@ -29,7 +29,7 @@
       ],
       "idle_requires_named_watched_event": true
     },
-    "target": "pending:P4"
+    "target": "rule:supervision.idle-ladder"
   },
   {
     "source": "preference.project-design-direction",
@@ -192,7 +192,7 @@
     "source": "preference.digest-builder-census",
     "class": "rule",
     "value": "Every digest lists working or idle state for each authorized builder slot.",
-    "target": "pending:P4"
+    "target": "rule:supervision.digests"
   },
   {
     "source": "preference.owner-priority-followups",
@@ -775,49 +775,49 @@
     "source": "cadence.sweep-minutes",
     "class": "default",
     "value": 30,
-    "target": "pending:P4"
+    "target": "key:cadence.sweep_minutes"
   },
   {
     "source": "cadence.report-overdue-minutes",
     "class": "default",
     "value": 20,
-    "target": "pending:P4"
+    "target": "key:cadence.report_overdue_minutes"
   },
   {
     "source": "cadence.status-minutes",
     "class": "default",
     "value": 30,
-    "target": "pending:P4"
+    "target": "key:cadence.status_minutes"
   },
   {
     "source": "cadence.status-stale-minutes",
     "class": "default",
     "value": 60,
-    "target": "pending:P4"
+    "target": "key:cadence.stale_minutes"
   },
   {
     "source": "cadence.digest-time",
     "class": "default",
     "value": "06:57",
-    "target": "pending:P4"
+    "target": "key:cadence.digest_time"
   },
   {
     "source": "cadence.daytime-reminder-minutes",
     "class": "default",
     "value": 120,
-    "target": "pending:P4"
+    "target": "key:cadence.reminder_minutes"
   },
   {
     "source": "cadence.check-records",
     "class": "invariant",
     "value": "Persist due checks and perform bounded due/wait passes.",
-    "target": "pending:P4"
+    "target": "invariant:invariant.check-custody"
   },
   {
     "source": "cadence.opt-in-rearm",
     "class": "rule",
     "value": "Offer supported opt-in Stop hook re-arm; never install or activate silently.",
-    "target": "pending:P4"
+    "target": "rule:supervision.rearm"
   },
   {
     "source": "cadence.identical-failures",
@@ -829,7 +829,7 @@
     "source": "cadence.no-progress-attempts",
     "class": "default",
     "value": 2,
-    "target": "pending:P4"
+    "target": "key:failures.no_progress_limit"
   },
   {
     "source": "backlog.activation",

@@ -70,6 +70,7 @@ KEYS = {
     'reports.max_lines': _limit(5, 1, 20),
     'reports.max_chars': _limit(1200, 1, 10000),
     'failures.identical_limit': _limit(2, 1, 10),
+    'failures.no_progress_limit': _limit(2, 1, 10),
     'prompts.abandoned_minutes': _minutes(60),
     'profiles.queen': _spec({'agent': 'claude', 'model': 'opus-5-5-1m',
                              'effort': 'xhigh', 'fast_mode': False}, 'profile'),
@@ -86,6 +87,8 @@ KEYS = {
     'cadence.status_minutes': _minutes(30),
     'cadence.stale_minutes': _minutes(60),
     'cadence.reminder_minutes': _minutes(120),
+    'cadence.reminder_start': _spec('08:00', 'clock'),
+    'cadence.reminder_end': _spec('20:00', 'clock'),
     'cadence.digest_time': _spec('06:57', 'clock'),
     'backlog.builder_cap': _limit(8, 1, 8, home='project',
                                   layers=('project', 'owner', 'overrides')),
@@ -285,6 +288,11 @@ def _validate(value, layer):
             _fail(key, 'invalid _why explanation')
     if '_why' in value:
         result['_why'] = copy.deepcopy(why)
+    if layer == 'owner':
+        start = result.get('cadence.reminder_start', KEYS['cadence.reminder_start']['default'])
+        end = result.get('cadence.reminder_end', KEYS['cadence.reminder_end']['default'])
+        if start >= end:
+            _fail('cadence.reminder_end', 'reminder window must end after it starts')
     return result
 
 

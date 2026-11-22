@@ -7,7 +7,7 @@ import re
 import unittest
 from unittest.mock import patch
 
-from monarchy.orders import OrdersError, render
+from monarchy.orders import INVARIANT_RULE_IDS, OrdersError, render
 
 
 def resolved():
@@ -24,6 +24,7 @@ def resolved():
         'reports.max_lines': 5,
         'reports.max_chars': 1200,
         'failures.identical_limit': 2,
+        'failures.no_progress_limit': 2,
         'court.paused': False,
         'court.stopped': False,
         'court.away': False,
@@ -34,6 +35,8 @@ def resolved():
         'cadence.status_minutes': 30,
         'cadence.stale_minutes': 60,
         'cadence.reminder_minutes': 120,
+        'cadence.reminder_start': '08:00',
+        'cadence.reminder_end': '20:00',
         'cadence.digest_time': '06:57',
         'backlog.builder_cap': 8,
         'backlog.idle_minutes': 20,
@@ -89,9 +92,28 @@ class OrdersTests(unittest.TestCase):
         result = render('queen', config)
         self.assertNotIn('voice.plain-language', result['rule_ids'])
         self.assertIn('invariant.owner-route', result['rule_ids'])
-        config['orders.omit']['value'] = ['invariant.prompt-state']
-        with self.assertRaises(OrdersError):
-            render('queen', config)
+        for rule in INVARIANT_RULE_IDS:
+            config['orders.omit']['value'] = [rule]
+            with self.subTest(rule=rule), self.assertRaises(OrdersError):
+                render('queen', config)
+
+    def test_consumed_cadence_controls_reach_the_required_roles_with_provenance(self):
+        config = resolved()
+        config['failures.no_progress_limit'] = {'value': 1, 'layers': ['owner'], 'why': {}}
+        config['cadence.reminder_start'] = {'value': '09:15', 'layers': ['owner'], 'why': {}}
+        config['cadence.reminder_end'] = {'value': '17:15', 'layers': ['owner'], 'why': {}}
+        for role in ('queen', 'secretary', 'worker'):
+            with self.subTest(role=role):
+                text = render(role, config)['text']
+                block = text.split('Effective settings (values, provenance and reasons; not grants):\n\n```json\n')[1]
+                settings = json.loads(block.split('\n```', 1)[0])
+                self.assertEqual(settings['failures.no_progress_limit'], config['failures.no_progress_limit'])
+                if role != 'worker':
+                    for key in ('cadence.reminder_start', 'cadence.reminder_end'):
+                        self.assertEqual(settings[key], config[key])
+                else:
+                    self.assertNotIn('cadence.reminder_start', settings)
+                    self.assertNotIn('cadence.reminder_end', settings)
 
     def test_unknown_duplicate_or_untrusted_omissions_fail_safely(self):
         for value, layers in [(['private-sensitive-unknown'], ['owner']),

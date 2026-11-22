@@ -90,11 +90,26 @@ P3_TARGETS = {
     **{'delegation.taxonomy.' + category: 'rule:delegation.taxonomy'
        for category in TAXONOMY if category != 'internal-pr-approval'},
 }
+P4_KEYS = {
+    'cadence.sweep-minutes': 'cadence.sweep_minutes',
+    'cadence.report-overdue-minutes': 'cadence.report_overdue_minutes',
+    'cadence.status-minutes': 'cadence.status_minutes',
+    'cadence.status-stale-minutes': 'cadence.stale_minutes',
+    'cadence.digest-time': 'cadence.digest_time',
+    'cadence.daytime-reminder-minutes': 'cadence.reminder_minutes',
+    'cadence.no-progress-attempts': 'failures.no_progress_limit',
+}
+P4_TARGETS = {
+    **{source: 'key:' + key for source, key in P4_KEYS.items()},
+    'preference.idle-ladder': 'rule:supervision.idle-ladder',
+    'preference.digest-builder-census': 'rule:supervision.digests',
+    'cadence.opt-in-rearm': 'rule:supervision.rearm',
+    'cadence.check-records': 'invariant:invariant.check-custody',
+}
 # These rows represent runtime behavior, not the mere existence of a setting or
 # standing-order paragraph. Remove entries only with the phase's runtime proof.
 PENDING_RUNTIME = {
     'authority.one-writer': 'P3',
-    'cadence.check-records': 'P4',
     'backlog.activation': 'P5',
     'signoff.candidate-binding': 'P6',
     'priority.feed-mode': 'P7',
@@ -255,6 +270,27 @@ class ParityTests(unittest.TestCase):
         rows = {row['source']: row for row in catalog()}
         self.assertEqual(rows['delegation.states']['value'], list(STATES))
         self.assertEqual(set(rows['authority.never-delegable-floor']['value']), set(NEVER_DELEGABLE))
+
+    def test_p4_targets_match_the_bounded_cadence_contract(self):
+        rows = catalog()
+        by_source = {row['source']: row for row in rows}
+        self.assertEqual(len(P4_TARGETS), 11)
+        for source, target in P4_TARGETS.items():
+            with self.subTest(source=source):
+                self.assertEqual(by_source[source]['target'], target)
+        self.assertFalse(any(row['target'] == 'pending:P4' for row in rows))
+        self.assert_catalog(rows)
+
+    def test_p4_declared_settings_reach_leadership_with_their_actual_values(self):
+        rows = {row['source']: row for row in catalog()}
+        for role in ('queen', 'secretary'):
+            block = self.rendered[role]['text'].split(
+                'Effective settings (values, provenance and reasons; not grants):\n\n```json\n')[1]
+            settings = json.loads(block.split('\n```', 1)[0])
+            for source, key in P4_KEYS.items():
+                with self.subTest(role=role, source=source):
+                    self.assertEqual(settings[key], self.config[key])
+                    self.assertEqual(settings[key]['value'], rows[source]['value'])
 
     def test_fixture_exercises_each_layer_without_activating_authority(self):
         self.assertEqual(self.config['profiles.worker']['layers'], ['defaults'])
