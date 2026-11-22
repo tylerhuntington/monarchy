@@ -56,6 +56,24 @@ def parser():
     box.add_argument('file')
     forward = commands.add_parser('prepare-forward', help='journal a bounded Secretary summary without sending')
     forward.add_argument('outcome_id'); forward.add_argument('file')
+    delegation = commands.add_parser('delegation', help='record scoped grants without activating them by default')
+    grant_actions = delegation.add_subparsers(dest='delegation_action', required=True)
+    grant_actions.add_parser('categories').add_argument('project')
+    state = grant_actions.add_parser('state')
+    state.add_argument('project'); state.add_argument('category')
+    propose = grant_actions.add_parser('propose')
+    propose.add_argument('file'); propose.add_argument('--owner-message', required=True)
+    followup = grant_actions.add_parser('followup')
+    followup.add_argument('owner_decision_id'); followup.add_argument('--owner-message', required=True)
+    grant_actions.add_parser('apply').add_argument('decision_id')
+    revoke = grant_actions.add_parser('revoke')
+    revoke.add_argument('project'); revoke.add_argument('category')
+    revoke.add_argument('--owner-message', required=True)
+    delegated_answer = grant_actions.add_parser('answer')
+    delegated_answer.add_argument('decision_id'); delegated_answer.add_argument('file')
+    delegated_answer.add_argument('--revision', type=int, required=True)
+    delegated_answer.add_argument('--grant-id', required=True)
+    delegated_answer.add_argument('--current-head', help='fresh observed full head for internal PR approval')
     control = commands.add_parser('control', help='record owner controls or apply an answered proposal')
     verbs = control.add_subparsers(dest='verb', required=True)
     for verb in ('bearings', 'decisions', 'pause', 'stop', 'away', 'resume', 'model', 'handoff'):
@@ -80,10 +98,12 @@ def parser():
     answer.add_argument('--owner-message', required=True)
     send_answer = commands.add_parser('prepare-answer', help='journal scoped answer delivery without sending')
     send_answer.add_argument('decision_id')
+    send_answer.add_argument('--current-head', help='fresh observed full head for an internal PR answer')
     dispatch = commands.add_parser('prepare-dispatch', help='journal a brief without launching or sending')
     dispatch.add_argument('task'); dispatch.add_argument('--new-session', action='store_true')
     deliver = commands.add_parser('deliver', help='explicitly execute or reconcile a journaled operation')
     deliver.add_argument('operation_id')
+    deliver.add_argument('--current-head', help='fresh observed full head before a new internal PR answer send')
     verify = commands.add_parser('verify', help='record independent, source-bound review evidence')
     verify.add_argument('task'); verify.add_argument('file')
     return p
@@ -148,7 +168,32 @@ def main(argv=None):
         with CourtRecords(args.state) as records:
             court = Court(records, ConductorTransport())
             command = args.command
-            if command == 'control':
+            if command == 'delegation':
+                from .delegation import Delegation
+                grants = Delegation(records)
+                action = args.delegation_action
+                if action == 'categories':
+                    result = grants.categories(args.project)
+                elif action == 'state':
+                    result = grants.state(args.project, args.category)
+                elif action == 'propose':
+                    proposal = document(args.file)
+                    if type(proposal) is not dict or set(proposal) != {
+                            'project', 'category', 'state', 'precedents'}:
+                        raise RecordError('delegation proposal requires exact fields')
+                    result = grants.propose(**proposal, owner_message=args.owner_message)
+                elif action == 'apply':
+                    result = grants.apply(args.decision_id)
+                elif action == 'followup':
+                    result = grants.followup(args.owner_decision_id, owner_message=args.owner_message)
+                elif action == 'revoke':
+                    result = grants.revoke(args.project, args.category,
+                                           owner_message=args.owner_message)
+                elif action == 'answer':
+                    result = grants.answer(args.decision_id, document(args.file),
+                        expected_revision=args.revision, grant_id=args.grant_id,
+                        current_head=args.current_head)
+            elif command == 'control':
                 controls = Controls(records)
                 if args.verb == 'apply':
                     result = controls.apply(args.decision_id)
@@ -197,10 +242,14 @@ def main(argv=None):
             elif command == 'answer':
                 result = court.answer(args.decision_id, document(args.file), expected_revision=args.revision,
                                        owner_message=args.owner_message)
-            elif command == 'prepare-answer': result = court.prepare_answer(args.decision_id)
+            elif command == 'prepare-answer':
+                result = court.prepare_answer(args.decision_id,
+                    **({'current_head': args.current_head} if args.current_head is not None else {}))
             elif command == 'prepare-dispatch':
                 result = court.prepare_dispatch(args.task, new_session=args.new_session)
-            elif command == 'deliver': result = court.deliver(args.operation_id)
+            elif command == 'deliver':
+                result = court.deliver(args.operation_id,
+                    **({'current_head': args.current_head} if args.current_head is not None else {}))
             elif command == 'verify': result = court.verify(args.task, **document(args.file))
             output(result)
     except (ConfigError, OrdersError, HookError) as exc:
