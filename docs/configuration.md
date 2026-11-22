@@ -127,7 +127,8 @@ orders integrity and pause/stop inside the journal transaction. Readback of an
 already uncertain operation remains available while new actions are held.
 
 Existing databases migrate transactionally through v2 (`pins` and `overrides`)
-to v3 (`prompt_observations`).
+to v3 (`prompt_observations`) and v4 (nullable prompt cancellation reasons).
+Existing ambiguous prompt observations remain unknown with no cancellation reason.
 Legacy explicitly bound Monarchy installations remain recoverable before configuration adoption.
 After a Monarchy installation adopts pins, legacy tasks need an approved configuration binding
 before another external action. Pending decisions and uncertain operations survive

@@ -21,6 +21,10 @@ ENV = {'CONDUCTOR_SESSION_ID': 'session-fixture', 'MONARCHY_STATE': '/tmp/court-
 QUESTION = {'question': 'Which path should proceed?', 'header': 'Path', 'multiSelect': False,
             'options': [{'label': 'Continue (Recommended)', 'description': 'Continue the task.'},
                         {'label': 'Hold', 'description': 'Keep the task held.'}]}
+CANCELLED = ('User cancelled the question. Please continue without this information or ask in a different way.\n'
+             'Error code: CONDUCTOR_ASK_USER_QUESTION_USER_CANCELLED\n'
+             'Retryable: no\n'
+             'Suggested action: Continue without this information or ask in a normal message if it is still necessary.')
 
 
 def payload(event='PreToolUse'):
@@ -235,6 +239,57 @@ class PromptHookTests(unittest.TestCase):
             code, runner, _ = self.run_adapter(data)
             self.assertEqual(code, 0)
             self.assertEqual(runner.calls[0][0][6], 'unknown')
+
+    def test_exact_native_cancellation_records_cancel_without_private_content(self):
+        data = payload('PostToolUse')
+        data['tool_name'] = 'mcp__conductor__AskUserQuestion'
+        blocks = [{'type': 'text', 'text': CANCELLED}]
+        for response in (blocks, {'content': blocks}, {'content': blocks, 'isError': False}):
+            with self.subTest(response=response):
+                data['tool_response'] = response
+                code, runner, error = self.run_adapter(data)
+                self.assertEqual((code, error), (0, ''))
+                self.assertEqual([args[6] for args, _ in runner.calls], ['cancel'])
+                self.assertNotIn(CANCELLED, repr(runner.calls))
+                self.assertNotIn(QUESTION['question'], repr(runner.calls))
+
+    def test_cancellation_requires_exact_native_formatter_and_unambiguous_envelope(self):
+        blocks = [{'type': 'text', 'text': CANCELLED}]
+        responses = [
+            [{'type': 'text', 'text': text}] for text in
+            (CANCELLED.split('\n')[0], CANCELLED + '\n', 'prefix' + CANCELLED,
+             CANCELLED.replace('Retryable: no', 'Retryable: yes'),
+             CANCELLED.replace('\n', '\r\n'), CANCELLED + '\nUser responses:\n1. Hold')]
+        responses += [blocks * 2, {'content': blocks, 'isError': True},
+                      {'content': blocks, 'isError': 'false'}, {'content': blocks, 'error': 'failed'},
+                      {'content': blocks, 'cancelled': True}, {'content': blocks, 'unknown': True},
+                      [{'type': 'text', 'text': CANCELLED, 'isError': True}]]
+        for response in responses:
+            with self.subTest(response=response):
+                data = payload('PostToolUse')
+                data.update(tool_name='mcp__conductor__AskUserQuestion', tool_response=response)
+                code, runner, _ = self.run_adapter(data)
+                self.assertEqual(code, 0)
+                self.assertEqual(runner.calls[0][0][6], 'unknown')
+        for update in ({'tool_name': 'AskUserQuestion'}, {'hook_event_name': 'PostToolUseFailure'},
+                       {'tool_input': {}}, {'error': 'failed'}, {'isError': True},
+                       {'is_interrupt': True}, {'cancelled': True}, {'afkTimeoutMs': 1000}):
+            with self.subTest(update=update):
+                data = payload('PostToolUse')
+                data.update(tool_name='mcp__conductor__AskUserQuestion', tool_response=blocks)
+                data.update(update)
+                code, runner, _ = self.run_adapter(data)
+                self.assertEqual(code, 0)
+                self.assertEqual(runner.calls[0][0][6], 'unknown')
+
+    def test_uncertain_cancellation_write_attempts_generic_unknown(self):
+        data = payload('PostToolUse')
+        data.update(tool_name='mcp__conductor__AskUserQuestion',
+                    tool_response=[{'type': 'text', 'text': CANCELLED}])
+        code, runner, error = self.run_adapter(data, recorder=Recorder([1, 0]))
+        self.assertEqual(code, 2)
+        self.assertEqual([args[6] for args, _ in runner.calls], ['cancel', 'unknown'])
+        self.assertTrue(error.strip())
 
     def test_builtin_tool_does_not_accept_conductor_numbered_text(self):
         data = payload('PostToolUse')

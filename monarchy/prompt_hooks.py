@@ -17,6 +17,13 @@ QUESTION_TOOLS = ('AskUserQuestion', 'mcp__conductor__AskUserQuestion')
 # Match the real end of the name, including when malformed input ends in a newline.
 QUESTION_MATCHER = r'^(?:' + '|'.join(re.escape(name) for name in QUESTION_TOOLS) + r')(?![\s\S])'
 FAILURE_MESSAGE = 'Monarchy could not safely record the prompt observation; keep forwarding held.'
+# Exact installed Conductor cancellation result. Partial prose and interrupts
+# are ambiguous; this does not identify who or what cancelled the interaction.
+CONDUCTOR_CANCELLED = (
+    'User cancelled the question. Please continue without this information or ask in a different way.\n'
+    'Error code: CONDUCTOR_ASK_USER_QUESTION_USER_CANCELLED\n'
+    'Retryable: no\n'
+    'Suggested action: Continue without this information or ask in a normal message if it is still necessary.')
 
 
 class HookError(ValueError):
@@ -164,6 +171,30 @@ def _single_answer(value):
             and not any(ord(char) < 32 or ord(char) == 127 for char in value))
 
 
+def _conductor_text(data):
+    """Extract one exact native content block with no error or timeout markers."""
+    response, tool_input = data.get('tool_response'), data.get('tool_input')
+    if type(tool_input) is not dict or _questions(tool_input.get('questions')) is None:
+        return None
+    for item in (data, response):
+        if type(item) is not dict:
+            continue
+        if 'error' in item or item.get('afkTimeoutMs') is not None:
+            return None
+        for flag in ('isError', 'is_interrupt', 'interrupted', 'cancelled', 'canceled', 'aborted'):
+            if flag in item and item[flag] is not False:
+                return None
+    if type(response) is dict:
+        if not set(response) <= {'content', 'isError'}:
+            return None
+        response = response.get('content')
+    if (type(response) is not list or len(response) != 1 or type(response[0]) is not dict
+            or set(response[0]) != {'type', 'text'} or response[0]['type'] != 'text'
+            or type(response[0]['text']) is not str):
+        return None
+    return response[0]['text']
+
+
 def _conductor_answered(data):
     """Recognize the installed Conductor formatter, not arbitrary MCP prose.
 
@@ -171,30 +202,14 @@ def _conductor_answered(data):
     one-content MCP envelope is also recognized. Neither is an owner grant.
     Multiline freeform text is ambiguous in this positional format and holds.
     """
-    response, tool_input = data.get('tool_response'), data.get('tool_input')
-    if type(tool_input) is not dict or _questions(tool_input.get('questions')) is None:
+    text = _conductor_text(data)
+    if text is None:
         return False
-    for item in (data, response):
-        if type(item) is not dict:
-            continue
-        if 'error' in item or item.get('afkTimeoutMs') is not None:
-            return False
-        for flag in ('isError', 'is_interrupt', 'interrupted', 'cancelled', 'canceled', 'aborted'):
-            if flag in item and item[flag] is not False:
-                return False
-    if type(response) is dict:
-        if not set(response) <= {'content', 'isError'}:
-            return False
-        response = response.get('content')
-    if (type(response) is not list or len(response) != 1 or type(response[0]) is not dict
-            or set(response[0]) != {'type', 'text'} or response[0]['type'] != 'text'
-            or type(response[0]['text']) is not str):
-        return False
-    lines = response[0]['text'].split('\n')
+    lines = text.split('\n')
     if not lines or lines[0] != 'User responses:':
         return False
     cursor = 1
-    for number, question in enumerate(tool_input['questions'], 1):
+    for number, question in enumerate(data['tool_input']['questions'], 1):
         if cursor >= len(lines):
             return False
         prefix = str(number) + '. '
@@ -257,12 +272,19 @@ def run_hook(raw, environ, runner=subprocess.run):
                for value in (session, prompt_id)):
             raise HookError('prompt identity is missing or invalid')
         state = _path(environ.get('MONARCHY_STATE'))
-        action = ('open' if event == 'PreToolUse' else
-                  'close' if event == 'PostToolUse' and _answered(data) else 'unknown')
+        action = 'unknown'
+        if event == 'PreToolUse':
+            action = 'open'
+        elif event == 'PostToolUse':
+            if _answered(data):
+                action = 'close'
+            elif (tool == 'mcp__conductor__AskUserQuestion'
+                  and _conductor_text(data) == CONDUCTOR_CANCELLED):
+                action = 'cancel'
         if not _record(action, session, prompt_id, state, runner):
-            # A close may have committed before its process timed out. Attempt
-            # a conservative same-ID unknown observation; never retry a close.
-            if action == 'close':
+            # A terminal observation may have committed before its process timed
+            # out. Attempt generic unknown; never retry a close or cancellation.
+            if action in {'close', 'cancel'}:
                 _record('unknown', session, prompt_id, state, runner)
             raise HookError('prompt observation could not be recorded')
         return 0

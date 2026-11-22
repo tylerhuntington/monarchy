@@ -7,6 +7,8 @@ import tempfile
 import unittest
 
 from monarchy.records import CourtRecords
+from monarchy.conversation import Conversation, prompt_policy
+from monarchy.prompt_hooks import CONDUCTOR_CANCELLED, run_hook
 
 SESSION = '33333333-3333-4333-8333-333333333333'
 
@@ -30,6 +32,34 @@ class ConversationCLITests(unittest.TestCase):
             result = self.run_cli('--state', state, 'prompt', 'status', '--session', SESSION)
             self.assertEqual(result.returncode, 0, result.stderr)
             self.assertEqual(json.loads(result.stdout)['state'], 'unknown')
+
+    def test_native_cancel_reopen_and_answer_survive_real_hook_cli_processes(self):
+        with tempfile.TemporaryDirectory() as directory:
+            state = Path(directory) / 'royalty.db'
+            with CourtRecords(state) as records:
+                records.create_task('task', 'example/project', 'worker', metadata={
+                    'queen_binding': {'session_id': SESSION}})
+            env = {'CONDUCTOR_SESSION_ID': SESSION, 'MONARCHY_STATE': str(state)}
+            data = {'tool_name': 'mcp__conductor__AskUserQuestion', 'tool_use_id': 'first',
+                    'tool_input': {'questions': [{'question': 'Private synthetic question?',
+                                                  'options': ['Hold', 'Continue']}]}}
+            for event, prompt_id, response, expected in [
+                ('PreToolUse', 'first', None, ('open', None)),
+                ('PostToolUse', 'first', CONDUCTOR_CANCELLED, ('unknown', 'native-cancelled')),
+                ('PreToolUse', 'second', None, ('open', 'answer-required')),
+                ('PostToolUse', 'second', 'User responses:\n1. Private synthetic answer', ('closed', None))]:
+                data.update(hook_event_name=event, tool_use_id=prompt_id,
+                            tool_response=[{'type': 'text', 'text': response}])
+                self.assertEqual(run_hook(json.dumps(data).encode(), env), 0)
+                with CourtRecords(state) as records:
+                    observation = Conversation(records).status(SESSION)
+                    self.assertEqual((observation['state'], observation['reason']), expected)
+                    self.assertEqual(prompt_policy(observation),
+                                     'available' if expected[0] == 'closed' else 'hold')
+                    self.assertEqual(records._connection.execute('SELECT count(*) FROM decisions').fetchone()[0], 0)
+            raw = state.read_bytes()
+            self.assertNotIn(b'Private synthetic question', raw)
+            self.assertNotIn(b'Private synthetic answer', raw)
 
     def test_settings_and_box_lint_are_stateless(self):
         with tempfile.TemporaryDirectory() as directory:

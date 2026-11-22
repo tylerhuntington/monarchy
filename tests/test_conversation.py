@@ -1,6 +1,7 @@
 """Durable forwarding boundary tests without native writes."""
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
+import sqlite3
 import tempfile
 import unittest
 
@@ -146,6 +147,167 @@ class ConversationTests(unittest.TestCase):
         with self.assertRaises(Conflict): self.court.deliver(self.prepare()['operation_id'])
         with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'next', 'open')
         self.assertEqual(self.transport.writes, 0)
+
+    def test_cancelled_question_reopens_but_forwards_wait_for_matching_answer(self):
+        operation = self.prepare()
+        self.conversation.observe(QUEEN, 'first', 'open')
+        cancelled = self.conversation.observe(QUEEN, 'first', 'cancel')
+        self.assertEqual((cancelled['state'], cancelled['reason']), ('unknown', 'native-cancelled'))
+        self.assertEqual(self.conversation.observe(QUEEN, 'first', 'cancel'), cancelled)
+        with self.assertRaises(Conflict): self.court.deliver(operation['operation_id'])
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'first', 'open')
+        self.assertEqual(self.conversation.observe(QUEEN, 'first', 'close'), cancelled)
+        with CourtRecords(self.path) as reopened:
+            next_box = Conversation(reopened).observe(QUEEN, 'second', 'open')
+        self.assertEqual((next_box['state'], next_box['reason']), ('open', 'answer-required'))
+        self.assertEqual(self.conversation.observe(QUEEN, 'second', 'open'), next_box)
+        old = (datetime.now(timezone.utc) - timedelta(days=10)).isoformat()
+        self.records._connection.execute('UPDATE prompt_observations SET observed_at=?', (old,))
+        with self.assertRaises(Conflict): self.court.deliver(operation['operation_id'])
+        for action in ('cancel', 'close', 'unknown'):
+            self.conversation.observe(QUEEN, 'first', action)
+            self.assertEqual(self.conversation.status(QUEEN)['prompt_id'], 'second')
+            self.assertEqual(self.conversation.status(QUEEN)['reason'], 'answer-required')
+        closed = self.conversation.observe(QUEEN, 'second', 'close')
+        self.assertEqual((closed['state'], closed['reason']), ('closed', None))
+        self.assertEqual(self.court.deliver(operation['operation_id'])['state'], 'confirmed')
+        self.court.deliver(operation['operation_id'])
+        self.assertEqual(self.transport.writes, 1)
+
+    def test_successive_cancellations_keep_reopened_questions_held_past_expiry(self):
+        self.conversation.observe(QUEEN, 'first', 'open')
+        for previous, fresh in [('first', 'second'), ('second', 'third')]:
+            self.conversation.observe(QUEEN, previous, 'cancel')
+            observation = self.conversation.observe(QUEEN, fresh, 'open')
+            self.assertEqual(observation['reason'], 'answer-required')
+            self.assertEqual(prompt_policy(observation, now=datetime.now(timezone.utc)
+                                           + timedelta(days=10)), 'hold')
+
+    def test_cancellation_cannot_repair_generic_unknown_or_failed_reopen(self):
+        self.conversation.observe(QUEEN, 'first', 'open')
+        self.conversation.observe(QUEEN, 'first', 'unknown')
+        observation = self.conversation.observe(QUEEN, 'first', 'cancel')
+        self.assertEqual((observation['state'], observation['reason']), ('unknown', None))
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'second', 'open')
+        self.conversation.observe(QUEEN, 'first', 'close')
+        with self.assertRaises(Conflict): self.court.deliver(self.prepare()['operation_id'])
+
+    def test_unknown_after_native_cancellation_removes_reopen_permission(self):
+        self.conversation.observe(QUEEN, 'first', 'open')
+        self.conversation.observe(QUEEN, 'first', 'cancel')
+        observation = self.conversation.observe(QUEEN, 'first', 'unknown')
+        self.assertEqual((observation['state'], observation['reason']), ('unknown', None))
+        self.assertEqual(self.conversation.observe(QUEEN, 'first', 'cancel'), observation)
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'second', 'open')
+
+    def test_unknown_on_reopened_question_cannot_be_repaired_by_cancel_or_close(self):
+        self.conversation.observe(QUEEN, 'first', 'open')
+        self.conversation.observe(QUEEN, 'first', 'cancel')
+        self.conversation.observe(QUEEN, 'second', 'open')
+        observation = self.conversation.observe(QUEEN, 'second', 'unknown')
+        self.assertIsNone(observation['reason'])
+        for action in ('cancel', 'close'):
+            self.assertEqual(self.conversation.observe(QUEEN, 'second', action), observation)
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'third', 'open')
+
+    def test_uncorrelated_or_contradictory_cancellation_never_allows_reopen(self):
+        self.closed()
+        for prompt_id in ('box', 'unseen'):
+            observation = self.conversation.observe(QUEEN, prompt_id, 'cancel')
+            self.assertEqual((observation['state'], observation['reason']), ('unknown', None))
+            with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'next', 'open')
+        with self.assertRaises(Conflict): self.court.deliver(self.prepare()['operation_id'])
+
+    def test_reopen_refuses_any_historically_seen_id_including_unmatched_callback(self):
+        # A legacy journal may retain a callback without its matching open.
+        self.records._connection.execute(
+            'INSERT INTO prompt_observations(session_id,prompt_id,state,observed_at) VALUES(?,?,?,?)',
+            (QUEEN, 'old-callback', 'unknown', NOW.isoformat()))
+        self.records._connection.execute(
+            'INSERT INTO prompt_observations(session_id,prompt_id,state,observed_at) VALUES(?,?,?,?)',
+            (QUEEN, 'first', 'open', NOW.isoformat()))
+        self.conversation.observe(QUEEN, 'first', 'cancel')
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'old-callback', 'open')
+        self.conversation.observe(QUEEN, 'fresh', 'open')
+
+    def test_cancelled_reopen_keeps_inflight_and_unknown_forward_fence(self):
+        self.closed()
+        operation = self.prepare()
+        self.records.set_operation_state(operation['operation_id'], 'in_flight', expected_state='prepared')
+        # A real open may predate recovery of an uncertain native send.
+        self.records._connection.execute(
+            'INSERT INTO prompt_observations(session_id,prompt_id,state,observed_at) VALUES(?,?,?,?)',
+            (QUEEN, 'first', 'open', NOW.isoformat()))
+        self.conversation.observe(QUEEN, 'first', 'cancel')
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'second', 'open')
+        self.records.set_operation_state(operation['operation_id'], 'unknown', expected_state='in_flight')
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'second', 'open')
+        self.court.deliver(operation['operation_id'])
+        self.conversation.observe(QUEEN, 'second', 'open')
+        self.assertEqual(self.transport.writes, 0)
+
+    def test_any_reason_holds_even_with_expired_or_closed_observation(self):
+        for state in ('open', 'closed', 'unknown'):
+            for reason in ('answer-required', 'native-cancelled', 'unrecognized'):
+                with self.subTest(state=state, reason=reason):
+                    self.assertEqual(prompt_policy({'state': state, 'reason': reason,
+                        'observed_at': NOW.isoformat()}, now=NOW+timedelta(days=10)), 'hold')
+
+    def test_v3_migration_preserves_unknown_without_inferring_cancellation(self):
+        self.conversation.observe(QUEEN, 'legacy', 'unknown')
+        operation = self.prepare()
+        self.records.close()
+        with sqlite3.connect(self.path) as legacy:
+            legacy.execute('ALTER TABLE prompt_observations RENAME TO prompt_v4')
+            legacy.execute("""CREATE TABLE prompt_observations (
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL,
+                prompt_id TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('open','closed','unknown')),
+                observed_at TEXT NOT NULL)""")
+            legacy.execute('INSERT INTO prompt_observations SELECT sequence,session_id,prompt_id,state,observed_at FROM prompt_v4')
+            legacy.execute('DROP TABLE prompt_v4')
+            legacy.execute('PRAGMA user_version=3')
+        self.records = CourtRecords(self.path)
+        self.conversation = Conversation(self.records)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 4)
+        observation = self.conversation.status(QUEEN)
+        self.assertEqual((observation['state'], observation['reason']), ('unknown', None))
+        self.assertEqual(self.records.get_operation(operation['operation_id']), operation)
+        self.assertEqual(self.conversation.observe(QUEEN, 'legacy', 'cancel'), observation)
+        with self.assertRaises(Conflict): self.conversation.observe(QUEEN, 'fresh', 'open')
+        with CourtRecords(self.path) as again:
+            self.assertEqual(Conversation(again).status(QUEEN), observation)
+
+    def test_v4_missing_reason_column_is_rejected_without_partial_repair(self):
+        self.records.close()
+        with sqlite3.connect(self.path) as broken:
+            broken.execute('DROP TABLE prompt_observations')
+            broken.execute("""CREATE TABLE prompt_observations (
+                sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL,
+                prompt_id TEXT NOT NULL, state TEXT NOT NULL, observed_at TEXT NOT NULL)""")
+            broken.execute('PRAGMA user_version=4')
+        with self.assertRaises(RecordError): CourtRecords(self.path)
+        with sqlite3.connect(self.path) as after:
+            self.assertNotIn('reason', {row[1] for row in after.execute('PRAGMA table_info(prompt_observations)')})
+            self.assertEqual(after.execute('PRAGMA user_version').fetchone()[0], 4)
+
+    def test_v4_missing_prompt_history_table_is_not_silently_recreated(self):
+        self.records.close()
+        with sqlite3.connect(self.path) as broken:
+            broken.execute('DROP TABLE prompt_observations')
+            broken.execute('PRAGMA user_version=4')
+        with self.assertRaises(RecordError): CourtRecords(self.path)
+        with sqlite3.connect(self.path) as after:
+            self.assertIsNone(after.execute(
+                "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='prompt_observations'").fetchone())
+
+    def test_schema_refuses_invalid_cancellation_reason_state_pairs(self):
+        for state, reason in [('closed', 'native-cancelled'), ('open', 'native-cancelled'),
+                              ('unknown', 'answer-required'), ('closed', 'answer-required'),
+                              ('open', 'unrecognized')]:
+            with self.subTest(state=state, reason=reason), self.assertRaises(sqlite3.IntegrityError):
+                self.records._connection.execute(
+                    'INSERT INTO prompt_observations(session_id,prompt_id,state,observed_at,reason) VALUES(?,?,?,?,?)',
+                    (QUEEN, 'invalid', state, NOW.isoformat(), reason))
 
     def test_prompt_open_between_prepare_and_admission_holds_delivery(self):
         self.closed()

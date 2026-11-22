@@ -50,8 +50,9 @@ Claude Code 2.1.295 or later. Qualify that behavior on the actual host before us
 | PreToolUse for AskUserQuestion | `open` for this tool-use ID before permitting the tool |
 | Built-in PostToolUse with matching questions and nonempty structured answers | `close` for this tool-use ID |
 | Conductor PostToolUse with a recognized numbered answer for each input question | `close` for this tool-use ID |
+| Conductor PostToolUse with the exact complete native cancellation result | `cancel` for this tool-use ID; forwarding stays held |
 | PostToolUseFailure | `unknown` for this tool-use ID |
-| Error, cancellation, timeout, freeform dismissal, or ambiguous post result | `unknown` for this tool-use ID |
+| Error, unrecognized cancellation, timeout, freeform dismissal, or ambiguous post result | `unknown` for this tool-use ID |
 
 The [official tool output contract](https://code.claude.com/docs/en/agent-sdk/python)
 provides structured `questions` and `answers`, optional freeform `response`, and
@@ -65,21 +66,30 @@ answer for each input question. Claude passes the content-block array to its pos
 hook; the exact single-content MCP envelope is also accepted. Single-line freeform
 answers are valid, including Other responses outside the provided options.
 Multi-select answers use indented bullet lines and require a multi-select input.
-Cancellation prose, errors, extra blocks, incorrect numbering or answer counts,
+Partial cancellation prose, errors, extra blocks, incorrect numbering or answer counts,
 empty answers, and ambiguous multiline freeform responses record `unknown`.
 The adapter never interprets arbitrary JSON text as an answer. Source inspection
 does not replace native hook qualification on the intended host.
 
+Cancellation recognition requires the complete installed Conductor formatter,
+including its `CONDUCTOR_ASK_USER_QUESTION_USER_CANCELLED` code, exact explanatory
+lines, and the same strict content envelope. A prefix, interruption flag, timeout,
+or failure event is insufficient. Native cancellation can result from steering,
+shutdown, or interaction delivery failure as well as a UI cancellation; it does
+not establish that the owner clicked Cancel. The observer retains only the state
+reason, never the cancellation text or the question. This source-tested path
+still needs a native cancellation and reopening exercise on the intended host.
+
 Each observation invokes the existing runtime CLI using an argument array:
 
 ```text
-python -m monarchy --state PATH prompt open|close|unknown --session SESSION_ID --prompt-id TOOL_USE_ID
+python -m monarchy --state PATH prompt open|close|cancel|unknown --session SESSION_ID --prompt-id TOOL_USE_ID
 ```
 
 The CLI checks the Queen session registered in task metadata, durable timestamps, matching IDs, and the
 transaction excluding a forward already in flight or uncertain. A failed open
-exits 2 and blocks the question. A failed close attempts one same-ID `unknown`
-observation, then exits 2. If recording still fails, the adapter cannot promise
+exits 2 and blocks the question. A failed close or cancellation write attempts one
+same-ID generic `unknown` observation, then exits 2. If recording still fails, the adapter cannot promise
 that an unknown state was saved; forwarding must remain held until reconciled.
 
 Input is limited to 64 KiB. Duplicate keys and nonfinite JSON values are rejected.
@@ -93,12 +103,20 @@ post hooks. Managed post hooks can also receive failed tool output. Missing
 callbacks therefore do not establish closed state. See the
 [hook lifecycle reference](https://code.claude.com/docs/en/hooks#posttooluse).
 
-An unknown prompt holds indefinitely. A known-open prompt's admission hold can
-expire at the configured abandoned-prompt limit; expiry does not store a close
-or answer a decision. Replaying an old close after an unknown observation must
-not release the hold. Ambiguous-state repair requires operator investigation and
-fresh native evidence; this phase has no force-close command. Recover before
-reopening a cancelled decision for an actual owner answer. The
+An unknown prompt holds indefinitely. Only a cancellation matching the current
+known-open ID records `unknown` with reason `native-cancelled`. That permits the
+Queen to reopen the unanswered decision on the next turn with a never-seen tool
+ID. The fresh open carries reason `answer-required`: forwarding stays held past
+the abandonment limit until a matching successful answer closes that prompt.
+Successive cancellations preserve this obligation. No observer invokes a new
+question automatically, matches its semantic content, or grants authority.
+
+An ordinary known-open prompt's admission hold can expire at the configured
+abandoned-prompt limit; expiry does not store a close or answer a decision.
+Generic unknown remains sticky, including after a previously observed
+cancellation. A later cancellation or replayed close cannot repair it. Ambiguous
+state requires operator investigation and fresh native evidence; this phase has
+no force-close or automatic ambiguous-state repair command. The
 [conversation contract](conversation.md) explains delivery and owner controls.
 
 ## Verify before enabling
@@ -106,7 +124,9 @@ reopening a cancelled decision for an actual owner answer. The
 Use scratch royalty records with explicit authority for its sessions and local settings.
 Verify the current-holder identity, then open a real AskUserQuestion and observe
 that a Secretary forward holds. Answer it and verify that the matching close
-permits the held forward. Also exercise a cancelled question, a stale prompt ID,
+permits the held forward. Also cancel a question, verify the indefinite hold,
+reopen the unanswered decision with a fresh ID, and answer it before verifying
+release. Exercise a stale prompt ID,
 a duplicate close after unknown, and an unavailable state file. Verify that an
 unrecordable open blocks the native question and that an unknown result holds.
 Test a missing script and hook timeout to confirm the host honors `onFailure`.

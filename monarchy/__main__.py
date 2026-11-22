@@ -48,7 +48,7 @@ def parser():
     orders.add_argument('role', choices=('queen', 'secretary', 'worker'))
     orders.add_argument('--owner'); orders.add_argument('--project')
     prompt = commands.add_parser('prompt', help='observe a native Queen prompt without recording answers')
-    prompt.add_argument('action', choices=('open', 'close', 'unknown', 'status'))
+    prompt.add_argument('action', choices=('open', 'close', 'cancel', 'unknown', 'status'))
     prompt.add_argument('--session', required=True); prompt.add_argument('--prompt-id')
     settings = commands.add_parser('prompt-settings', help='print opt-in hook settings without installing them')
     settings.add_argument('--script', required=True); settings.add_argument('--state-path', required=True)

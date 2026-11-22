@@ -34,26 +34,40 @@ owner. The native adapter still reports an unobserved agent type explicitly.
 ## Prompt observations and holds
 
 The [opt-in observer](prompt-hooks.md) writes only session identity, tool-use ID,
-state, and timestamp. Registration binds the Queen session to task metadata.
-The v3 database migration retains existing records and adds append-only prompt
-observations. To inspect a session:
+state, timestamp, and a cancellation reason when applicable. Registration binds
+the Queen session to task metadata. The v4 database migration adds a nullable
+reason to the append-only prompt history; old unknown rows remain ambiguous.
+To inspect a session:
 
 ```sh
 python3 -m monarchy --state /path/to/private/court.db prompt status --session SESSION_ID
 ```
 
-An absent or unknown state holds indefinitely. A known-open prompt holds until a
+An absent or unknown state holds indefinitely. An ordinary known-open prompt holds until a
 matching successful close or the configured abandonment limit, 60 minutes by
 default. Expiry permits admission without pretending the question was answered
 or writing a close. Future or malformed timestamps hold.
 
-Opening a second prompt while one is unresolved is rejected. An open replay is
+An exact native cancellation of the current open prompt records `unknown` with
+reason `native-cancelled`, while keeping forwards held. The Queen can reopen the
+unanswered decision on the next turn with a tool ID absent from the entire prompt
+history. That fresh `open` carries reason `answer-required`; its hold cannot expire.
+Only a matching successful answer clears it. Repeated cancellations keep the
+obligation. The observer does not invoke the next question, compare its meaning,
+or treat the eventual answer as approval for an operation. Native cancellation
+and reopening remain unqualified until separately exercised on the host.
+
+Otherwise, opening a second prompt while one is unresolved is rejected. An open replay is
 accepted only for the same current open tool ID and never resets its age.
-Stale closes cannot clear a newer prompt. An ambiguous close becomes unknown;
-replaying the earlier close cannot release it. Unknown observations require
+Stale closes and cancellations cannot clear a newer prompt. An ambiguous close
+becomes generic unknown; replaying the earlier close cannot release it. Generic
+unknown also removes permission to reopen after cancellation, and a later
+cancellation cannot repair that ambiguity. Generic unknown observations require
 operator investigation and fresh native evidence; this phase has no force-close
 or automatic ambiguous-state repair command. Do not fabricate callbacks to pass
-the gate. A cancelled decision still needs a real owner answer after recovery.
+the gate. A cancellation without the exact observed native result cannot use the
+reopening path. The trusted local CLI records observations; it does not authenticate
+the owner or prove who caused a native cancellation.
 
 Prompt-open and forward admission use the same SQLite write transaction. An
 open prompt prevents admission; an in-flight or uncertain forward prevents a new

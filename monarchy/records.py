@@ -156,12 +156,16 @@ class CourtRecords:
             self._connection.execute("PRAGMA trusted_schema = OFF")
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2, 3):
+                if version not in (0, 1, 2, 3, 4):
                     raise RecordError("unsupported royalty database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
                 ).fetchone():
                     raise RecordError("royalty database must not contain triggers or views")
+                if version in (3, 4) and not self._connection.execute(
+                    "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='prompt_observations'"
+                ).fetchone():
+                    raise RecordError('royalty database is missing prompt history')
                 self._connection.execute("""CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY, repository TEXT NOT NULL,
                     owner TEXT NOT NULL, generation INTEGER NOT NULL CHECK(generation > 0),
@@ -226,10 +230,24 @@ class CourtRecords:
                 self._connection.execute("""CREATE TABLE IF NOT EXISTS prompt_observations (
                     sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL,
                     prompt_id TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('open','closed','unknown')),
-                    observed_at TEXT NOT NULL
+                    observed_at TEXT NOT NULL,
+                    reason TEXT CHECK(reason IS NULL OR
+                        (reason='native-cancelled' AND state='unknown') OR
+                        (reason='answer-required' AND state='open'))
                 )""")
+                columns = {row['name'] for row in self._connection.execute(
+                    'PRAGMA table_info(prompt_observations)')}
+                if 'reason' not in columns:
+                    if version == 4:
+                        raise RecordError('royalty database is missing prompt cancellation metadata')
+                    # Old unknown rows stay ambiguous. No historical callback is
+                    # inferred to be a native cancellation during migration.
+                    self._connection.execute("""ALTER TABLE prompt_observations ADD COLUMN
+                        reason TEXT CHECK(reason IS NULL OR
+                            (reason='native-cancelled' AND state='unknown') OR
+                            (reason='answer-required' AND state='open'))""")
                 self._connection.execute("CREATE INDEX IF NOT EXISTS prompt_sessions ON prompt_observations(session_id,sequence)")
-                self._connection.execute("PRAGMA user_version = 3")
+                self._connection.execute("PRAGMA user_version = 4")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()

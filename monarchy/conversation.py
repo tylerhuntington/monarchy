@@ -18,8 +18,9 @@ def _timestamp(value):
 
 
 def prompt_policy(observation, abandoned_minutes=60, *, now=None):
-    """Only a known-open prompt may age out; absence and ambiguity always hold."""
-    if not observation or observation.get('state') not in {'open', 'closed'}:
+    """Only an ordinary known-open prompt may age out; cancellation stays held."""
+    if (not observation or observation.get('state') not in {'open', 'closed'}
+            or observation.get('reason') is not None):
         return 'hold'
     try:
         current = now or datetime.now(timezone.utc)
@@ -109,14 +110,15 @@ class Conversation:
             'SELECT * FROM prompt_observations WHERE session_id=? ORDER BY sequence DESC LIMIT 1',
             (session,)).fetchone()
         return dict(row) if row else {'session_id': session, 'state': 'unknown', 'prompt_id': None,
-                                     'observed_at': None}
+                                     'observed_at': None, 'reason': None}
 
     def observe(self, session, prompt_id, action):
         _uuid(session, 'session_id')
         _identifier(prompt_id, 'prompt_id')
-        if action not in {'open', 'close', 'unknown'}:
-            raise RecordError('prompt action must be open, close, or unknown')
-        state = 'closed' if action == 'close' else action
+        if action not in {'open', 'close', 'cancel', 'unknown'}:
+            raise RecordError('prompt action must be open, close, cancel, or unknown')
+        state = 'closed' if action == 'close' else 'unknown' if action == 'cancel' else action
+        reason = None
         with self.records._transaction():
             registered = False
             for offset in range(0, 10000, 100):
@@ -131,10 +133,11 @@ class Conversation:
                 raise Conflict('prompt session is not a registered Queen')
             current = self.status(session)
             connection = self.records._connection
-            # A retry must not restart the abandonment clock or resurrect an old box.
-            previous = connection.execute(
-                'SELECT 1 FROM prompt_observations WHERE session_id=? AND prompt_id=? AND state=? LIMIT 1',
-                (session, prompt_id, state)).fetchone()
+            # Any historical observation consumes the identity, even a callback
+            # whose open was never observed. A new box needs a truly fresh ID.
+            known = connection.execute(
+                'SELECT 1 FROM prompt_observations WHERE session_id=? AND prompt_id=? LIMIT 1',
+                (session, prompt_id)).fetchone()
             if action == 'open':
                 for offset in range(0, 10000, 100):
                     operations = self.records.list_operations(states=['in_flight', 'unknown'],
@@ -148,28 +151,42 @@ class Conversation:
                         break
                 else:
                     raise RecordError('unresolved operation budget exceeded')
-                if previous:
+                if known:
                     if current['prompt_id'] == prompt_id and current['state'] == 'open':
                         return current
                     raise Conflict('completed or ambiguous prompt identity cannot reopen')
-                if current['prompt_id'] is not None and current['state'] in {'open', 'unknown'}:
+                cancelled = (current['state'] == 'unknown'
+                             and current['reason'] == 'native-cancelled')
+                if cancelled:
+                    # Only a matching answer may clear this obligation. The new
+                    # known-open box cannot release forwards through expiry.
+                    reason = 'answer-required'
+                elif (current['reason'] is not None or
+                      (current['prompt_id'] is not None and current['state'] in {'open', 'unknown'})):
                     raise Conflict('resolve the current prompt before opening another')
-            elif previous:
-                return current
             elif current['prompt_id'] != prompt_id:
                 # Stale callbacks cannot clear a newer prompt. With no open event,
-                # there is no evidence of a closed prompt at all.
-                known = connection.execute(
-                    'SELECT 1 FROM prompt_observations WHERE session_id=? AND prompt_id=? LIMIT 1',
-                    (session, prompt_id)).fetchone()
+                # there is no evidence of a close or a recoverable cancellation.
                 if known:
                     return current
                 state = 'unknown'
             elif action == 'close' and current['state'] != 'open':
                 return current
+            elif action == 'cancel':
+                if current['state'] == 'open':
+                    reason = 'native-cancelled'
+                elif current['state'] == 'unknown':
+                    # A late cancellation cannot repair ambiguity. A duplicate
+                    # cancellation can only preserve the current discriminator.
+                    return current
+                # A cancellation after a known close contradicts that close:
+                # keep it as generic unknown, with no permission to reopen.
+            if (current['prompt_id'] == prompt_id and current['state'] == state
+                    and current['reason'] == reason):
+                return current
             connection.execute(
-                'INSERT INTO prompt_observations(session_id,prompt_id,state,observed_at) VALUES(?,?,?,?)',
-                (session, prompt_id, state, _now()))
+                'INSERT INTO prompt_observations(session_id,prompt_id,state,observed_at,reason) VALUES(?,?,?,?,?)',
+                (session, prompt_id, state, _now(), reason))
             return self.status(session)
 
     def prepare_forward(self, outcome_id, text):
