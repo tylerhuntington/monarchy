@@ -184,7 +184,7 @@ class Court:
                                             expected_revision=expected_revision,
                                             owner_message=owner_message)
 
-    def prepare_dispatch(self, task_id, *, new_session=False):
+    def prepare_dispatch(self, task_id, *, new_session=False, backlog_snapshot=None, idle_source=None):
         task = self.records.get_task(task_id)
         meta = task['metadata']
         binding = meta['binding']
@@ -205,6 +205,8 @@ class Court:
         else:
             operation = prepare_message(task_id, binding, brief, **ids)
         operation['request']['generation'] = task['generation']
+        from .backlog import dispatch_fields
+        operation['request'].update(dispatch_fields(task))
         if new_session:
             # A stored launch is immutable. A branding change must not replace
             # its original intent or prevent reconciliation of an uncertain send.
@@ -217,7 +219,8 @@ class Court:
                 if comparable == operation['request']:
                     operation['request'] = previous['request']
         return self.records.prepare_operation(operation['operation_id'], task_id,
-                                               operation['kind'], operation['request'])
+                                               operation['kind'], operation['request'],
+                                               backlog_snapshot=backlog_snapshot,idle_source=idle_source)
 
     def prepare_answer(self, decision_id, *, current_head=None):
         decision = self.records.get_decision(decision_id)

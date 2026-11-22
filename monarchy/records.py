@@ -162,17 +162,17 @@ class CourtRecords:
             self._connection.execute("PRAGMA trusted_schema = OFF")
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2, 3, 4, 5, 6):
+                if version not in (0, 1, 2, 3, 4, 5, 6, 7):
                     raise RecordError("unsupported royalty database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
                 ).fetchone():
                     raise RecordError("royalty database must not contain triggers or views")
-                if version in (3, 4, 5, 6) and not self._connection.execute(
+                if version in (3, 4, 5, 6, 7) and not self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='prompt_observations'"
                 ).fetchone():
                     raise RecordError('royalty database is missing prompt history')
-                if version in (5, 6) and not self._connection.execute(
+                if version in (5, 6, 7) and not self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='delegation_events'"
                 ).fetchone():
                     raise RecordError('royalty database is missing delegation history')
@@ -225,7 +225,7 @@ class CourtRecords:
                 )""")
                 decision_columns = {row['name'] for row in self._connection.execute('PRAGMA table_info(decisions)')}
                 if 'answered_by' not in decision_columns:
-                    if version in (5, 6):
+                    if version in (5, 6, 7):
                         raise RecordError('royalty database is missing answer provenance')
                     self._connection.execute('ALTER TABLE decisions ADD COLUMN answered_by TEXT')
                     for legacy in self._connection.execute(
@@ -268,7 +268,7 @@ class CourtRecords:
                 columns = {row['name'] for row in self._connection.execute(
                     'PRAGMA table_info(prompt_observations)')}
                 if 'reason' not in columns:
-                    if version in (4, 5, 6):
+                    if version in (4, 5, 6, 7):
                         raise RecordError('royalty database is missing prompt cancellation metadata')
                     # Old unknown rows stay ambiguous. No historical callback is
                     # inferred to be a native cancellation during migration.
@@ -277,7 +277,7 @@ class CourtRecords:
                             (reason='native-cancelled' AND state='unknown') OR
                             (reason='answer-required' AND state='open'))""")
                 self._connection.execute("CREATE INDEX IF NOT EXISTS prompt_sessions ON prompt_observations(session_id,sequence)")
-                if version == 6 and not self._connection.execute(
+                if version in (6, 7) and not self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='cadence_observations'"
                 ).fetchone():
                     raise RecordError('royalty database is missing cadence history')
@@ -288,7 +288,7 @@ class CourtRecords:
                 )""")
                 self._connection.execute('CREATE INDEX IF NOT EXISTS cadence_task_observations '
                                          'ON cadence_observations(task_id,generation,sequence)')
-                if version == 6 and not self._connection.execute(
+                if version in (6, 7) and not self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='checks'"
                 ).fetchone():
                     raise RecordError('royalty database is missing cadence checks')
@@ -305,7 +305,7 @@ class CourtRecords:
                 self._connection.execute('CREATE INDEX IF NOT EXISTS cadence_pending '
                                          'ON checks(project,state,due_at)')
                 for table in ('cadence_notices', 'cadence_notice_checks'):
-                    if version == 6 and not self._connection.execute(
+                    if version in (6, 7) and not self._connection.execute(
                         "SELECT 1 FROM sqlite_schema WHERE type='table' AND name=?", (table,)
                     ).fetchone():
                         raise RecordError('royalty database is missing cadence notice history')
@@ -318,7 +318,7 @@ class CourtRecords:
                     secretary_session TEXT NOT NULL, check_id TEXT NOT NULL REFERENCES checks(check_id),
                     PRIMARY KEY(secretary_session,check_id)
                 )""")
-                if version == 6 and not self._connection.execute(
+                if version in (6, 7) and not self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='cadence_census'"
                 ).fetchone():
                     raise RecordError('royalty database is missing cadence census history')
@@ -339,7 +339,35 @@ class CourtRecords:
                     columns = {row['name'] for row in self._connection.execute('PRAGMA table_info(' + table + ')')}
                     if columns != required:
                         raise RecordError('royalty database has malformed cadence history')
-                self._connection.execute("PRAGMA user_version = 6")
+                if version == 7 and not self._connection.execute(
+                    "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='backlog_events'"
+                ).fetchone():
+                    raise RecordError('royalty database is missing backlog history')
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS backlog_events (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, event_id TEXT NOT NULL UNIQUE,
+                    project TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('active','revoked')),
+                    payload TEXT NOT NULL, created_at TEXT NOT NULL
+                )""")
+                self._connection.execute('CREATE INDEX IF NOT EXISTS backlog_project '
+                                         'ON backlog_events(project,sequence)')
+                if version == 7 and not self._connection.execute(
+                    "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='dispatch_reservations'"
+                ).fetchone():
+                    raise RecordError('royalty database is missing writer custody')
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS dispatch_reservations (
+                    reservation_id TEXT PRIMARY KEY, project TEXT NOT NULL,
+                    writer_repository TEXT NOT NULL, branch_ref TEXT NOT NULL,
+                    task_id TEXT NOT NULL REFERENCES tasks(task_id), generation INTEGER NOT NULL,
+                    session_id TEXT NOT NULL, operation_id TEXT NOT NULL UNIQUE REFERENCES operations(operation_id),
+                    payload TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('held','released')), admitted_at TEXT,
+                    created_at TEXT NOT NULL, release_receipt_id TEXT UNIQUE,
+                    release_receipt TEXT, released_at TEXT
+                )""")
+                self._connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS writer_branch_custody "
+                    "ON dispatch_reservations(writer_repository,branch_ref) WHERE state='held'")
+                self._connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS writer_session_custody "
+                    "ON dispatch_reservations(session_id) WHERE state='held'")
+                self._connection.execute("PRAGMA user_version = 7")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()
@@ -565,6 +593,9 @@ class CourtRecords:
             task = self.get_task(task_id)
             if task["generation"] != expected_generation:
                 raise StaleGeneration("assignment changed before reassignment")
+            if self._connection.execute("SELECT 1 FROM dispatch_reservations WHERE task_id=? AND state='held' LIMIT 1",
+                                        (task_id,)).fetchone():
+                raise Conflict('release retained writer custody before reassignment')
             if self._connection.execute(
                 "SELECT 1 FROM operations WHERE task_id = ? AND state IN ('in_flight', 'unknown') LIMIT 1",
                 (task_id,),
@@ -820,7 +851,8 @@ class CourtRecords:
             )
             return self.get_decision(decision_id)
 
-    def prepare_operation(self, operation_id, task_id, kind, request, *, current_head=None):
+    def prepare_operation(self, operation_id, task_id, kind, request, *, current_head=None,
+                          backlog_snapshot=None, idle_source=None):
         _identifier(operation_id, "operation_id")
         _identifier(task_id, "task_id")
         _identifier(kind, "kind")
@@ -846,6 +878,10 @@ class CourtRecords:
                 "INSERT INTO operations VALUES (?, ?, ?, ?, 'prepared', NULL, ?, ?)",
                 (operation_id, task_id, kind, encoded, now, now),
             )
+            if request.get('route')=='worker-dispatch':
+                from .backlog import reserve_dispatch
+                reserve_dispatch(self,self.get_operation(operation_id),backlog_snapshot=backlog_snapshot,
+                                 idle_source=idle_source)
             return self.get_operation(operation_id)
 
     def get_operation(self, operation_id):
@@ -878,6 +914,8 @@ class CourtRecords:
                 forward_admission_check(self, operation)
                 from .cadence import cadence_admission_check
                 cadence_admission_check(self, operation, now=_now())
+                from .backlog import worker_admission_check
+                worker_admission_check(self, operation, now=_now())
                 reference = _decision_reference(operation["request"])
                 if reference is not None:
                     decision = self.get_decision(reference[0])
