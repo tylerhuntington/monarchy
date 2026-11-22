@@ -127,8 +127,14 @@ class Preferences:
         effective = resolve(owner=_source(owner, 'owner'),
                             project=_source(project, 'project') if project else {},
                             overrides=self.records.config_overrides(repository))
+        self._models(effective)
         bounded_orders(effective)
         return effective
+
+    def _models(self, config):
+        for role, row in self.records.model_overrides().items():
+            config['profiles.' + role] = {'value': row['profile'], 'layers': ['overrides'],
+                                         'why': {'overrides': 'Exact owner-approved model receipt.'}}
 
     def _founding_specs(self, config):
         profiles = {role: config['profiles.' + role]['value'] for role in ('queen', 'secretary', 'worker')}
@@ -234,6 +240,7 @@ class Preferences:
         config = resolve(owner=_source(payload['owner'], 'owner'),
                          project=_source(payload['project'], 'project') if payload['project'] else {},
                          overrides=overrides)
+        self._models(config)
         bounded_orders(config)
         return {'pin_id': pin['pin_id'], 'config': config, 'drift': drift, 'held': bool(drift),
                 'effective_digest': digest(config), 'sources': {'owner': payload['owner'], 'project': payload['project']},
@@ -251,25 +258,26 @@ class Preferences:
         if project and KEYS[key]['home'] != 'project':
             raise ConfigError('project cannot set an override for the royalty')
         load(json.dumps({key: value}), 'overrides')
-        def validate():
-            # An override must be usable by every affected current project, not
-            # merely valid as an isolated JSON fragment. Reads see the tentative
-            # insertion under the same transaction; failure rolls it back.
-            projects = [r[0] for r in self.records._connection.execute(
-                'SELECT DISTINCT project FROM pins LIMIT 1001').fetchall()]
-            if len(projects) > 1000: raise ConfigError('royalty project bound exceeded')
-            affected = [project] if project else list(set(projects) | {''})
-            for scope in affected:
-                overrides = self.records.config_overrides(scope)
-                if scope in projects:
-                    pin = self.records.latest_pin(scope)['payload']
-                    config = resolve(owner=_source(pin['owner'], 'owner'),
-                                     project=_source(pin['project'], 'project') if pin['project'] else {},
-                                     overrides=overrides)
-                else:
-                    config = resolve(overrides=overrides)
-                bounded_orders(config)
-        self.records.put_override(key, value, project, owner_message, validate=validate)
+        self.records.put_override(key, value, project, owner_message,
+                                  validate=lambda: self.validate_current_overrides(project))
+
+    def validate_current_overrides(self, project=''):
+        """Validate the tentative aggregate inside the caller's write transaction."""
+        projects = [r[0] for r in self.records._connection.execute(
+            'SELECT DISTINCT project FROM pins LIMIT 1001').fetchall()]
+        if len(projects) > 1000: raise ConfigError('royalty project bound exceeded')
+        affected = [project] if project else list(set(projects) | {''})
+        for scope in affected:
+            overrides = self.records.config_overrides(scope)
+            if scope in projects:
+                pin = self.records.latest_pin(scope)['payload']
+                config = resolve(owner=_source(pin['owner'], 'owner'),
+                                 project=_source(pin['project'], 'project') if pin['project'] else {},
+                                 overrides=overrides)
+            else:
+                config = resolve(overrides=overrides)
+            self._models(config)
+            bounded_orders(config)
 
     def bind(self, data):
         """Bind new task context to approved profiles and hash-pinned orders."""

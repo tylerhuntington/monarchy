@@ -156,12 +156,16 @@ class CourtRecords:
             self._connection.execute("PRAGMA trusted_schema = OFF")
             with self._transaction():
                 version = self._connection.execute("PRAGMA user_version").fetchone()[0]
-                if version not in (0, 1, 2):
+                if version not in (0, 1, 2, 3, 4):
                     raise RecordError("unsupported royalty database version")
                 if self._connection.execute(
                     "SELECT 1 FROM sqlite_schema WHERE type IN ('trigger', 'view') LIMIT 1"
                 ).fetchone():
                     raise RecordError("royalty database must not contain triggers or views")
+                if version in (3, 4) and not self._connection.execute(
+                    "SELECT 1 FROM sqlite_schema WHERE type='table' AND name='prompt_observations'"
+                ).fetchone():
+                    raise RecordError('royalty database is missing prompt history')
                 self._connection.execute("""CREATE TABLE IF NOT EXISTS tasks (
                     task_id TEXT PRIMARY KEY, repository TEXT NOT NULL,
                     owner TEXT NOT NULL, generation INTEGER NOT NULL CHECK(generation > 0),
@@ -223,7 +227,27 @@ class CourtRecords:
                     setting TEXT NOT NULL, value TEXT NOT NULL,
                     owner_message TEXT NOT NULL, created_at TEXT NOT NULL
                 )""")
-                self._connection.execute("PRAGMA user_version = 2")
+                self._connection.execute("""CREATE TABLE IF NOT EXISTS prompt_observations (
+                    sequence INTEGER PRIMARY KEY AUTOINCREMENT, session_id TEXT NOT NULL,
+                    prompt_id TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('open','closed','unknown')),
+                    observed_at TEXT NOT NULL,
+                    reason TEXT CHECK(reason IS NULL OR
+                        (reason='native-cancelled' AND state='unknown') OR
+                        (reason='answer-required' AND state='open'))
+                )""")
+                columns = {row['name'] for row in self._connection.execute(
+                    'PRAGMA table_info(prompt_observations)')}
+                if 'reason' not in columns:
+                    if version == 4:
+                        raise RecordError('royalty database is missing prompt cancellation metadata')
+                    # Old unknown rows stay ambiguous. No historical callback is
+                    # inferred to be a native cancellation during migration.
+                    self._connection.execute("""ALTER TABLE prompt_observations ADD COLUMN
+                        reason TEXT CHECK(reason IS NULL OR
+                            (reason='native-cancelled' AND state='unknown') OR
+                            (reason='answer-required' AND state='open'))""")
+                self._connection.execute("CREATE INDEX IF NOT EXISTS prompt_sessions ON prompt_observations(session_id,sequence)")
+                self._connection.execute("PRAGMA user_version = 4")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):
                 self._connection.close()
@@ -280,21 +304,13 @@ class CourtRecords:
             validate()  # Roll back the new history row if its folded state is unusable.
 
     def config_overrides(self, project=''):
-        rows = self._connection.execute(
-            'SELECT * FROM overrides WHERE project IN (?,?) ORDER BY sequence', ('', project)).fetchall()
-        from .config import KEYS
-        result = {}
-        for row in rows:
-            key = row['setting']
-            value = json.loads(row['value'])['value']
-            if key not in KEYS:
-                raise RecordError('stored override has unknown setting')
-            if key in result and KEYS[key]['merge'] == 'min':
-                value = min(result[key], value)
-            elif key in result and KEYS[key]['merge'] == 'union':
-                value = sorted(set(result[key]) | set(value))
-            result[key] = value
-        return result
+        from .controls import fold_overrides
+        return fold_overrides(self, project)['config']
+
+    def model_overrides(self):
+        """Approved model receipts remain distinct from config-file input."""
+        from .controls import fold_overrides
+        return fold_overrides(self)['models']
 
     def __enter__(self):
         return self
@@ -739,6 +755,8 @@ class CourtRecords:
             if state == "in_flight":
                 from .preferences import admission_check
                 admission_check(self, self.get_task(operation["task_id"]))
+                from .conversation import forward_admission_check
+                forward_admission_check(self, operation)
                 reference = _decision_reference(operation["request"])
                 if reference is not None:
                     decision = self.get_decision(reference[0])

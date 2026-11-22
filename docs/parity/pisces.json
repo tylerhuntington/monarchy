@@ -3,19 +3,19 @@
     "source": "preference.box-framing",
     "class": "rule",
     "value": "Present decisions in a box after plain-language framing; explain each option and why the first is recommended.",
-    "target": "pending:P2"
+    "target": "rule:conversation.decision-box"
   },
   {
     "source": "preference.reopen-cancelled-box",
     "class": "rule",
     "value": "Reopen a cancelled unanswered decision box on the next turn; do not replace it with a prose decision list.",
-    "target": "pending:P2"
+    "target": "rule:conversation.no-prose-decisions"
   },
   {
     "source": "preference.single-owner-conversation",
     "class": "rule",
     "value": "Keep owner interaction with the Queen and routine coordination with the Secretary; hold forwards during an owner box.",
-    "target": "pending:P2"
+    "target": "rule:coordination.owner-channel"
   },
   {
     "source": "preference.idle-ladder",
@@ -50,19 +50,19 @@
       "questions_per_box": 1,
       "blank_answer_is_consent": false
     },
-    "target": "pending:P2"
+    "target": "rule:conversation.decision-box"
   },
   {
     "source": "preference.requested-decision-prompt",
     "class": "rule",
     "value": "When asked about an open decision, present its box immediately with brief framing.",
-    "target": "pending:P2"
+    "target": "rule:conversation.requested-decisions"
   },
   {
     "source": "preference.no-decisions-hidden-in-prose",
     "class": "rule",
     "value": "Mentioned open or parked decisions receive a box in the same turn; report no pending decisions only when none remain.",
-    "target": "pending:P2"
+    "target": "rule:conversation.no-prose-decisions"
   },
   {
     "source": "preference.routine-cleanup",
@@ -80,7 +80,7 @@
     "source": "preference.bounded-bundled-approval",
     "class": "rule",
     "value": "Prefer one bounded approval covering the remaining steps of a work item without widening scope or bypassing reserved gates.",
-    "target": "pending:P2"
+    "target": "rule:conversation.bounded-approval"
   },
   {
     "source": "preference.archive-salvage",
@@ -527,37 +527,37 @@
     "source": "forwards.operation-journal",
     "class": "invariant",
     "value": "Persist forward intent and reconcile uncertain delivery without blind resend.",
-    "target": "pending:P2"
+    "target": "invariant:invariant.one-writer"
   },
   {
     "source": "forwards.secretary-header",
     "class": "invariant",
     "value": "[secretary]",
-    "target": "pending:P2"
+    "target": "invariant:invariant.headers"
   },
   {
     "source": "forwards.character-lint",
     "class": "invariant",
     "value": "Apply the configured additive forbidden-character list before forwarding.",
-    "target": "pending:P2"
+    "target": "invariant:invariant.config-custody"
   },
   {
     "source": "prompts.abandoned-minutes",
     "class": "default",
     "value": 60,
-    "target": "pending:P2"
+    "target": "key:prompts.abandoned_minutes"
   },
   {
     "source": "prompts.known-open-only",
     "class": "invariant",
     "value": "Apply abandoned-prompt timeout only to known-open state; unknown state holds.",
-    "target": "pending:P2"
+    "target": "invariant:invariant.prompt-state"
   },
   {
     "source": "prompts.opt-in-hooks",
     "class": "rule",
     "value": "Print an optional prompt hook/settings snippet; never install it silently.",
-    "target": "pending:P2"
+    "target": "invariant:invariant.runtime-boundary"
   },
   {
     "source": "boxes.option-bounds",
@@ -567,7 +567,7 @@
       "maximum": 4,
       "recommended_first": true
     },
-    "target": "pending:P2"
+    "target": "rule:conversation.decision-box"
   },
   {
     "source": "owner.verbs",
@@ -582,7 +582,7 @@
       "model",
       "handoff"
     ],
-    "target": "pending:P2"
+    "target": "invariant:invariant.verb-classification"
   },
   {
     "source": "owner.verb-classification",
@@ -601,13 +601,13 @@
         "handoff"
       ]
     },
-    "target": "pending:P2"
+    "target": "invariant:invariant.verb-classification"
   },
   {
     "source": "owner.bearings-lines",
     "class": "default",
     "value": 5,
-    "target": "pending:P2"
+    "target": "key:voice.max_lines"
   },
   {
     "source": "authority.trusted-owner-route",

@@ -4,6 +4,7 @@ import copy
 import json
 import subprocess
 import unittest
+from unittest.mock import patch
 
 from monarchy.conductor import (
     ConductorTransport, TransportError, prepare_message, prepare_session,
@@ -72,6 +73,25 @@ def native_failure():
 
 
 class TransportTests(unittest.TestCase):
+    def test_explicit_sender_must_be_current_native_session_before_sending(self):
+        op = prepare_message('task-1', binding(), 'hello', message_id=MESSAGE,
+                             sender_session_id=SOURCE)
+        run = Runner([workspace(), status(), session(), {}, page([event()])])
+        with patch.dict('os.environ', {'CONDUCTOR_SESSION_ID': SESSION}):
+            with self.assertRaises(TransportError):
+                ConductorTransport(run).send_message(op, lambda _: None)
+        self.assertEqual(run.calls, [])
+        with patch.dict('os.environ', {'CONDUCTOR_SESSION_ID': SOURCE}):
+            self.assertEqual(ConductorTransport(run).send_message(op, lambda _: None)['state'], 'confirmed')
+
+    def test_sender_context_does_not_prevent_uncertain_message_readback(self):
+        op = prepare_message('task-1', binding(), 'hello', message_id=MESSAGE,
+                             sender_session_id=SOURCE)
+        op['state'] = 'unknown'
+        run = Runner([workspace(), status(), session(), page([event()])])
+        with patch.dict('os.environ', {'CONDUCTOR_SESSION_ID': SESSION}):
+            self.assertEqual(ConductorTransport(run).send_message(op, lambda _: None)['state'], 'confirmed')
+
     def test_binding_checks_native_membership_and_exposes_unobserved_agent(self):
         run = Runner([workspace(), status(), session()])
         value = ConductorTransport(run).read_binding(binding())

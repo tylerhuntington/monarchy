@@ -11,7 +11,8 @@ the package starts no agents, hooks, or background service.
 | Private SQLite records for tasks, reports, decisions, and outcomes | Survive local process restarts; host-loss recovery needs a separate backup or durable volume. |
 | Assignment generations and operation admission | Fence stale writes through the record API; do not stop native sessions or subprocesses. |
 | Conductor message delivery and native report ingestion | Require explicit commands and verified membership of the royalty; do not authenticate new owner authority. |
-| Queen and Secretary pull inboxes | Presenting a result does not acknowledge it. No automatic prompt-safe forwarding. |
+| Queen and Secretary pull inboxes and explicit bounded forwards | Presenting a result does not acknowledge it. Forwarding requires a known prompt state and qualified opt-in hooks. |
+| Durable owner controls | Widening controls require exact answered proposals; handoff records intent only. |
 | Source-bound completion review | Checks the submitted evidence contract; the reviewer must perform the actual checks. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |
 | Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the royalty. |
@@ -24,7 +25,9 @@ after it exits.
 
 The current [Conductor adapter](conductor-transport.md) targets cloud sessions.
 It cannot verify the agent type from session readback, prove human authority from
-missing sender markers, or observe whether the Queen has an open decision prompt.
+missing sender markers, or itself observe whether the Queen has an open decision prompt.
+The separate [prompt hooks](prompt-hooks.md) persist conservative observations;
+their native integration must be qualified before use.
 The CLI can enable fast mode but cannot explicitly disable it, so new-session
 requests with `fast_mode=False` are held. Workspace creation remains a host action.
 

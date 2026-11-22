@@ -10,7 +10,9 @@ import re
 import unittest
 
 from monarchy.config import KEYS, load, resolve
+from monarchy.controls import RESTRICTIONS, WIDENING
 from monarchy.orders import INVARIANT_RULE_IDS, MARKER, ROLES, render, rule_ids
+from monarchy.prompt_hooks import HookError, lint_box
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -37,11 +39,45 @@ P1_RULES = {
     'voice.manual-steps': ('voice.manual-steps', ('one concrete step', 'verify its result')),
     'voice.timestamp-format': ('voice.timestamp-and-characters', ('confirmed voice.zone', 'ISO 8601 offset')),
 }
+P2_KEYS = {
+    'prompts.abandoned-minutes': 'prompts.abandoned_minutes',
+    'owner.bearings-lines': 'voice.max_lines',
+}
+P2_RULES = {
+    'preference.box-framing': ('queen', 'conversation.decision-box',
+        ('framing before the box', 'reason and consequence', '(Recommended) option first')),
+    'preference.reopen-cancelled-box': ('queen', 'conversation.no-prose-decisions',
+        ('cancelled unanswered box reopens on the next turn', 'prose fallback cannot supply missing authority')),
+    'preference.single-owner-conversation': ('secretary', 'coordination.owner-channel',
+        ("Keep routine coordination away from the owner's conversation", 'Bring the Queen',
+         'never replace an unanswered box with prose')),
+    'preference.one-question-per-box': ('queen', 'conversation.decision-box',
+        ('one question per box', 'two to four options')),
+    'preference.requested-decision-prompt': ('queen', 'conversation.requested-decisions',
+        ('present its box promptly', 'short framing')),
+    'preference.no-decisions-hidden-in-prose': ('queen', 'conversation.no-prose-decisions',
+        ('Never leave a decision in prose', 'open or parked decisions receive their box in the same turn')),
+    'preference.bounded-bundled-approval': ('queen', 'conversation.bounded-approval',
+        ('one bounded box', 'remaining steps', 'scope, limits and stopping conditions',
+         'reserved actions', 'exact-candidate approvals', 'required project gates', 'never widens authority')),
+    'boxes.option-bounds': ('queen', 'conversation.decision-box',
+        ('two to four options', '(Recommended) option first')),
+}
+P2_INVARIANTS = {
+    'forwards.operation-journal': 'invariant.one-writer',
+    'forwards.secretary-header': 'invariant.headers',
+    'forwards.character-lint': 'invariant.config-custody',
+    'prompts.known-open-only': 'invariant.prompt-state',
+    'prompts.opt-in-hooks': 'invariant.runtime-boundary',
+    'owner.verbs': 'invariant.verb-classification',
+    'owner.verb-classification': 'invariant.verb-classification',
+}
+P2_TARGETS = {**{source: 'key:' + key for source, key in P2_KEYS.items()},
+              **{source: 'rule:' + rule for source, (_, rule, _) in P2_RULES.items()},
+              **{source: 'invariant:' + rule for source, rule in P2_INVARIANTS.items()}}
 # These rows represent runtime behavior, not the mere existence of a setting or
 # standing-order paragraph. Remove entries only with the phase's runtime proof.
 PENDING_RUNTIME = {
-    'forwards.operation-journal': 'P2',
-    'prompts.known-open-only': 'P2',
     'authority.trusted-owner-route': 'P3',
     'authority.never-delegable-floor': 'P3',
     'delegation.answer-provenance': 'P3',
@@ -63,6 +99,13 @@ def fixture_config():
 
 def catalog():
     return json.loads(CATALOG.read_text())
+
+
+def rule_bodies(text):
+    matches = list(MARKER.finditer(text))
+    return {match.group(1): ' '.join(text[match.end():
+            matches[index + 1].start() if index + 1 < len(matches) else len(text)].split())
+            for index, match in enumerate(matches)}
 
 
 class ParityTests(unittest.TestCase):
@@ -113,16 +156,57 @@ class ParityTests(unittest.TestCase):
 
     def test_p1_prose_rules_are_present_in_the_actual_queen_orders(self):
         rows = {row['source']: row for row in catalog()}
-        text = self.rendered['queen']['text']
-        matches = list(MARKER.finditer(text))
-        bodies = {match.group(1): ' '.join(text[match.end():
-                  matches[index + 1].start() if index + 1 < len(matches) else len(text)].split())
-                  for index, match in enumerate(matches)}
+        bodies = rule_bodies(self.rendered['queen']['text'])
         for source, (rule, phrases) in P1_RULES.items():
             with self.subTest(source=source):
                 self.assertEqual(rows[source]['target'], 'rule:' + rule)
                 for phrase in phrases:
                     self.assertIn(phrase, bodies[rule])
+
+    def test_p2_targets_match_the_qualified_scope_and_resolve_offline(self):
+        rows = catalog()
+        by_source = {row['source']: row for row in rows}
+        for source, target in P2_TARGETS.items():
+            with self.subTest(source=source):
+                self.assertEqual(by_source[source]['target'], target)
+        self.assert_catalog(rows)
+
+    def test_p2_rule_targets_preserve_the_declared_conversation_contract(self):
+        bodies = {role: rule_bodies(result['text']) for role, result in self.rendered.items()}
+        for source, (role, rule, phrases) in P2_RULES.items():
+            with self.subTest(source=source):
+                for phrase in phrases:
+                    self.assertIn(phrase, bodies[role][rule])
+        self.assertIn('A blank answer is not consent', bodies['queen']['conversation.no-prose-decisions'])
+        self.assertIn('only when the durable decision list has no unanswered item',
+                      bodies['queen']['conversation.requested-decisions'])
+
+    def test_p2_box_values_match_the_optional_lint_boundaries(self):
+        rows = {row['source']: row for row in catalog()}
+        bounds = rows['boxes.option-bounds']['value']
+        self.assertEqual(rows['preference.one-question-per-box']['value'],
+                         {'questions_per_box': 1, 'blank_answer_is_consent': False})
+        self.assertTrue(bounds['recommended_first'])
+        for count in range(bounds['minimum'] - 1, bounds['maximum'] + 2):
+            options = [{'label': 'Choice ' + str(index) + (' (Recommended)' if index == 0 else ''),
+                        'description': 'A bounded alternative.'} for index in range(count)]
+            if bounds['minimum'] <= count <= bounds['maximum']:
+                lint_box('Which path should proceed?', options)
+            else:
+                with self.assertRaises(HookError):
+                    lint_box('Which path should proceed?', options)
+        options[0]['label'] = 'Choice 0'
+        with self.assertRaises(HookError):
+            lint_box('Which path should proceed?', options[:bounds['minimum']])
+
+    def test_p2_verb_rows_match_runtime_classification_without_claiming_native_effects(self):
+        rows = {row['source']: row for row in catalog()}
+        classification = rows['owner.verb-classification']['value']
+        self.assertEqual(set(classification['restrictive']), set(RESTRICTIONS) | {'bearings', 'decisions'})
+        self.assertEqual(set(classification['confirmation_required']), WIDENING)
+        verbs = rows['owner.verbs']['value']
+        self.assertEqual(len(verbs), len(set(verbs)))
+        self.assertEqual(set(verbs), set(RESTRICTIONS) | WIDENING | {'bearings', 'decisions'})
 
     def test_future_runtime_authority_is_not_claimed_by_constant_or_prose(self):
         rows = {row['source']: row for row in catalog()}

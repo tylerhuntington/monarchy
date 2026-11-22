@@ -3,21 +3,24 @@ import argparse
 import json
 from pathlib import Path
 
-from .records import CourtRecords, RecordError
-from .conductor import ConductorTransport, TransportError
+from .records import CourtRecords, RecordError, _payload
+from .conductor import ConductorTransport, TransportError, _json
 from .supervision import Court
 from .config import ConfigError, load, resolve
 from .preferences import Preferences, read_source, _git
 from .orders import render, OrdersError
+from .conversation import Conversation
+from .prompt_hooks import HookError, settings_snippet, lint_box
+from .controls import Controls
 
 
 def document(path):
-    raw = Path(path).read_bytes()
+    with Path(path).open('rb') as file:
+        raw = file.read(65537)
     if len(raw) > 65536:
         raise RecordError('input document exceeds 64 KiB')
-    value = json.loads(raw)
-    if not isinstance(value, dict):
-        raise RecordError('input document must be a JSON object')
+    value = _json(raw)
+    _payload(value)
     return value
 
 
@@ -44,6 +47,22 @@ def parser():
     orders = commands.add_parser('orders', help='render hash-pinned role standing orders')
     orders.add_argument('role', choices=('queen', 'secretary', 'worker'))
     orders.add_argument('--owner'); orders.add_argument('--project')
+    prompt = commands.add_parser('prompt', help='observe a native Queen prompt without recording answers')
+    prompt.add_argument('action', choices=('open', 'close', 'cancel', 'unknown', 'status'))
+    prompt.add_argument('--session', required=True); prompt.add_argument('--prompt-id')
+    settings = commands.add_parser('prompt-settings', help='print opt-in hook settings without installing them')
+    settings.add_argument('--script', required=True); settings.add_argument('--state-path', required=True)
+    box = commands.add_parser('box-lint', help='validate optional decision box style')
+    box.add_argument('file')
+    forward = commands.add_parser('prepare-forward', help='journal a bounded Secretary summary without sending')
+    forward.add_argument('outcome_id'); forward.add_argument('file')
+    control = commands.add_parser('control', help='record owner controls or apply an answered proposal')
+    verbs = control.add_subparsers(dest='verb', required=True)
+    for verb in ('bearings', 'decisions', 'pause', 'stop', 'away', 'resume', 'model', 'handoff'):
+        sub = verbs.add_parser(verb)
+        if verb in ('model', 'handoff'): sub.add_argument('file')
+        if verb not in ('bearings', 'decisions'): sub.add_argument('--owner-message', required=True)
+    verbs.add_parser('apply').add_argument('decision_id')
     register = commands.add_parser('register', help='record a task and its explicit native binding')
     register.add_argument('file')
     for name in ('tick', 'status'):
@@ -92,6 +111,16 @@ def main(argv=None):
     p = parser()
     args = p.parse_args(argv)
     try:
+        if args.command == 'prompt-settings':
+            output(settings_snippet(args.script, args.state_path))
+            return
+        if args.command == 'box-lint':
+            box = document(args.file)
+            if set(box) != {'question', 'options'}:
+                raise HookError('box input requires exactly question and options')
+            lint_box(box['question'], box['options'])
+            output({'valid': True})
+            return
         if args.command == 'config' and args.config_action == 'check':
             load(Path(args.file).read_bytes(), args.layer)
             output({'valid': True, 'layer': args.layer})
@@ -119,7 +148,26 @@ def main(argv=None):
         with CourtRecords(args.state) as records:
             court = Court(records, ConductorTransport())
             command = args.command
-            if command == 'config':
+            if command == 'control':
+                controls = Controls(records)
+                if args.verb == 'apply':
+                    result = controls.apply(args.decision_id)
+                else:
+                    result = controls.command(args.verb,
+                        document(args.file) if args.verb in ('model', 'handoff') else None,
+                        owner_message=getattr(args, 'owner_message', None))
+            elif command == 'prompt':
+                if args.action == 'status':
+                    if args.prompt_id: raise RecordError('status does not accept a prompt ID')
+                    result = Conversation(records).status(args.session)
+                else:
+                    result = Conversation(records).observe(args.session, args.prompt_id, args.action)
+            elif command == 'prepare-forward':
+                with Path(args.file).open('rb') as file:
+                    raw = file.read(65537)
+                if len(raw) > 65536: raise RecordError('forward file exceeds its bound')
+                result = Conversation(records).prepare_forward(args.outcome_id, raw.decode('utf-8'))
+            elif command == 'config':
                 prefs = Preferences(records)
                 if args.config_action == 'override':
                     values = load(Path(args.file).read_bytes(), 'overrides')
@@ -155,9 +203,9 @@ def main(argv=None):
             elif command == 'deliver': result = court.deliver(args.operation_id)
             elif command == 'verify': result = court.verify(args.task, **document(args.file))
             output(result)
-    except (ConfigError, OrdersError) as exc:
+    except (ConfigError, OrdersError, HookError) as exc:
         p.exit(1, str(exc) + '\n')
-    except (RecordError, TransportError, OSError, ValueError, KeyError, TypeError):
+    except (RecordError, TransportError, OSError, ValueError, KeyError, TypeError, RecursionError):
         # Input may contain private messages; never echo it in diagnostics.
         p.exit(1, 'Royalty command failed. Check the input, current assignment and private journal.\n')
 

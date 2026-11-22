@@ -7,6 +7,7 @@ identity, never a grant of authority. See docs/conductor-transport.md.
 import copy
 import json
 import math
+import os
 import re
 import subprocess
 import time
@@ -384,6 +385,9 @@ class ConductorTransport:
             return result
         request = value["request"]
         binding = request["binding"]
+        if (request.get('sender_session_id') is not None
+                and os.environ.get('CONDUCTOR_SESSION_ID') != request['sender_session_id']):
+            raise TransportError('message must be sent from its registered native session')
         observed = None
         if kind == "send_message":
             observed = self._binding(binding, deadline)
