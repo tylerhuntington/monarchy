@@ -1,6 +1,6 @@
 """Grant-bound backlog dispatch without GitHub writes or native actions."""
 from pathlib import Path
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 import tempfile
 import unittest
 
@@ -216,6 +216,49 @@ class BacklogTests(unittest.TestCase):
             result={'native_id':'retained-readback'})
         self.assertEqual(confirmed['state'],'confirmed')
         self.assertEqual(self.backlog.reservation(operation['request']['reservation_id'])['state'],'held')
+
+
+    def idle(self,*,status='idle',minutes=20):
+        from monarchy.cadence import Cadence
+        self.records.create_task('idle-source',PROJECT,'00000008-2222-4222-8222-222222222222')
+        now=datetime.now(timezone.utc)
+        cadence=Cadence(self.records)
+        cadence.observe('idle-source','idle-first',generation=1,observed_at=(now-timedelta(minutes=minutes)).isoformat(),native_status='idle')
+        cadence.observe('idle-source','idle-last',generation=1,observed_at=now.isoformat(),native_status=status)
+        return {'task_id':'idle-source','generation':1,'first_observation_id':'idle-first','last_observation_id':'idle-last'}
+
+    def test_idle_pull_uses_real_distinct_observations_and_one_bounded_read(self):
+        grant=self.activate()
+        candidate,_,facts,reader=self.selected()
+        source=self.idle()
+        data={'task_id':'pulled','repository':PROJECT,'owner':'00000008-2222-4222-8222-222222222222',
+              'metadata':{'brief':'Prepare the selected tracked item.', 'binding':{
+                  'repo':PROJECT,'session_id':'00000008-2222-4222-8222-222222222222',
+                  'workspace_id':WORKSPACE,'profile':PROFILE}}}
+        result=self.backlog.pull(data,facts,idle_source=source,reader=reader)
+        self.assertEqual(result['operation']['state'],'prepared')
+        self.assertEqual(result['candidate']['candidate_id'],candidate['candidate_id'])
+        self.assertEqual(len(self.records.list_operations()),1)
+        self.assertEqual(self.records.get_task('pulled')['metadata']['backlog']['grant_id'],grant['grant_id'])
+        with self.assertRaises(Conflict):
+            self.backlog.pull(dict(data,task_id='second-pull'),facts,idle_source=source,reader=reader)
+        with self.assertRaises(RecordError):self.records.get_task('second-pull')
+        self.backlog.release(result['operation']['request']['reservation_id'],'cancel-pull',
+            {'kind':'never-admitted','operation_id':result['operation']['operation_id']})
+        with self.assertRaises(Conflict):
+            self.backlog.pull(dict(data,task_id='reused-idle'),facts,idle_source=source,reader=reader)
+        with self.assertRaises(RecordError):self.records.get_task('reused-idle')
+
+    def test_unknown_or_short_idle_does_not_create_a_pull_assignment(self):
+        self.activate()
+        _,_,facts,reader=self.selected()
+        source=self.idle(status='unknown',minutes=19)
+        data={'task_id':'held-pull','repository':PROJECT,'owner':'00000008-2222-4222-8222-222222222222',
+              'metadata':{'brief':'Prepare.', 'binding':{'repo':PROJECT,
+                  'session_id':'00000008-2222-4222-8222-222222222222','workspace_id':WORKSPACE,'profile':PROFILE}}}
+        with self.assertRaises(Conflict):self.backlog.pull(data,facts,idle_source=source,reader=reader)
+        with self.assertRaises(RecordError):self.records.get_task('held-pull')
+        self.assertEqual(self.records.list_operations(),[])
 
 
 if __name__ == '__main__':

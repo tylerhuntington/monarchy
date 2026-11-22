@@ -109,6 +109,11 @@ def reserve_dispatch(records,operation,*,backlog_snapshot=None,idle_source=None)
              'grant_id':grant['grant_id'] if grant else None}
     if grant:
         payload['candidate_id']=task['metadata']['backlog']['candidate']['candidate_id']
+    if idle_source is not None:
+        if grant is None:
+            raise Conflict('idle pull requires an active backlog grant')
+        _idle_source(records,task,idle_source,config)
+        payload['idle_source']=idle_source
     db.execute('INSERT INTO dispatch_reservations '
         '(reservation_id,project,writer_repository,branch_ref,task_id,generation,session_id,operation_id,payload,state,created_at) '
         'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
@@ -142,6 +147,10 @@ def worker_admission_check(records,operation,*,backlog_snapshot=None,now=None):
     config,current,_=policy(records,task['repository'],current=True)
     if reservation['payload']['policy']!=current:
         raise Conflict('writer configuration changed after reservation')
+    if (operation['operation_id']==reservation['operation_id']
+            and reservation['payload'].get('idle_source') is not None):
+        _idle_source(records,task,reservation['payload']['idle_source'],config,
+                     reservation_id=reservation['reservation_id'])
     count=records._connection.execute("SELECT COUNT(*) FROM dispatch_reservations WHERE project=? AND state='held'",
                                       (task['repository'].lower(),)).fetchone()[0]
     cap=config['backlog.builder_cap']['value']
@@ -177,6 +186,48 @@ def _candidate_grant(records,project,grant_id,candidate,*,fresh_snapshot=None,fr
     if grant['payload']['references'] is not None and refs!=grant['payload']['references']:
         raise Conflict('candidate window differs from the exact granted reference allowlist')
     return grant,checked
+
+
+def _idle_source(records,task,source,config,*,reservation_id=None):
+    from .cadence import Cadence,timestamp
+    if type(source) is not dict or set(source)!={'task_id','generation','first_observation_id','last_observation_id'}:
+        raise RecordError('idle pull requires exact first and last native observation identities')
+    _generation(source['generation'])
+    prior=records.get_task(source['task_id'])
+    if (prior['generation']!=source['generation'] or prior['owner']!=task['owner']
+            or project_name(prior['repository'])!=project_name(task['repository'])):
+        raise Conflict('idle observations do not belong to this current worker assignment')
+    cadence=Cadence(records)
+    first=cadence.observation(source['first_observation_id'])
+    last=cadence.observation(source['last_observation_id'])
+    now=timestamp(_now()); start=timestamp(first['observed_at']); end=timestamp(last['observed_at'])
+    if (first['observation_id']==last['observation_id']
+            or any(row['task_id']!=prior['task_id'] or row['generation']!=prior['generation'] for row in (first,last))
+            or (end-start).total_seconds()<config['backlog.idle_minutes']['value']*60
+            or not 0<=(now-end).total_seconds()<=60):
+        raise Conflict('idle pull requires a complete interval and a recent distinct native reading')
+    latest=records._connection.execute('SELECT observation_id FROM cadence_observations '
+        'WHERE task_id=? AND generation=? ORDER BY observed_at DESC,sequence DESC LIMIT 1',
+        (prior['task_id'],prior['generation'])).fetchone()
+    rows=records._connection.execute('SELECT * FROM cadence_observations WHERE task_id=? AND generation=? '
+        'AND observed_at>=? AND observed_at<=? ORDER BY observed_at,sequence LIMIT 1001',
+        (prior['task_id'],prior['generation'],first['observed_at'],last['observed_at'])).fetchall()
+    if latest[0]!=last['observation_id'] or len(rows)>1000:
+        raise Conflict('idle observation history changed or exceeds the bounded pass')
+    for row in rows:
+        observation=records._decode(row)
+        facts=observation['payload']
+        if facts['native_status']!='idle' or facts['progress_ref'] is not None or facts['watched_event'] is not None:
+            raise Conflict('unknown, working, progress or named-event observations do not prove idle eligibility')
+    if records._connection.execute("SELECT 1 FROM events WHERE task_id=? AND generation=? "
+        "AND kind IN ('progress','completed') AND created_at>? AND created_at<=? LIMIT 1",
+        (prior['task_id'],prior['generation'],first['observed_at'],last['observed_at'])).fetchone():
+        raise Conflict('new task progress interrupts the idle interval')
+    old=records._connection.execute('SELECT reservation_id,state,created_at,released_at FROM dispatch_reservations '
+        'WHERE session_id=? LIMIT 1001',(task['owner'],)).fetchall()
+    if len(old)>1000 or any(row['reservation_id']!=reservation_id and
+            (row['state']=='held' or timestamp(row['released_at'])>=start) for row in old):
+        raise Conflict('retained writer custody or an already-consumed idle interval holds this pull')
 
 
 def _backlog_task(records,task,*,backlog_snapshot=None,fresh=False):
@@ -258,6 +309,7 @@ class Backlog:
             payload={'kind':'backlog.proposal','generation':1,'project':project,'references':refs,
                      'scope':'project-backlog' if refs is None else 'reference-allowlist',
                      'builder_cap':cap,'endpoint':ENDPOINT,'policy':frozen,
+                     'review_hours':config['backlog.review_hours']['value'],
                      'selection_order':config['backlog.selection_order']['value'],
                      'checkpoint':latest['event_id'] if latest else None,'request_owner_message':owner_message,
                      'question':'Activate this exact scoped backlog through preparation and independent review?',
@@ -291,10 +343,11 @@ class Backlog:
                     or payload.get('scope')!=('project-backlog' if payload['references'] is None else 'reference-allowlist')
                     or type(payload.get('builder_cap')) is not int
                     or not 1<=payload['builder_cap']<=config['backlog.builder_cap']['value']
-                    or payload.get('selection_order')!=config['backlog.selection_order']['value']):
+                    or payload.get('selection_order')!=config['backlog.selection_order']['value']
+                    or payload.get('review_hours')!=config['backlog.review_hours']['value']):
                 raise Conflict('backlog scope or configuration changed before activation')
             now=_now()
-            grant={k:payload[k] for k in ('scope','references','builder_cap','endpoint','policy','selection_order')}
+            grant={k:payload[k] for k in ('scope','references','builder_cap','endpoint','policy','selection_order','review_hours')}
             grant.update(decision_id=decision_id,decision_revision=decision['revision'],
                          owner_message=decision['owner_message'],activated_at=now)
             self.db.execute('INSERT INTO backlog_events(event_id,project,state,payload,created_at) VALUES(?,?,?,?,?)',
@@ -354,6 +407,37 @@ class Backlog:
         from .supervision import Court
         return Court(self.records).prepare_dispatch(task_id,new_session=new_session,
             backlog_snapshot=fresh_snapshot,idle_source=idle_source)
+
+    def pull(self,data,classifications,*,idle_source,reader=None,new_session=False):
+        from .backlog_selection import GitHubBacklog,select
+        from .supervision import Court
+        _payload(data)
+        project=project_name(data.get('repository'))
+        grant=self.state(project)
+        if grant['state']!='active' or grant['held_reasons']:
+            raise Conflict('idle pull requires an active current project backlog grant')
+        config,_,_=policy(self.records,project,current=True)
+        _idle_source(self.records,data,idle_source,config)
+        if type(classifications) is not list or not 1<=len(classifications)<=MAX_REFERENCES:
+            raise RecordError('idle pull requires a bounded current classification window')
+        refs=grant['payload']['references']
+        if refs is None:
+            refs=_references([row.get('reference') if type(row) is dict else None for row in classifications])
+        snapshot=(reader or GitHubBacklog()).read(project,refs)
+        result=select(snapshot,config,classifications)
+        candidate=result['candidate']
+        if candidate is None:
+            return {'candidate':None,'held':result['held'],'operation':None}
+        with self.records._transaction():
+            bound=self.bind(data,candidate,grant['grant_id'])
+            self.records._create_task(bound['task_id'],bound['repository'],bound['owner'],metadata=bound['metadata'])
+            operation=Court(self.records)._prepare_dispatch(bound['task_id'],new_session=new_session,
+                backlog_snapshot=snapshot,idle_source=idle_source)
+        return {'candidate':candidate,'held':result['held'],'operation':operation}
+
+    def review(self,project,metrics,*,observed_at,source_refs):
+        from .backlog_metrics import review
+        return review(self.records,project,metrics,observed_at=observed_at,source_refs=source_refs)
 
     def release(self,reservation_id,receipt_id,receipt):
         _identifier(receipt_id,'receipt_id')

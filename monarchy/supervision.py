@@ -185,6 +185,11 @@ class Court:
                                             owner_message=owner_message)
 
     def prepare_dispatch(self, task_id, *, new_session=False, backlog_snapshot=None, idle_source=None):
+        with self.records._transaction():
+            return self._prepare_dispatch(task_id,new_session=new_session,backlog_snapshot=backlog_snapshot,
+                                          idle_source=idle_source)
+
+    def _prepare_dispatch(self, task_id, *, new_session=False, backlog_snapshot=None, idle_source=None):
         task = self.records.get_task(task_id)
         meta = task['metadata']
         binding = meta['binding']
@@ -218,7 +223,7 @@ class Court:
                 comparable = {**previous['request'], 'name': operation['request']['name']}
                 if comparable == operation['request']:
                     operation['request'] = previous['request']
-        return self.records.prepare_operation(operation['operation_id'], task_id,
+        return self.records._prepare_operation(operation['operation_id'], task_id,
                                                operation['kind'], operation['request'],
                                                backlog_snapshot=backlog_snapshot,idle_source=idle_source)
 

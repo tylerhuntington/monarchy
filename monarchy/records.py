@@ -562,24 +562,27 @@ class CourtRecords:
         return self._list("operations", conditions=conditions, values=values, order="operation_id", limit=limit, offset=offset)
 
     def create_task(self, task_id, repository, owner, *, metadata=None):
+        with self._transaction():
+            return self._create_task(task_id,repository,owner,metadata=metadata)
+
+    def _create_task(self, task_id, repository, owner, *, metadata=None):
         _identifier(task_id, "task_id")
         _identifier(owner, "owner")
         if type(repository) is not str or not _REPOSITORY.fullmatch(repository):
             raise RecordError("repository must be owner/repository")
         encoded = _payload(metadata if metadata is not None else {})
-        with self._transaction():
-            existing = self._connection.execute("SELECT 1 FROM tasks WHERE task_id = ?", (task_id,)).fetchone()
-            if existing:
-                task = self.get_task(task_id)
-                if (task["repository"] != repository or task["owner"] != owner
-                        or task["generation"] != 1 or _payload(task["metadata"]) != encoded):
-                    raise Conflict("task identity already has another assignment")
-                return task
-            now = _now()
-            self._connection.execute(
-                "INSERT INTO tasks VALUES (?, ?, ?, 1, ?, ?, ?)", (task_id, repository, owner, encoded, now, now),
-            )
-            return self.get_task(task_id)
+        existing = self._connection.execute("SELECT 1 FROM tasks WHERE task_id = ?", (task_id,)).fetchone()
+        if existing:
+            task = self.get_task(task_id)
+            if (task["repository"] != repository or task["owner"] != owner
+                    or task["generation"] != 1 or _payload(task["metadata"]) != encoded):
+                raise Conflict("task identity already has another assignment")
+            return task
+        now = _now()
+        self._connection.execute(
+            "INSERT INTO tasks VALUES (?, ?, ?, 1, ?, ?, ?)", (task_id, repository, owner, encoded, now, now),
+        )
+        return self.get_task(task_id)
 
     def get_task(self, task_id):
         return self._get("tasks", "task_id", _identifier(task_id, "task_id"))
@@ -853,36 +856,41 @@ class CourtRecords:
 
     def prepare_operation(self, operation_id, task_id, kind, request, *, current_head=None,
                           backlog_snapshot=None, idle_source=None):
+        with self._transaction():
+            return self._prepare_operation(operation_id,task_id,kind,request,current_head=current_head,
+                                           backlog_snapshot=backlog_snapshot,idle_source=idle_source)
+
+    def _prepare_operation(self, operation_id, task_id, kind, request, *, current_head=None,
+                           backlog_snapshot=None, idle_source=None):
         _identifier(operation_id, "operation_id")
         _identifier(task_id, "task_id")
         _identifier(kind, "kind")
         encoded = _payload(request)
         decision_reference = _decision_reference(request)
-        with self._transaction():
-            existing = self._connection.execute("SELECT * FROM operations WHERE operation_id = ?", (operation_id,)).fetchone()
-            if existing:
-                if (existing["task_id"], existing["kind"], existing["request"]) != (task_id, kind, encoded):
-                    raise Conflict("operation identity was reused with different content")
-                return self._decode(existing)
-            self.get_task(task_id)
-            if decision_reference is not None:
-                decision = self.get_decision(decision_reference[0])
-                if decision["task_id"] != task_id:
-                    raise Conflict("operation decision belongs to another task")
-                if (decision.get('answered_by') or '').startswith('grant:'):
-                    from .delegation import answer_admission_check
-                    answer_admission_check(self, {'task_id': task_id, 'kind': kind, 'request': request},
-                                           current_head=current_head)
-            now = _now()
-            self._connection.execute(
-                "INSERT INTO operations VALUES (?, ?, ?, ?, 'prepared', NULL, ?, ?)",
-                (operation_id, task_id, kind, encoded, now, now),
-            )
-            if request.get('route')=='worker-dispatch':
-                from .backlog import reserve_dispatch
-                reserve_dispatch(self,self.get_operation(operation_id),backlog_snapshot=backlog_snapshot,
-                                 idle_source=idle_source)
-            return self.get_operation(operation_id)
+        existing = self._connection.execute("SELECT * FROM operations WHERE operation_id = ?", (operation_id,)).fetchone()
+        if existing:
+            if (existing["task_id"], existing["kind"], existing["request"]) != (task_id, kind, encoded):
+                raise Conflict("operation identity was reused with different content")
+            return self._decode(existing)
+        self.get_task(task_id)
+        if decision_reference is not None:
+            decision = self.get_decision(decision_reference[0])
+            if decision["task_id"] != task_id:
+                raise Conflict("operation decision belongs to another task")
+            if (decision.get('answered_by') or '').startswith('grant:'):
+                from .delegation import answer_admission_check
+                answer_admission_check(self, {'task_id': task_id, 'kind': kind, 'request': request},
+                                       current_head=current_head)
+        now = _now()
+        self._connection.execute(
+            "INSERT INTO operations VALUES (?, ?, ?, ?, 'prepared', NULL, ?, ?)",
+            (operation_id, task_id, kind, encoded, now, now),
+        )
+        if request.get('route')=='worker-dispatch':
+            from .backlog import reserve_dispatch
+            reserve_dispatch(self,self.get_operation(operation_id),backlog_snapshot=backlog_snapshot,
+                             idle_source=idle_source)
+        return self.get_operation(operation_id)
 
     def get_operation(self, operation_id):
         return self._get("operations", "operation_id", _identifier(operation_id, "operation_id"))
