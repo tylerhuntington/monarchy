@@ -15,6 +15,7 @@ the package starts no agents, hooks, or background service.
 | Durable owner controls | Widening controls require exact answered proposals; handoff records intent only. |
 | Category grants and actual answer provenance | Owner-confirmed scope, revocation and current evidence checks; no native owner authentication or GitHub approval/merge action. |
 | Durable cadence checks, receipts and builder census | Bounded due/wait passes; roster and observations come from trusted adapters, not the builder cap. |
+| Scoped backlog grants, read-only selection and writer reservations | Explicit owner activation and current admission evidence; no automatic scheduler, merge grant or host process fencing. |
 | Source-bound completion review | Checks the submitted evidence contract; the reviewer must perform the actual checks. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |
 | Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the royalty. |
@@ -36,8 +37,12 @@ or count arbitrary repair commands.
 The [delegation contract](delegation.md) checks typed action classification and
 owner-origin precedents. Trusted adapters supply those facts, current heads and
 review evidence; the runtime does not infer them from prose or fetch them from
-GitHub. Task/generation fencing does not establish unique branch custody across
-different tasks; that parity gap remains open.
+GitHub. New worker delivery requires an explicit read-only or writer mode.
+Writer dispatch reserves a canonical repository and branch across tasks in the
+private journal. Historical unknown branch custody holds new project writers;
+release needs retained evidence. This local admission contract does not sandbox
+agents, stop host processes or prevent unjournaled external writers. See
+[backlog](backlog.md) for its trust and native qualification boundaries.
 
 The current [Conductor adapter](conductor-transport.md) targets cloud sessions.
 It cannot verify the agent type from session readback, prove human authority from
@@ -70,7 +75,9 @@ No production release, infrastructure change, model subscription, or personal
 outreach is authorized by installing Monarchy. Those permissions belong to the
 owner and each project.
 
-The [continuous backlog model](planning/continuous-backlog.md) is a design input.
+The [bounded backlog runtime](backlog.md) implements scoped selection, capacity,
+idle pulls and retained trial-review decisions. The wider
+[continuous backlog model](planning/continuous-backlog.md) remains a design input.
 This release does not implement its 24/7 scheduler, gallery/video pipeline, native
 owner sign-off boxes, or approval-bound merge coordination. Project adoption and
 native qualification must precede unattended use.

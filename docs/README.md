@@ -16,6 +16,7 @@ Start here to set up that conversation and understand what comes back to you.
 - [Configure the royalty](configuration.md): validate preferences, confirm founding choices and pin exact sources.
 - [Delegate within a grant](delegation.md): confirm category scope, retain actual answer provenance and revoke authority.
 - [Keep checks and digests current](cadence.md): use durable check receipts, bounded waits and an explicit builder census.
+- [Pull authorized backlog work](backlog.md): confirm exact scope, read candidates and reserve capacity before dispatch.
 - [Plan capability parity](planning/opinionated-defaults.md): phased roadmap with activation and migration kept separate.
 - [Build ahead, keep the owner in charge](planning/continuous-backlog.md): design input for grant-bound continuous building and sign-off; not an installed background service.
 - [Know the limits](limits.md): what this version implements and what remains manual.

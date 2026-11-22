@@ -25,6 +25,7 @@ Write a task JSON file with these fields:
   "owner": "22222222-2222-4222-8222-222222222222",
   "metadata": {
     "authority_ref": "reference-to-the-original-user-request",
+    "execution_mode": "read-only",
     "agent_name": "Investigate tests",
     "brief": "Investigate the failing test. Report evidence. Do not change files.",
     "court_id": "my-court",
@@ -63,6 +64,13 @@ python3 -m monarchy --state /path/to/private/court.db deliver OPERATION_ID
 ```
 
 Preparation only journals the intent. `deliver` is the explicit external action.
+Every new worker delivery needs an explicit execution mode. The example is
+read-only. A writer instead uses `"execution_mode":"writer"` and
+`"writer_branch":{"repository":"example/project","ref":"refs/heads/work/item"}`.
+Dispatch reserves that canonical repository and branch before any send; prepared
+and unresolved work retains custody. Read-only classification grants no write
+authority and is not a filesystem sandbox. See [backlog custody](backlog.md)
+for capacity, legacy holds and supported release receipts.
 For a fresh session in an existing workspace, reserve a new session UUID in the
 binding and add `--new-session` to `prepare-dispatch`. The current CLI cannot
 explicitly turn fast mode off for a new session, so that profile is held before

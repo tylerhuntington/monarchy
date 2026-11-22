@@ -5,8 +5,9 @@ decisions, results, and external-operation receipts in one private SQLite
 database. Schema upgrades retain existing records: version 2 adds configuration
 pins and restrictive overrides, versions 3 and 4 add prompt observations and
 cancellation reasons, version 5 adds answer provenance and append-only
-delegation history, and version 6 adds durable cadence checks and their evidence.
-Migration activates no category grant or hook.
+delegation history, version 6 adds durable cadence checks and their evidence,
+and version 7 adds backlog history and retained dispatch reservations.
+Migration activates no backlog or category grant or hook.
 See [configuration custody](configuration.md). It uses only Python's standard library. Opening the database starts
 no agents, installs no hooks, and sends no messages.
 
@@ -115,6 +116,13 @@ check. A supported completion receipt must match its task, generation and kind.
 The [cadence contract](cadence.md) explains current holds, explicit census inputs,
 bounded wait behavior and uncertain wake recovery. These records do not by
 themselves prove native observation, message delivery or owner authority.
+
+Backlog activation retains the exact answered scope and policy. Writer
+reservations retain branch, task generation, session and operation identity;
+uncertain delivery keeps that custody. The [backlog contract](backlog.md)
+explains capacity, idle evidence and supported release receipts. Declaring a
+task read-only is a trusted input, not a filesystem sandbox or proof that
+another session's background processes stopped.
 
 After a timeout or lost response, mark the operation `unknown` and read the
 native service to reconcile its stable ID. An `in_flight` operation found after

@@ -29,9 +29,12 @@ exercise those boundaries. The local owner route, action classification, current
 head and review evidence still require trusted callers; these tests do not
 authenticate a person or verify GitHub remotely. No native P3 exercise is claimed.
 
-`authority.one-writer` remains `pending:P3`. Current ownership fences one task
-and generation; it does not enforce shared branch custody across distinct tasks.
-That gap must close before final zero-pending qualification.
+`authority.one-writer` remains `pending:P3` while the P5 custody integration is
+qualified. New worker delivery now requires explicit execution modes; writer
+reservations fence canonical branches across tasks and retain unknown legacy
+custody. The final mapping must cite the combined admission, migration and
+release proof. It cannot claim host process fencing or prevention of unjournaled
+external writes. The row stays present until that review is complete.
 
 P4 maps 11 rows to the [cadence contract](../cadence.md), including seven setting
 values, three standing-order rules and the non-omittable check-custody invariant.
@@ -50,6 +53,14 @@ There is no native P4 or unattended-operation qualification claim. Reminder
 window hours are documented implementation defaults, not recovered private
 source facts. P5 through P10 rows retain their existing targets, and the inventory
 still makes no full-source or live preference-drift claim.
+
+P5's eight targets are prepared in the parity tests but remain `pending:P5` in
+the catalog. The proposed mappings distinguish four configuration values, the
+idle-selection and capacity-review rules, exact activation authority and the
+non-omittable read-only/admission boundary. Resolving those marker names is not
+runtime or native proof. Promotion requires the combined backlog tests and the
+actual owner-granted native idle-pull exercise described by the
+[backlog contract](../backlog.md).
 
 The public hygiene test scans maintained text, including first-party vendor
 wrapper documentation. It preserves the pinned upstream archive and its legal
