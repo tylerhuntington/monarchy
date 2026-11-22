@@ -7,6 +7,39 @@ from monarchy.config import ConfigError, KEYS, defaults_digest, load, resolve, w
 
 
 class ConfigTests(unittest.TestCase):
+    def test_cadence_window_and_no_progress_budget_have_explicit_defaults(self):
+        config = resolve()
+        self.assertEqual(config['cadence.reminder_start']['value'], '08:00')
+        self.assertEqual(config['cadence.reminder_end']['value'], '20:00')
+        self.assertEqual(config['failures.no_progress_limit']['value'], 2)
+        self.assertEqual(resolve(owner={'failures.no_progress_limit': 1})[
+            'failures.no_progress_limit']['value'], 1)
+        self.assertEqual(resolve(owner={'failures.no_progress_limit': 3})[
+            'failures.no_progress_limit']['value'], 2)
+
+    def test_reminder_window_has_one_owner_home_and_increasing_clock_bounds(self):
+        window = {'cadence.reminder_start': '09:00', 'cadence.reminder_end': '17:00'}
+        config = resolve(owner=window)
+        self.assertEqual(config['cadence.reminder_start']['layers'], ['owner'])
+        self.assertEqual(config['cadence.reminder_end']['value'], '17:00')
+        for layer in ('project', 'overrides'):
+            with self.subTest(layer=layer), self.assertRaises(ConfigError):
+                resolve(**{layer: window})
+        for window in ({'cadence.reminder_start': '20:00'},
+                       {'cadence.reminder_end': '08:00'},
+                       {'cadence.reminder_start': '22:00', 'cadence.reminder_end': '06:00'},
+                       {'cadence.reminder_start': '9:00'},
+                       {'cadence.reminder_end': '24:00'}):
+            with self.subTest(window=window), self.assertRaises(ConfigError):
+                resolve(owner=window)
+            with self.subTest(loader=window), self.assertRaises(ConfigError):
+                load(json.dumps(window), 'owner')
+
+    def test_no_progress_budget_rejects_boolean_fraction_and_out_of_bounds_values(self):
+        for value in (True, 1.5, 0, -1, 11):
+            with self.subTest(value=value), self.assertRaises(ConfigError):
+                resolve(owner={'failures.no_progress_limit': value})
+
     def test_defaults_supply_recommended_profiles_and_runtime_limits(self):
         config = resolve()
         self.assertEqual(config['forwards.max_lines']['value'], 3)
