@@ -14,8 +14,10 @@ from unittest.mock import patch
 from monarchy.rearm import settings_snippet, wait, run_hook
 from monarchy.records import CourtRecords, RecordError
 from monarchy.controls import Controls
-from monarchy.preferences import digest
+from monarchy.preferences import Preferences, digest
 from monarchy.cadence import Cadence
+from monarchy.conversation import Conversation
+from test_approval import source
 
 
 SECRETARY = '22222222-2222-4222-8222-222222222222'
@@ -267,3 +269,81 @@ class RearmTests(unittest.TestCase):
             self.assertEqual(run_hook(b'{"hook_event_name":"Stop"}', self.environment(),
                                       stderr=err, now=lambda: NOW), 0)
         self.assertIn('stopped safely', err.getvalue())
+
+
+class PinnedRoutingTests(unittest.TestCase):
+    def setUp(self):
+        self.directory = tempfile.TemporaryDirectory()
+        self.addCleanup(self.directory.cleanup)
+        self.records = CourtRecords(Path(self.directory.name) / 'private.db')
+        self.addCleanup(self.records.close)
+        self.now = NOW.replace(hour=8, minute=1)
+        prefs = Preferences(self.records)
+        owner = source({'voice.zone': 'UTC'}, 'owner')
+        project = source({'project.repository': PROJECT}, 'project')
+        with patch('monarchy.records._now', return_value='2026-01-01T00:00:00+00:00'):
+            for box in prefs.founding(owner, project):
+                self.records.answer_decision(box['decision_id'], {'accept': True},
+                    expected_revision=box['revision'], owner_message='owner-founding')
+            prefs.pin(owner, project, owner_message='owner-pin', monarchy_revision='c' * 40)
+            config = prefs.show(PROJECT)['config']
+            meta = {'brief': 'Inspect a maintenance task.', 'binding': binding('builder'),
+                    'queen_binding': dict(binding(QUEEN), profile=config['profiles.queen']['value']),
+                    'secretary_binding': dict(binding(SECRETARY), profile=config['profiles.secretary']['value'])}
+            task = prefs.bind({'task_id': 'task', 'repository': PROJECT, 'owner': 'builder', 'metadata': meta})
+            self.records.create_task('task', PROJECT, 'builder', metadata=task['metadata'])
+            self.records.open_decision('owner-question', 'task', {'generation': 1, 'question': 'Accept this scope?'})
+
+    def prompt(self, action, prompt_id='question'):
+        with patch('monarchy.conversation._now', return_value=self.now.isoformat()):
+            return Conversation(self.records).observe(QUEEN, prompt_id, action)
+
+    def wait(self):
+        return wait(self.records, project=PROJECT, secretary_session=SECRETARY, now=lambda: self.now)
+
+    def test_unknown_prompt_holds_owner_items_until_close_without_stopping_internal_work(self):
+        due = Cadence(self.records).due(now=self.now.isoformat(), project=PROJECT)
+        owner = [row for row in due if row['recipient'] == 'queen']
+        self.assertTrue(owner)
+        self.assertTrue(all('queen-prompt-held' in row['held_reasons'] for row in owner))
+        first = self.wait()
+        self.assertEqual(first['reason'], 'change')
+        self.assertEqual({row['recipient'] for row in first['checks']}, {'secretary'})
+        self.prompt('open')
+        self.prompt('close')
+        released = self.wait()
+        self.assertEqual(released['reason'], 'change')
+        self.assertEqual({row['recipient'] for row in released['checks']}, {'queen'})
+        self.assertTrue(all(row['state'] == 'pending' for row in released['checks']))
+
+    def test_open_cancelled_and_away_states_do_not_hold_internal_secretary_checks(self):
+        self.prompt('open')
+        Controls(self.records).command('away', owner_message='owner-away')
+        first = self.wait()
+        self.assertEqual(first['reason'], 'change')
+        self.assertEqual({row['recipient'] for row in first['checks']}, {'secretary'})
+        self.prompt('cancel')
+        later = self.now + timedelta(hours=2)
+        owner = [row for row in Cadence(self.records).due(now=later.isoformat(), project=PROJECT)
+                 if row['recipient'] == 'queen']
+        self.assertTrue(owner)
+        self.assertTrue(all({'owner-away', 'queen-prompt-held'} <= set(row['held_reasons']) for row in owner))
+
+    def test_prompt_opened_after_notice_preparation_drops_only_owner_items(self):
+        self.prompt('open')
+        self.prompt('close')
+        prepare = Cadence.prepare_notice
+
+        def open_prompt(cadence, *args, **kwargs):
+            notice = prepare(cadence, *args, **kwargs)
+            self.prompt('open', 'next-question')
+            return notice
+
+        with patch.object(Cadence, 'prepare_notice', open_prompt):
+            result = self.wait()
+        self.assertEqual(result['reason'], 'change')
+        self.assertEqual({row['recipient'] for row in result['checks']}, {'secretary'})
+        notice = Cadence(self.records).get_notice(result['notification_id'])
+        self.assertGreater(len(notice['check_ids']), len(result['check_ids']))
+        self.assertTrue(all(Cadence(self.records).get(check_id, now=self.now.isoformat())['state'] == 'pending'
+                            for check_id in notice['check_ids']))
