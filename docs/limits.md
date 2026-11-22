@@ -13,6 +13,7 @@ the package starts no agents, hooks, or background service.
 | Conductor message delivery and native report ingestion | Require explicit commands and verified membership of the royalty; do not authenticate new owner authority. |
 | Queen and Secretary pull inboxes and explicit bounded forwards | Presenting a result does not acknowledge it. Forwarding requires a known prompt state and qualified opt-in hooks. |
 | Durable owner controls | Widening controls require exact answered proposals; handoff records intent only. |
+| Category grants and actual answer provenance | Owner-confirmed scope, revocation and current evidence checks; no native owner authentication or GitHub approval/merge action. |
 | Source-bound completion review | Checks the submitted evidence contract; the reviewer must perform the actual checks. |
 | Conductor session and GitHub PR observation | Does not verify test results, merge queues, deployment health, or completion. |
 | Pinned First Mate source and isolated compatibility test | Reference distribution, not the engine that runs the royalty. |
@@ -22,6 +23,12 @@ dispatch saves an intent; `deliver` performs or reconciles the native action.
 After an uncertain result, it reads the original identities rather than sending
 again. The separate observer only polls. Neither command keeps supervision alive
 after it exits.
+
+The [delegation contract](delegation.md) checks typed action classification and
+owner-origin precedents. Trusted adapters supply those facts, current heads and
+review evidence; the runtime does not infer them from prose or fetch them from
+GitHub. Task/generation fencing does not establish unique branch custody across
+different tasks; that parity gap remains open.
 
 The current [Conductor adapter](conductor-transport.md) targets cloud sessions.
 It cannot verify the agent type from session readback, prove human authority from

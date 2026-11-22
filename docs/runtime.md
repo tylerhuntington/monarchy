@@ -122,6 +122,12 @@ An answer is tied to the decision revision and 00 agent generation. After a hand
 the Secretary must reconcile the old obligation explicitly. It cannot quietly
 send the old answer to a replacement 00 agent.
 
+An eligible category can instead use a current [delegation grant](delegation.md).
+Its answer retains `grant:<id>` provenance and no owner-message impersonation.
+Preparing and admitting the relay rechecks its grant; internal approval also
+requires a freshly observed full head. A granted answer is not a GitHub approval
+or merge command, and cannot supply owner-only authority.
+
 ## Check the work before calling it done
 
 A 00 agent's completion report needs a full source revision. An independent

@@ -307,17 +307,20 @@ class ControlTests(unittest.TestCase):
 
     def test_full_render_budget_is_enforced_atomically_for_model_overlay(self):
         owner = {'voice.zone': 'UTC'}
-        base = {'project.repository': 'example/project',
-                'project.required_checks': ['c' + str(i).zfill(2) + 'x' * 253 for i in range(64)],
-                'project.merge_labels': ['m' + str(i).zfill(2) + 'x' * 253 for i in range(64)]}
         def candidate(size):
-            values = ['p' + str(i).zfill(2) + 'x' * min(253, size - i * 253)
-                      for i in range((size + 252) // 253)]
-            project = dict(base, **{'project.priority_surfaces': values})
+            project = {'project.repository': 'example/project'}
+            for field, prefix in (('project.required_checks', 'c'), ('project.merge_labels', 'm'),
+                                  ('project.priority_surfaces', 'p')):
+                count = min(size, 64 * 253)
+                project[field] = [prefix + str(i).zfill(2) + 'x' * min(253, count - i * 253)
+                                  for i in range((count + 252) // 253)]
+                size -= count
             config = resolve(owner=owner, project=project)
             sizes = {role: len(render(role, config)['text'].encode()) for role in ('queen', 'secretary', 'worker')}
             return project, sizes
-        low, high = 0, 12000
+        low, high = 0, 3 * 64 * 253
+        self.assertLessEqual(max(candidate(low)[1].values()), MAX_TEXT_BYTES - 103)
+        self.assertGreater(max(candidate(high)[1].values()), MAX_TEXT_BYTES - 103)
         while low < high:
             middle = (low + high + 1) // 2
             if max(candidate(middle)[1].values()) <= MAX_TEXT_BYTES - 103:

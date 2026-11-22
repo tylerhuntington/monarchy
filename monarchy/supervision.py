@@ -219,11 +219,15 @@ class Court:
         return self.records.prepare_operation(operation['operation_id'], task_id,
                                                operation['kind'], operation['request'])
 
-    def prepare_answer(self, decision_id):
+    def prepare_answer(self, decision_id, *, current_head=None):
         decision = self.records.get_decision(decision_id)
         task = self.records.get_task(decision['task_id'])
         if decision['state'] != 'answered':
-            raise Conflict('decision has no recorded owner answer')
+            raise Conflict('decision has no recorded answer')
+        if (decision.get('answered_by') or '').startswith('grant:'):
+            from .delegation import Delegation
+            Delegation(self.records)._authorize(decision, decision['answer'],
+                decision['answered_by'][6:], current_head=current_head)
         if decision['payload']['generation'] != task['generation']:
             raise StaleGeneration('answer belongs to an earlier 00 Agent assignment')
         binding = task['metadata']['binding']
@@ -233,16 +237,34 @@ class Court:
         text = json.dumps({'kind': 'monarchy.answer', 'task_id': task['task_id'],
                            'generation': task['generation'], 'decision_id': decision_id,
                            'revision': decision['revision'], 'answer': decision['answer'],
-                           'owner_message': decision['owner_message']}, sort_keys=True)
+                           'owner_message': decision['owner_message'],
+                           'answered_by': decision['answered_by']}, sort_keys=True)
         operation = prepare_message(task['task_id'], binding, text,
                                     operation_id=identity('answer-operation', key),
                                     message_id=identity('answer-message', key))
         operation['request'].update(generation=task['generation'], decision_id=decision_id,
                                     decision_revision=decision['revision'])
+        # Preserve an already journaled owner delivery across the provenance
+        # migration. New deliveries always serialize answered_by explicitly.
+        if decision['answered_by'] == 'owner':
+            try:
+                previous = self.records.get_operation(operation['operation_id'])
+            except RecordError:
+                previous = None
+            if previous is not None:
+                old_request = previous['request']
+                try:
+                    old_message = json.loads(old_request['text'])
+                    if ('answered_by' not in old_message
+                            and {**old_message, 'answered_by': 'owner'} == json.loads(text)
+                            and {**old_request, 'text': text} == operation['request']):
+                        operation['request'] = old_request
+                except (KeyError, TypeError, ValueError):
+                    pass
         return self.records.prepare_operation(operation['operation_id'], operation['task_id'],
-                                               operation['kind'], operation['request'])
+                                               operation['kind'], operation['request'], current_head=current_head)
 
-    def deliver(self, operation_id):
+    def deliver(self, operation_id, *, current_head=None):
         if self.transport is None:
             raise RecordError('a native transport is required')
         operation = self.records.get_operation(operation_id)
@@ -263,7 +285,7 @@ class Court:
         def persist(value):
             nonlocal expected_state
             saved = self.records.set_operation_state(operation_id, value['state'],
-                                                     expected_state=expected_state, result=value['result'])
+                expected_state=expected_state, result=value['result'], current_head=current_head)
             expected_state = value['state']
             return saved
         if operation['kind'] == 'create_session':

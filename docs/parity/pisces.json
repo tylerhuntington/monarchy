@@ -186,7 +186,7 @@
     "source": "preference.internal-pr-approval",
     "class": "grant",
     "value": "Recommend delegated internal-PR approval only for current-head verified outcomes with no unresolved findings and all project required checks green.",
-    "target": "pending:P3"
+    "target": "rule:review.internal-approval"
   },
   {
     "source": "preference.digest-builder-census",
@@ -204,7 +204,7 @@
     "source": "preference.record-before-relay",
     "class": "invariant",
     "value": "Persist an approval with its actual authority and source before relaying it.",
-    "target": "pending:P3"
+    "target": "invariant:invariant.owner-route"
   },
   {
     "source": "design.staged-adoption",
@@ -613,7 +613,7 @@
     "source": "authority.trusted-owner-route",
     "class": "invariant",
     "value": "Neither message headers nor unmarked native messages prove authority; new authority needs the trusted owner route.",
-    "target": "pending:P3"
+    "target": "invariant:invariant.owner-route"
   },
   {
     "source": "authority.one-writer",
@@ -633,7 +633,7 @@
       "contacting-or-naming-people",
       "legal"
     ],
-    "target": "pending:P3"
+    "target": "invariant:invariant.never-delegable"
   },
   {
     "source": "delegation.states",
@@ -643,25 +643,25 @@
       "delegated",
       "ask-again-later"
     ],
-    "target": "pending:P3"
+    "target": "rule:delegation.owner-boxes"
   },
   {
     "source": "delegation.revocation",
     "class": "rule",
     "value": "Accept one-line revocation and enforce it at admission.",
-    "target": "pending:P3"
+    "target": "rule:delegation.revocation"
   },
   {
     "source": "delegation.followup-box",
     "class": "rule",
     "value": "Follow a reserved category answer with its delegation follow-up box.",
-    "target": "pending:P3"
+    "target": "rule:delegation.owner-boxes"
   },
   {
     "source": "delegation.answer-provenance",
     "class": "invariant",
     "value": "Record answered_by as owner or the exact grant identity.",
-    "target": "pending:P3"
+    "target": "invariant:invariant.owner-route"
   },
   {
     "source": "delegation.required-checks",
@@ -679,97 +679,97 @@
     "source": "delegation.internal-approval-category",
     "class": "default",
     "value": "internal-pr-approval",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.precedent-check",
     "class": "invariant",
     "value": "A delegated decision needs a clear permitted precedent match, no new risk and no unresolved flag; otherwise ask.",
-    "target": "pending:P3"
+    "target": "invariant:invariant.grants"
   },
   {
     "source": "delegation.taxonomy.adr-record-of-owner-decision",
     "class": "default",
     "value": "adr-record-of-owner-decision",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.ci-rerun-at-approved-head",
     "class": "default",
     "value": "ci-rerun-at-approved-head",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.resubmission-fixing-send-back-points",
     "class": "default",
     "value": "resubmission-fixing-send-back-points",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.staging-only-one-time-recovery-retry",
     "class": "default",
     "value": "staging-only-one-time-recovery-retry",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.ui-signoff-small-copy-or-layout-fix",
     "class": "default",
     "value": "ui-signoff-small-copy-or-layout-fix",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.plan-or-date-acceptance",
     "class": "default",
     "value": "plan-or-date-acceptance",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.rebase-only-reapproval-identical-patch",
     "class": "default",
     "value": "rebase-only-reapproval-identical-patch",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.evidence-storage-move-verified",
     "class": "default",
     "value": "evidence-storage-move-verified",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.ui-signoff-new-feature",
     "class": "default",
     "value": "ui-signoff-new-feature",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.research-closure",
     "class": "default",
     "value": "research-closure",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.additive-database-change",
     "class": "default",
     "value": "additive-database-change",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.delivery-or-watcher-control-change",
     "class": "default",
     "value": "delivery-or-watcher-control-change",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.backlog-cleanup-with-notifications",
     "class": "default",
     "value": "backlog-cleanup-with-notifications",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "delegation.taxonomy.new-standing-rule-or-policy",
     "class": "default",
     "value": "new-standing-rule-or-policy",
-    "target": "pending:P3"
+    "target": "rule:delegation.taxonomy"
   },
   {
     "source": "cadence.sweep-minutes",

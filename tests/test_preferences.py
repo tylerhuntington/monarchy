@@ -123,7 +123,7 @@ class PreferenceTests(unittest.TestCase):
         self.records=CourtRecords(self.db)
         self.assertEqual(self.records.get_task('t'),task)
         self.assertEqual(self.records.get_operation('op')['state'],'unknown')
-        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0],4)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0],5)
 
     def test_new_project_cannot_restore_older_court_owner_without_box(self):
         self.pin()
