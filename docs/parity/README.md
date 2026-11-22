@@ -10,6 +10,10 @@ explicit exclusion in the approved plan. Later phases replace pending targets
 with `key:`, `rule:`, `invariant:` or `project:` only when their evidence exists.
 Current rows are not proof of complete source coverage or live preference drift.
 
+The [conversation qualification](../verification/conversation-contract.md)
+separates P2's native observations from offline behavior checks and the narrower
+scope of each target. A rendered invariant alone does not qualify a runtime row.
+
 The public hygiene test scans maintained text, including first-party vendor
 wrapper documentation. It preserves the pinned upstream archive and its legal
 notice. Before publishing an amended private draft, also inspect every new
