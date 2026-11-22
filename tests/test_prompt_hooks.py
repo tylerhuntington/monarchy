@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 import io
 import json
 from pathlib import Path
+import re
 import shlex
 import subprocess
 import sys
@@ -148,6 +149,120 @@ class PromptHookTests(unittest.TestCase):
         self.assertEqual((code, error), (0, ''))
         self.assertFalse(runner.calls)
 
+    def test_exact_conductor_alias_records_the_same_prompt_lifecycle(self):
+        for event, expected in [('PreToolUse', 'open'), ('PostToolUse', 'close'),
+                                ('PostToolUseFailure', 'unknown')]:
+            with self.subTest(event=event):
+                data = payload(event)
+                data['tool_name'] = 'mcp__conductor__AskUserQuestion'
+                if event == 'PostToolUse':
+                    data['tool_response'] = [{'type': 'text',
+                        'text': 'User responses:\n1. Continue (Recommended)'}]
+                code, runner, error = self.run_adapter(data)
+                self.assertEqual((code, error), (0, ''))
+                self.assertEqual(len(runner.calls), 1)
+                self.assertEqual(runner.calls[0][0][6], expected)
+                self.assertEqual(runner.calls[0][0][-1], 'toolu_fixture')
+
+    def test_conductor_alias_does_not_guess_json_or_the_builtin_answer_format(self):
+        data = payload('PostToolUse')
+        data['tool_name'] = 'mcp__conductor__AskUserQuestion'
+        for response in (data['tool_response'],
+                         {'content': [{'type': 'text', 'text': json.dumps(data['tool_response'])}]}):
+            with self.subTest(response=response):
+                data['tool_response'] = response
+                code, runner, _ = self.run_adapter(data)
+                self.assertEqual(code, 0)
+                self.assertEqual(len(runner.calls), 1)
+                self.assertEqual(runner.calls[0][0][6], 'unknown')
+
+    def test_native_conductor_single_freeform_and_multiselect_answers_close(self):
+        for questions, text in [
+            ([QUESTION], 'User responses:\n1. Continue (Recommended)'),
+            ([QUESTION], 'User responses:\n1. Another bounded path'),
+            ([dict(QUESTION, multiSelect=True)], 'User responses:\n1.\n   - Continue\n   - Other path'),
+            ([QUESTION, dict(QUESTION, question='Which follow-up?', multiSelect=True)],
+             'User responses:\n1. Hold\n2.\n   - Follow-up A\n   - Follow-up B')]:
+            data = payload('PostToolUse')
+            data['tool_name'] = 'mcp__conductor__AskUserQuestion'
+            data['tool_input'] = {'questions': copy.deepcopy(questions)}
+            blocks = [{'type': 'text', 'text': text}]
+            for response in (blocks, {'content': blocks}, {'content': blocks, 'isError': False}):
+                data['tool_response'] = response
+                code, runner, _ = self.run_adapter(data)
+                self.assertEqual(code, 0)
+                self.assertEqual(runner.calls[0][0][6], 'close')
+                self.assertNotIn(text, repr(runner.calls))
+
+    def test_native_conductor_cancellation_error_and_ambiguous_results_hold(self):
+        success = {'content': [{'type': 'text', 'text': 'User responses:\n1. Continue'}]}
+        responses = [
+            {'content': [{'type': 'text', 'text': 'User cancelled the question. Please continue without this information or ask in a different way.'}]},
+            dict(success, isError=True), dict(success, isError='false'),
+            dict(success, cancelled=True), dict(success, is_interrupt=True),
+            dict(success, afkTimeoutMs=1000), dict(success, error='failed'),
+            {'content': [{'type': 'text', 'text': 'Error asking the user a question: delivery failed'}], 'isError': True},
+            {'content': success['content'] * 2}, {'content': []},
+            {'content': [{'type': 'image', 'text': 'User responses:\n1. Continue'}]},
+            {'content': success['content'], 'unknown': True},
+            'User responses:\n1. Continue', {'result': success},
+            [{'type': 'text', 'text': 'User responses:\n1. Continue', 'unknown': True}],
+        ]
+        for text in ('User responses:\n1. ', 'User responses:\n1.', 'User responses:\n2. Continue',
+                     'User responses:\n1. Continue\n2. Extra', 'User responses:\n1. Continue\nExtra',
+                     'User responses:\n1. Continue\n', 'User responses:\n1.\n   - ',
+                     'User responses:\n1.\n  - Wrong indent', 'User responses:\n1.\n   - Continue',
+                     'User responses:\n1. Continue\x00', 'User responses:\r\n1. Continue'):
+            responses.append({'content': [{'type': 'text', 'text': text}]})
+        responses.extend(response['content'] for response in list(responses)
+                         if type(response) is dict and set(response) == {'content'})
+        for response in responses:
+            with self.subTest(response=response):
+                data = payload('PostToolUse')
+                data['tool_name'] = 'mcp__conductor__AskUserQuestion'
+                data['tool_response'] = response
+                code, runner, _ = self.run_adapter(data)
+                self.assertEqual(code, 0)
+                self.assertEqual(runner.calls[0][0][6], 'unknown')
+
+    def test_native_conductor_success_with_top_level_failure_stays_unknown(self):
+        for flag, value in [('error', 'failed'), ('cancelled', True), ('is_interrupt', True),
+                            ('afkTimeoutMs', 1000), ('isError', True)]:
+            data = payload('PostToolUse')
+            data['tool_name'] = 'mcp__conductor__AskUserQuestion'
+            data['tool_response'] = [{'type': 'text', 'text': 'User responses:\n1. Continue'}]
+            data[flag] = value
+            code, runner, _ = self.run_adapter(data)
+            self.assertEqual(code, 0)
+            self.assertEqual(runner.calls[0][0][6], 'unknown')
+
+    def test_builtin_tool_does_not_accept_conductor_numbered_text(self):
+        data = payload('PostToolUse')
+        data['tool_response'] = {'content': [{'type': 'text', 'text': 'User responses:\n1. Continue'}]}
+        code, runner, _ = self.run_adapter(data)
+        self.assertEqual(code, 0)
+        self.assertEqual(runner.calls[0][0][6], 'unknown')
+
+    def test_alias_lookalikes_never_match_or_write_prompt_observations(self):
+        names = ['AskUserQuestion', 'mcp__conductor__AskUserQuestion']
+        lookalikes = ['askuserquestion', 'mcp__other__AskUserQuestion',
+                     'mcp__Conductor__AskUserQuestion', 'mcp__conductor__askuserquestion']
+        for name in names:
+            lookalikes.extend([name + 'Extra', 'Prefix' + name, name + '\n', name + '\r'])
+        snippet = settings_snippet('/tmp/hook.py', '/tmp/state.sqlite')
+        for entries in snippet['hooks'].values():
+            matcher = entries[0]['matcher']
+            for name in names:
+                self.assertIsNotNone(re.search(matcher, name), name)
+            for name in lookalikes:
+                self.assertIsNone(re.search(matcher, name), name)
+        for name in lookalikes:
+            data = payload()
+            data['tool_name'] = name
+            code, runner, error = self.run_adapter(data, env={})
+            self.assertEqual((code, error), (0, ''))
+            self.assertFalse(runner.calls)
+
     def test_unknown_events_and_subagent_calls_cannot_change_queen_state(self):
         for update in ({'hook_event_name': 'Stop'}, {'agent_id': 'child-fixture'}):
             data = payload()
@@ -209,7 +324,8 @@ class PromptHookTests(unittest.TestCase):
         self.assertEqual(set(snippet['hooks']), {'PreToolUse', 'PostToolUse', 'PostToolUseFailure'})
         for event, entries in snippet['hooks'].items():
             self.assertEqual(len(entries), 1)
-            self.assertEqual(entries[0]['matcher'], '^AskUserQuestion$')
+            self.assertEqual(entries[0]['matcher'],
+                             r'^(?:AskUserQuestion|mcp__conductor__AskUserQuestion)(?![\s\S])')
             hook = entries[0]['hooks'][0]
             self.assertEqual(hook['type'], 'command')
             self.assertEqual(shlex.split(hook['command']),

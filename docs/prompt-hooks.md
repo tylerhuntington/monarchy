@@ -28,7 +28,10 @@ Review the result, preserve any existing hooks, then explicitly add it to the
 Claude settings supported by the intended host. Do not put it in Conductor
 repository settings or install it through a Monarchy setup script. The generated
 command uses the current Python interpreter and absolute, shell-quoted paths.
-It matches only AskUserQuestion and stays synchronous.
+It matches only the exact names `AskUserQuestion` and
+`mcp__conductor__AskUserQuestion` and stays synchronous. The second name is
+Conductor's namespaced question tool. Other namespaces, spelling variants,
+prefixes and suffixes do not match.
 
 The native environment must supply `CONDUCTOR_SESSION_ID` for the current Queen.
 The snippet supplies `MONARCHY_STATE`. The adapter does not substitute Claude's
@@ -45,7 +48,8 @@ Claude Code 2.1.295 or later. Qualify that behavior on the actual host before us
 | Hook event or result | Recorded observation |
 | --- | --- |
 | PreToolUse for AskUserQuestion | `open` for this tool-use ID before permitting the tool |
-| PostToolUse with matching questions and nonempty structured answers | `close` for this tool-use ID |
+| Built-in PostToolUse with matching questions and nonempty structured answers | `close` for this tool-use ID |
+| Conductor PostToolUse with a recognized numbered answer for each input question | `close` for this tool-use ID |
 | PostToolUseFailure | `unknown` for this tool-use ID |
 | Error, cancellation, timeout, freeform dismissal, or ambiguous post result | `unknown` for this tool-use ID |
 
@@ -54,6 +58,17 @@ provides structured `questions` and `answers`, optional freeform `response`, and
 `afkTimeoutMs` for automatic resolution. The adapter accepts only the structured
 answered form without an interruption or timeout marker. A prompt close is an
 observation, never an owner decision or a grant.
+
+The Conductor tool uses a separate positional format established by installed
+source inspection: one text block starting with `User responses:` and a numbered
+answer for each input question. Claude passes the content-block array to its post
+hook; the exact single-content MCP envelope is also accepted. Single-line freeform
+answers are valid, including Other responses outside the provided options.
+Multi-select answers use indented bullet lines and require a multi-select input.
+Cancellation prose, errors, extra blocks, incorrect numbering or answer counts,
+empty answers, and ambiguous multiline freeform responses record `unknown`.
+The adapter never interprets arbitrary JSON text as an answer. Source inspection
+does not replace native hook qualification on the intended host.
 
 Each observation invokes the existing runtime CLI using an argument array:
 

@@ -13,6 +13,9 @@ MAX_INPUT_BYTES = 65536
 ROOT = Path(__file__).resolve().parents[1]
 IDENTIFIER = re.compile(r'[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}\Z')
 EVENTS = ('PreToolUse', 'PostToolUse', 'PostToolUseFailure')
+QUESTION_TOOLS = ('AskUserQuestion', 'mcp__conductor__AskUserQuestion')
+# Match the real end of the name, including when malformed input ends in a newline.
+QUESTION_MATCHER = r'^(?:' + '|'.join(re.escape(name) for name in QUESTION_TOOLS) + r')(?![\s\S])'
 FAILURE_MESSAGE = 'Monarchy could not safely record the prompt observation; keep forwarding held.'
 
 
@@ -84,7 +87,7 @@ def settings_snippet(script_path, state_path):
     script_path, state_path = _path(script_path), _path(state_path)
     command = 'MONARCHY_STATE={} {} {}'.format(
         shlex.quote(state_path), shlex.quote(sys.executable), shlex.quote(script_path))
-    return {'hooks': {event: [{'matcher': '^AskUserQuestion$', 'hooks': [{
+    return {'hooks': {event: [{'matcher': QUESTION_MATCHER, 'hooks': [{
         'type': 'command', 'command': command, 'timeout': 10, 'onFailure': 'block',
     }]}] for event in EVENTS}}
 
@@ -133,7 +136,7 @@ def _questions(value):
     return questions if len(set(questions)) == len(questions) else None
 
 
-def _answered(data):
+def _builtin_answered(data):
     # Managed PostToolUse can receive failed tool output. Do not treat the
     # event name alone, a freeform dismissal or an automatic timeout as a close.
     response, tool_input = data.get('tool_response'), data.get('tool_input')
@@ -154,6 +157,69 @@ def _answered(data):
     return (type(answers) is dict and set(answers) == set(questions)
             and all(type(answer) is str and bool(answer.strip())
                     for answer in answers.values()))
+
+
+def _single_answer(value):
+    return (bool(value.strip()) and len(value.splitlines()) == 1
+            and not any(ord(char) < 32 or ord(char) == 127 for char in value))
+
+
+def _conductor_answered(data):
+    """Recognize the installed Conductor formatter, not arbitrary MCP prose.
+
+    Claude passes the native tool's content array to PostToolUse. The exact
+    one-content MCP envelope is also recognized. Neither is an owner grant.
+    Multiline freeform text is ambiguous in this positional format and holds.
+    """
+    response, tool_input = data.get('tool_response'), data.get('tool_input')
+    if type(tool_input) is not dict or _questions(tool_input.get('questions')) is None:
+        return False
+    for item in (data, response):
+        if type(item) is not dict:
+            continue
+        if 'error' in item or item.get('afkTimeoutMs') is not None:
+            return False
+        for flag in ('isError', 'is_interrupt', 'interrupted', 'cancelled', 'canceled', 'aborted'):
+            if flag in item and item[flag] is not False:
+                return False
+    if type(response) is dict:
+        if not set(response) <= {'content', 'isError'}:
+            return False
+        response = response.get('content')
+    if (type(response) is not list or len(response) != 1 or type(response[0]) is not dict
+            or set(response[0]) != {'type', 'text'} or response[0]['type'] != 'text'
+            or type(response[0]['text']) is not str):
+        return False
+    lines = response[0]['text'].split('\n')
+    if not lines or lines[0] != 'User responses:':
+        return False
+    cursor = 1
+    for number, question in enumerate(tool_input['questions'], 1):
+        if cursor >= len(lines):
+            return False
+        prefix = str(number) + '. '
+        if lines[cursor].startswith(prefix):
+            if not _single_answer(lines[cursor][len(prefix):]):
+                return False
+            cursor += 1
+        elif lines[cursor] == str(number) + '.' and question.get('multiSelect') is True:
+            cursor += 1
+            start = cursor
+            while cursor < len(lines) and lines[cursor].startswith('   - '):
+                if not _single_answer(lines[cursor][5:]):
+                    return False
+                cursor += 1
+            if cursor == start:
+                return False
+        else:
+            return False
+    return cursor == len(lines)
+
+
+def _answered(data):
+    if data.get('tool_name') == 'mcp__conductor__AskUserQuestion':
+        return _conductor_answered(data)
+    return _builtin_answered(data)
 
 
 def _record(action, session, prompt_id, state, runner):
@@ -180,7 +246,7 @@ def run_hook(raw, environ, runner=subprocess.run):
         tool = data.get('tool_name')
         if type(tool) is not str or not tool:
             raise HookError('hook tool identity is missing')
-        if tool != 'AskUserQuestion':
+        if tool not in QUESTION_TOOLS:
             return 0
         event = data.get('hook_event_name')
         if event not in EVENTS or data.get('agent_id') is not None:
