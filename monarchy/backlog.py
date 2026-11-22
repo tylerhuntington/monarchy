@@ -3,6 +3,7 @@ import hashlib
 import json
 from pathlib import Path
 import subprocess
+import copy
 
 from .config import ConfigError, defaults_digest, resolve
 from .preferences import Preferences, accepted, digest
@@ -90,19 +91,24 @@ def reserve_dispatch(records,operation,*,backlog_snapshot=None,idle_source=None)
     if fields['execution_mode']=='read-only':
         return
     config,frozen,_=policy(records,task['repository'],current=True)
+    grant=None
     if task['metadata'].get('backlog') is not None:
-        raise Conflict('backlog candidate admission is not available yet')
+        grant=_backlog_task(records,task,backlog_snapshot=backlog_snapshot,fresh=True)
     branch=fields['writer_branch']
     db=records._connection
     count=db.execute("SELECT COUNT(*) FROM dispatch_reservations WHERE project=? AND state='held'",
                      (task['repository'].lower(),)).fetchone()[0]
-    if count>=config['backlog.builder_cap']['value']:
+    cap=min(config['backlog.builder_cap']['value'],grant['payload']['builder_cap']) if grant else config['backlog.builder_cap']['value']
+    if count>=cap:
         raise Conflict('prepared and unresolved writer reservations fill the builder cap')
     if db.execute("SELECT 1 FROM dispatch_reservations WHERE state='held' AND "
                   '((writer_repository=? AND branch_ref=?) OR session_id=?) LIMIT 1',
                   (branch['repository'],branch['ref'],task['owner'])).fetchone():
         raise Conflict('the branch or worker session already has retained writer custody')
-    payload={'policy':frozen,'binding':task['metadata']['binding'],'writer_branch':branch,'grant_id':None}
+    payload={'policy':frozen,'binding':task['metadata']['binding'],'writer_branch':branch,
+             'grant_id':grant['grant_id'] if grant else None}
+    if grant:
+        payload['candidate_id']=task['metadata']['backlog']['candidate']['candidate_id']
     db.execute('INSERT INTO dispatch_reservations '
         '(reservation_id,project,writer_repository,branch_ref,task_id,generation,session_id,operation_id,payload,state,created_at) '
         'VALUES(?,?,?,?,?,?,?,?,?,?,?)',
@@ -138,10 +144,50 @@ def worker_admission_check(records,operation,*,backlog_snapshot=None,now=None):
         raise Conflict('writer configuration changed after reservation')
     count=records._connection.execute("SELECT COUNT(*) FROM dispatch_reservations WHERE project=? AND state='held'",
                                       (task['repository'].lower(),)).fetchone()[0]
-    if count>config['backlog.builder_cap']['value']:
+    cap=config['backlog.builder_cap']['value']
+    if reservation['payload']['grant_id'] is not None:
+        grant=_backlog_task(records,task,backlog_snapshot=backlog_snapshot,
+                            fresh=operation['operation_id']==reservation['operation_id'])
+        if (grant['grant_id']!=reservation['payload']['grant_id']
+                or task['metadata']['backlog']['candidate']['candidate_id']!=reservation['payload']['candidate_id']):
+            raise Conflict('backlog grant or candidate differs from writer custody')
+        cap=min(cap,grant['payload']['builder_cap'])
+    if count>cap:
         raise Conflict('retained writer reservations exceed the current builder cap')
     records._connection.execute('UPDATE dispatch_reservations SET admitted_at=COALESCE(admitted_at,?) WHERE reservation_id=?',
                                 (now or _now(),reservation['reservation_id']))
+
+
+def _candidate_grant(records,project,grant_id,candidate,*,fresh_snapshot=None,fresh=False):
+    from .backlog_selection import validate_candidate,validate_frozen_candidate
+    project=project_name(project)
+    grant=Backlog(records).state(project)
+    if grant['state']!='active' or grant['grant_id']!=grant_id or grant['held_reasons']:
+        raise Conflict('backlog requires the exact current active project grant')
+    config,_,_=policy(records,project,current=True)
+    if fresh:
+        if fresh_snapshot is None:
+            raise Conflict('backlog dispatch requires a fresh source read receipt')
+        checked=validate_candidate(candidate,fresh_snapshot,config=config)
+    else:
+        checked=validate_frozen_candidate(candidate,config=config)
+    if checked['repository']!=project or checked['branch_repository']!=project:
+        raise Conflict('backlog candidate and physical writer must belong to the granted project')
+    refs=_references(checked['selection']['snapshot']['references'])
+    if grant['payload']['references'] is not None and refs!=grant['payload']['references']:
+        raise Conflict('candidate window differs from the exact granted reference allowlist')
+    return grant,checked
+
+
+def _backlog_task(records,task,*,backlog_snapshot=None,fresh=False):
+    source=task['metadata'].get('backlog')
+    if type(source) is not dict or set(source)!={'grant_id','candidate'}:
+        raise Conflict('backlog assignment requires an exact grant and frozen candidate')
+    grant,candidate=_candidate_grant(records,task['repository'],source['grant_id'],source['candidate'],
+                                    fresh_snapshot=backlog_snapshot,fresh=fresh)
+    if writer_branch(task)!={'repository':candidate['branch_repository'],'ref':'refs/heads/'+candidate['branch']}:
+        raise Conflict('writer branch differs from the selected tracked item')
+    return grant
 
 
 def policy(records, project, *, current=False):
@@ -279,6 +325,35 @@ class Backlog:
             result['release_receipt']=json.loads(result['release_receipt'])
             _payload(result['release_receipt'])
         return result
+
+    def bind(self,data,candidate,grant_id):
+        _payload(data)
+        result=copy.deepcopy(data)
+        if set(result)!={'task_id','repository','owner','metadata'} or type(result['metadata']) is not dict:
+            raise RecordError('backlog binding requires exact task assignment data')
+        project=project_name(result['repository'])
+        if result['repository']!=project:
+            raise Conflict('new backlog assignments require canonical repository identity')
+        grant,candidate=_candidate_grant(self.records,project,grant_id,candidate)
+        meta=result['metadata']
+        if any(key in meta for key in ('execution_mode','writer_branch','backlog','authority_ref')):
+            raise Conflict('backlog binding must not replace existing execution authority')
+        meta.update(execution_mode='writer',writer_branch={'repository':project,'ref':candidate['branch']},
+                    authority_ref=grant['payload']['owner_message'],
+                    backlog={'grant_id':grant_id,'candidate':candidate})
+        writer_branch(result)
+        if self.records.has_pins():
+            result=Preferences(self.records).bind(result)
+        _payload(result)
+        return result
+
+    def prepare(self,task_id,candidate,fresh_snapshot,*,idle_source=None,new_session=False):
+        task=self.records.get_task(task_id)
+        if task['metadata'].get('backlog',{}).get('candidate')!=candidate:
+            raise Conflict('preparation candidate differs from the frozen assignment')
+        from .supervision import Court
+        return Court(self.records).prepare_dispatch(task_id,new_session=new_session,
+            backlog_snapshot=fresh_snapshot,idle_source=idle_source)
 
     def release(self,reservation_id,receipt_id,receipt):
         _identifier(receipt_id,'receipt_id')

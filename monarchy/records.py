@@ -887,7 +887,8 @@ class CourtRecords:
     def get_operation(self, operation_id):
         return self._get("operations", "operation_id", _identifier(operation_id, "operation_id"))
 
-    def set_operation_state(self, operation_id, state, *, expected_state, result=None, current_head=None):
+    def set_operation_state(self, operation_id, state, *, expected_state, result=None, current_head=None,
+                            backlog_snapshot=None):
         _identifier(operation_id, "operation_id")
         if type(state) is not str or state not in _OPERATION_TRANSITIONS:
             raise RecordError("unrecognized operation state")
@@ -915,7 +916,7 @@ class CourtRecords:
                 from .cadence import cadence_admission_check
                 cadence_admission_check(self, operation, now=_now())
                 from .backlog import worker_admission_check
-                worker_admission_check(self, operation, now=_now())
+                worker_admission_check(self, operation, now=_now(),backlog_snapshot=backlog_snapshot)
                 reference = _decision_reference(operation["request"])
                 if reference is not None:
                     decision = self.get_decision(reference[0])

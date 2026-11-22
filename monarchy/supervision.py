@@ -267,7 +267,7 @@ class Court:
         return self.records.prepare_operation(operation['operation_id'], operation['task_id'],
                                                operation['kind'], operation['request'], current_head=current_head)
 
-    def deliver(self, operation_id, *, current_head=None):
+    def deliver(self, operation_id, *, current_head=None, backlog_snapshot=None):
         if self.transport is None:
             raise RecordError('a native transport is required')
         operation = self.records.get_operation(operation_id)
@@ -288,7 +288,8 @@ class Court:
         def persist(value):
             nonlocal expected_state
             saved = self.records.set_operation_state(operation_id, value['state'],
-                expected_state=expected_state, result=value['result'], current_head=current_head)
+                expected_state=expected_state, result=value['result'], current_head=current_head,
+                backlog_snapshot=backlog_snapshot)
             expected_state = value['state']
             return saved
         if operation['kind'] == 'create_session':

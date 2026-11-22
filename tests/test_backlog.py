@@ -1,5 +1,6 @@
 """Grant-bound backlog dispatch without GitHub writes or native actions."""
 from pathlib import Path
+from datetime import datetime, timezone
 import tempfile
 import unittest
 
@@ -30,6 +31,33 @@ class BacklogTests(unittest.TestCase):
             'execution_mode':'writer','writer_branch':{'repository':repository,'ref':branch},
             'binding':{'repo':repository,'session_id':session,'workspace_id':WORKSPACE,'profile':PROFILE},
             'authority_ref':'original-owner-work','brief':'Prepare the scoped change.'})
+
+    def activate(self,refs=REFERENCES):
+        proposal=self.backlog.propose(PROJECT,refs,owner_message='activation',builder_cap=1)
+        self.records.answer_decision(proposal['decision_id'],{'accept':True},expected_revision=1,owner_message='owner-yes')
+        return self.backlog.apply(proposal['decision_id'])
+
+    def selected(self,number=17):
+        from test_backlog_selection import native,NativeReads
+        from monarchy.backlog_selection import GitHubBacklog,select
+        from monarchy.backlog import policy
+        reader=GitHubBacklog(runner=NativeReads({number:native(number,'Issue')}))
+        snapshot=reader.read(PROJECT,[{'kind':'issue','number':number}])
+        fact={'reference':{'kind':'issue','number':number},'source_digest':snapshot['items'][0]['source_digest'],
+              'bucket':'other-bugs','priority':1,'size':1,'wanted':True,'dependencies':[],
+              'dependencies_complete':True,'ownership':'clear','planned_branch':'work/issue-'+str(number),
+              'priority_surface':None,'evidence_ref':'tracked-classification'}
+        candidate=select(snapshot,policy(self.records,PROJECT)[0],[fact])['candidate']
+        return candidate,snapshot,[fact],reader
+
+    def bound(self,candidate,grant,task_id='selected',number=8):
+        session=('%08d-2222-4222-8222-222222222222'%number)
+        data={'task_id':task_id,'repository':PROJECT,'owner':session,
+              'metadata':{'brief':'Prepare and review the tracked change.',
+                  'binding':{'repo':PROJECT,'session_id':session,'workspace_id':WORKSPACE,'profile':PROFILE}}}
+        result=self.backlog.bind(data,candidate,grant['grant_id'])
+        self.records.create_task(result['task_id'],result['repository'],result['owner'],metadata=result['metadata'])
+        return result
 
     def test_only_exact_owner_activation_creates_a_durable_project_grant(self):
         proposal = self.backlog.propose(PROJECT,REFERENCES,owner_message='request-activation',builder_cap=1)
@@ -152,6 +180,42 @@ class BacklogTests(unittest.TestCase):
         with self.assertRaises(Conflict):
             self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared')
         self.assertEqual(Court(self.records).prepare_dispatch('two')['state'],'prepared')
+
+    def test_actual_selected_candidate_needs_fresh_receipt_and_current_grant_at_admission(self):
+        grant=self.activate()
+        candidate,snapshot,_,_=self.selected()
+        self.bound(candidate,grant)
+        operation=self.backlog.prepare('selected',candidate,snapshot)
+        with self.assertRaises(Conflict):
+            self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared')
+        self.backlog.revoke(PROJECT,owner_message='revoke-before-send')
+        with self.assertRaises(Conflict):
+            self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared',backlog_snapshot=snapshot)
+        self.assertEqual(self.records.get_operation(operation['operation_id'])['state'],'prepared')
+
+    def test_project_scope_accepts_new_tracked_item_but_allowlist_stays_exact(self):
+        grant=self.activate(None)
+        candidate,snapshot,_,_=self.selected(18)
+        self.bound(candidate,grant)
+        self.assertEqual(self.backlog.prepare('selected',candidate,snapshot)['state'],'prepared')
+        self.backlog.revoke(PROJECT,owner_message='stop-project-grant')
+        allow=self.activate(REFERENCES)
+        with self.assertRaises(Conflict):self.bound(candidate,allow,task_id='outside-allowlist',number=9)
+
+    def test_fresh_dispatch_admits_once_and_unknown_reconciles_after_revoke(self):
+        grant=self.activate()
+        candidate,snapshot,_,_=self.selected()
+        self.bound(candidate,grant)
+        operation=self.backlog.prepare('selected',candidate,snapshot)
+        admitted=self.records.set_operation_state(operation['operation_id'],'in_flight',
+            expected_state='prepared',backlog_snapshot=snapshot)
+        self.assertEqual(admitted['state'],'in_flight')
+        self.records.set_operation_state(operation['operation_id'],'unknown',expected_state='in_flight')
+        self.backlog.revoke(PROJECT,owner_message='owner-stop')
+        confirmed=self.records.set_operation_state(operation['operation_id'],'confirmed',expected_state='unknown',
+            result={'native_id':'retained-readback'})
+        self.assertEqual(confirmed['state'],'confirmed')
+        self.assertEqual(self.backlog.reservation(operation['request']['reservation_id'])['state'],'held')
 
 
 if __name__ == '__main__':
