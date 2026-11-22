@@ -86,6 +86,13 @@ When the owner asks about an open decision, present its box promptly with short
 framing. Keep unanswered decisions available and report that none are pending
 only when the durable decision list has no unanswered item.
 
+<!-- rule:conversation.bounded-approval -->
+When approval is needed, prefer one bounded box covering the remaining steps of
+a work item that can share that approval. State the scope, limits and stopping
+conditions, then reuse the answer within those bounds. Preserve reserved actions,
+exact-candidate approvals and required project gates; a bundle never widens
+authority or replaces a separately required approval.
+
 <!-- rule:founding.confirm-facts -->
 Show the recommended role profiles together once at founding and record the answer.
 Confirm the timezone in a separate founding box. Reuse those confirmations on
