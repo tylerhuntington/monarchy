@@ -28,7 +28,10 @@ class DelegationTests(unittest.TestCase):
         self.path = Path(self.temp.name) / 'royalty.db'
         self.records = CourtRecords(self.path)
         self.delegation = Delegation(self.records)
-        self.records.create_task('task', PROJECT, WORKER, metadata={'binding': BINDING})
+        self.records.create_task('task', PROJECT, WORKER, metadata={
+            'binding': BINDING, 'execution_mode': 'writer',
+            'writer_branch': {'repository': PROJECT, 'ref': 'work/ci-repair'},
+            'authority_ref': 'owner-task', 'brief': 'Prepare the scoped CI repair.'})
 
     def tearDown(self):
         self.records.close()
@@ -196,6 +199,9 @@ class DelegationTests(unittest.TestCase):
         self.assertEqual(self.records.get_operation(operation['operation_id'])['state'], 'prepared')
 
     def test_uncertain_relay_reconciles_after_revoke(self):
+        # The CI continuation is delivered to a writer with already reserved
+        # custody, separately from the category grant tested below.
+        Court(self.records).prepare_dispatch('task')
         grant = self.grant()
         self.target()
         self.delegation.answer('target', {'accept': True}, expected_revision=1, grant_id=grant['grant_id'])
@@ -374,7 +380,7 @@ class DelegationTests(unittest.TestCase):
                                                     (identity,)).fetchone()
             self.assertIsNone(raw[0])
             with self.assertRaises(RecordError): self.records.get_decision(identity)
-        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 6)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 7)
 
 
 if __name__ == '__main__':

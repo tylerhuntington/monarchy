@@ -278,7 +278,7 @@ class ConversationTests(unittest.TestCase):
             legacy.execute('PRAGMA user_version=3')
         self.records = CourtRecords(self.path)
         self.conversation = Conversation(self.records)
-        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 6)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0], 7)
         observation = self.conversation.status(QUEEN)
         self.assertEqual((observation['state'], observation['reason']), ('unknown', None))
         self.assertEqual(self.records.get_operation(operation['operation_id']), operation)

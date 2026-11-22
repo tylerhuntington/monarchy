@@ -172,6 +172,7 @@ class CourtQualificationTests(unittest.TestCase):
         self.records = CourtRecords(self.database)
         self.court = Court(self.records, ConductorTransport(self.native))
         self.records.create_task(TASK, "example/project", WORKER, metadata={
+            "execution_mode": "read-only",
             "authority_ref": "trusted-fixture-owner:request-1",
             "brief": "Investigate the export failure. Return a verified review of the exact source revision.",
             "court_id": COURT, "binding": WORKER_BINDING,

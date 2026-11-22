@@ -20,6 +20,7 @@ class CourtTests(unittest.TestCase):
         self.records = CourtRecords(self.path)
         self.court = Court(self.records)
         self.records.create_task('task', 'example/project', WORKER, metadata={
+            'execution_mode': 'read-only',
             'binding': BINDING, 'brief': 'Read-only investigation.', 'source_revision': REVISION})
 
     def tearDown(self):
