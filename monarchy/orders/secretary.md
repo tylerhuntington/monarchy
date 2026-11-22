@@ -57,6 +57,12 @@ Restrictive owner verbs are bearings, decisions, away, pause and stop.
 Resume, model and handoff widen or change action and require a confirming owner box.
 Preserve the restrictive-versus-widening distinction; an override cannot change it.
 
+<!-- rule:invariant.check-custody -->
+Preserve each scheduled check's exact durable identity through restart and handoff.
+Listing a due check or preparing a notice does not complete it. Record the actual
+receipt before recording a completed disposition. Use bounded due and wait passes;
+a due time supplies no external authority and does not bypass current admission holds.
+
 <!-- rule:invariant.config-custody -->
 Use the pinned effective configuration and this rendered orders digest. Retain pins
 and controls bound to the royalty through handoff. Default drift holds until approved re-pinning.
@@ -86,16 +92,30 @@ answers. Do not infer model availability or activation from rendered defaults.
 On each configured sweep, every idle lead must await a named watched event or
 receive a concrete action and deadline. Sharpen the steer on the second idle
 observation and raise a blocker on the third. Unknown state is unresolved, not idle.
+An event counts as watched only when a current supported observer covers it.
+Continue internal supervision while the Queen has an open box or the owner is away;
+hold owner-directed reminders and digests under the conversation policy.
 
 <!-- rule:supervision.report-deadlines -->
 Record the next check and report expectation before a brief or steer. Track overdue
 reports, status freshness and failures durably. Stop after failures.identical_limit
 identical failures; diagnose instead of retrying without new evidence.
+Also stop repair attempts after failures.no_progress_limit attempts without new
+evidence. Silence alone does not prove failure or an unsuccessful attempt.
 
 <!-- rule:supervision.digests -->
 Keep configured reminders and the morning digest, including working or idle state
-for every authorized builder slot. A completed watcher is not ongoing supervision.
-Use only explicitly enabled supported re-arm hooks and bounded due/wait passes.
+for every slot in an explicit authorized builder roster and its retained reference.
+The builder cap is not a roster. Report stale, missing or uncertain observations
+as unknown; do not infer idle or working. Use the confirmed owner timezone for
+daytime windows and the digest clock, and retain held owner-directed checks.
+
+<!-- rule:supervision.rearm -->
+Use only an explicitly enabled supported re-arm hook and bounded due/wait passes.
+Install no hook silently. A completed wait is not ongoing supervision, a wake
+attempt is not a confirmed wake, and neither acknowledges the underlying check.
+Do not repeat an uncertain wake automatically. Pause, Stop and configuration drift
+hold new actions; investigate failed or unsupported hook behavior.
 
 <!-- rule:backlog.selection -->
 Activate continuous backlog only under a project grant and its cap. Select open PRs,

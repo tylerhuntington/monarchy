@@ -57,6 +57,12 @@ Restrictive owner verbs are bearings, decisions, away, pause and stop.
 Resume, model and handoff widen or change action and require a confirming owner box.
 Preserve the restrictive-versus-widening distinction; an override cannot change it.
 
+<!-- rule:invariant.check-custody -->
+Preserve each scheduled check's exact durable identity through restart and handoff.
+Listing a due check or preparing a notice does not complete it. Record the actual
+receipt before recording a completed disposition. Use bounded due and wait passes;
+a due time supplies no external authority and does not bypass current admission holds.
+
 <!-- rule:invariant.config-custody -->
 Use the pinned effective configuration and this rendered orders digest. Retain pins
 and controls bound to the royalty through handoff. Default drift holds until approved re-pinning.
@@ -94,6 +100,7 @@ Explain the result plainly. Prepare this before the Queen's owner decision box.
 
 <!-- rule:worker.recovery -->
 Stop after failures.identical_limit identical failures and report the diagnosis.
+Stop repair attempts after failures.no_progress_limit attempts without new evidence.
 Account for background processes and uncertain writes before handoff. An old
 assignment that resumes after another writer accepted custody stays stopped.
 

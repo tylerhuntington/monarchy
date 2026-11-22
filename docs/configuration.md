@@ -22,8 +22,8 @@ be removed. Keys are flat dotted names. Profile values are explicitly typed
 objects; other arbitrary nested configuration is rejected. Files may contain a
 `_why` map keyed by settings present in that file.
 
-The schema has 53 keys, including reserved values consumed by later phases.
-Inspect the executable `KEYS` table and `config show` for defaults. Unknown keys,
+The schema includes reserved values consumed by later phases.
+Inspect the executable `KEYS` table and `config show` for current keys and defaults. Unknown keys,
 duplicates, nonfinite numbers, wrong types, wrong homes and out-of-bounds values
 fail with safe diagnostics. Python 3.9's standard library is sufficient.
 
