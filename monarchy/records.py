@@ -361,12 +361,42 @@ class CourtRecords:
                     session_id TEXT NOT NULL, operation_id TEXT NOT NULL UNIQUE REFERENCES operations(operation_id),
                     payload TEXT NOT NULL, state TEXT NOT NULL CHECK(state IN ('held','released')), admitted_at TEXT,
                     created_at TEXT NOT NULL, release_receipt_id TEXT UNIQUE,
-                    release_receipt TEXT, released_at TEXT
+                    release_receipt TEXT, released_at TEXT, legacy INTEGER NOT NULL DEFAULT 0 CHECK(legacy IN (0,1)),
+                    last_admitted_at TEXT
                 )""")
+                expected_backlog={
+                    'backlog_events':{'sequence','event_id','project','state','payload','created_at'},
+                    'dispatch_reservations':{'reservation_id','project','writer_repository','branch_ref','task_id',
+                        'generation','session_id','operation_id','payload','state','admitted_at','created_at',
+                        'release_receipt_id','release_receipt','released_at','legacy','last_admitted_at'}}
+                for table,columns in expected_backlog.items():
+                    if {row['name'] for row in self._connection.execute('PRAGMA table_info('+table+')')}!=columns:
+                        raise RecordError('royalty database has malformed backlog custody history')
                 self._connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS writer_branch_custody "
-                    "ON dispatch_reservations(writer_repository,branch_ref) WHERE state='held'")
+                    "ON dispatch_reservations(writer_repository,branch_ref) WHERE state='held' AND legacy=0")
                 self._connection.execute("CREATE UNIQUE INDEX IF NOT EXISTS writer_session_custody "
-                    "ON dispatch_reservations(session_id) WHERE state='held'")
+                    "ON dispatch_reservations(session_id) WHERE state='held' AND legacy=0")
+                if version<7:
+                    for raw in self._connection.execute("SELECT * FROM operations WHERE kind IN ('send_message','create_session') "
+                            "AND state IN ('in_flight','unknown','confirmed')").fetchall():
+                        operation=self._decode(raw)
+                        task=self.get_task(operation['task_id'])
+                        if (operation['request'].get('route')=='queen-forward'
+                                or operation['request'].get('execution_mode')=='read-only'):
+                            continue
+                        binding=operation['request'].get('binding',{})
+                        generation=operation['request'].get('generation',task['generation'])
+                        _generation(generation)
+                        session=binding.get('session_id',task['owner']) if type(binding) is dict else task['owner']
+                        _identifier(session,'legacy_session')
+                        reservation_id=str(uuid.uuid5(uuid.NAMESPACE_URL,'monarchy:legacy-writer:'+operation['operation_id']))
+                        payload={'legacy':True,'operation_id':operation['operation_id'],'binding':binding}
+                        self._connection.execute('INSERT INTO dispatch_reservations '
+                            '(reservation_id,project,writer_repository,branch_ref,task_id,generation,session_id,'
+                            'operation_id,payload,state,admitted_at,created_at,last_admitted_at,legacy) VALUES(?,?,?,?,?,?,?,?,?,?,?,?,?,1)',
+                            (reservation_id,task['repository'].lower(),task['repository'].lower(),'legacy-unmapped',
+                             task['task_id'],generation,session,operation['operation_id'],_payload(payload),'held',
+                             operation['created_at'],operation['created_at'],operation['updated_at']))
                 self._connection.execute("PRAGMA user_version = 7")
         except (OSError, sqlite3.Error) as exc:
             if hasattr(self, "_connection"):

@@ -84,6 +84,12 @@ def reserve_dispatch(records,operation,*,backlog_snapshot=None,idle_source=None)
     """Called only inside the transaction inserting the prepared operation."""
     task=records.get_task(operation['task_id'])
     fields=dispatch_fields(task)
+    from .preferences import admission_check
+    admission_check(records,task)
+    binding=task['metadata'].get('binding')
+    if (type(binding) is not dict or binding.get('session_id')!=task['owner']
+            or binding.get('repo')!=task['repository'] or operation['request'].get('binding')!=binding):
+        raise Conflict('dispatch must preserve the exact current native binding and profile')
     if (type(operation['request'].get('generation')) is not int
             or operation['request']['generation']!=task['generation']
             or any(operation['request'].get(k)!=v for k,v in fields.items())):
@@ -96,9 +102,12 @@ def reserve_dispatch(records,operation,*,backlog_snapshot=None,idle_source=None)
         grant=_backlog_task(records,task,backlog_snapshot=backlog_snapshot,fresh=True)
     branch=fields['writer_branch']
     db=records._connection
+    if db.execute("SELECT 1 FROM dispatch_reservations WHERE project=? AND state='held' AND legacy=1 LIMIT 1",
+                  (task['repository'].lower(),)).fetchone():
+        raise Conflict('legacy writer branch custody is unknown; reconcile and prove the worker stopped')
     count=db.execute("SELECT COUNT(*) FROM dispatch_reservations WHERE project=? AND state='held'",
                      (task['repository'].lower(),)).fetchone()[0]
-    cap=min(config['backlog.builder_cap']['value'],grant['payload']['builder_cap']) if grant else config['backlog.builder_cap']['value']
+    cap=_project_cap(records,task['repository'],config)
     if count>=cap:
         raise Conflict('prepared and unresolved writer reservations fill the builder cap')
     if db.execute("SELECT 1 FROM dispatch_reservations WHERE state='held' AND "
@@ -135,6 +144,8 @@ def worker_admission_check(records,operation,*,backlog_snapshot=None,now=None):
             or binding.get('repo')!=task['repository'] or request.get('binding')!=binding):
         raise Conflict('worker message must preserve the exact current native binding and profile')
     if fields['execution_mode']=='read-only':
+        records._connection.execute("UPDATE dispatch_reservations SET last_admitted_at=? WHERE session_id=? AND state='held'",
+                                    (now or _now(),task['owner']))
         return
     row=records._connection.execute("SELECT * FROM dispatch_reservations WHERE task_id=? AND generation=? AND state='held'",
                                     (task['task_id'],task['generation'])).fetchone()
@@ -153,7 +164,7 @@ def worker_admission_check(records,operation,*,backlog_snapshot=None,now=None):
                      reservation_id=reservation['reservation_id'])
     count=records._connection.execute("SELECT COUNT(*) FROM dispatch_reservations WHERE project=? AND state='held'",
                                       (task['repository'].lower(),)).fetchone()[0]
-    cap=config['backlog.builder_cap']['value']
+    cap=_project_cap(records,task['repository'],config)
     if reservation['payload']['grant_id'] is not None:
         grant=_backlog_task(records,task,backlog_snapshot=backlog_snapshot,
                             fresh=operation['operation_id']==reservation['operation_id'])
@@ -163,8 +174,9 @@ def worker_admission_check(records,operation,*,backlog_snapshot=None,now=None):
         cap=min(cap,grant['payload']['builder_cap'])
     if count>cap:
         raise Conflict('retained writer reservations exceed the current builder cap')
-    records._connection.execute('UPDATE dispatch_reservations SET admitted_at=COALESCE(admitted_at,?) WHERE reservation_id=?',
-                                (now or _now(),reservation['reservation_id']))
+    at=now or _now()
+    records._connection.execute('UPDATE dispatch_reservations SET admitted_at=COALESCE(admitted_at,?),last_admitted_at=? '
+                                'WHERE reservation_id=?',(at,at,reservation['reservation_id']))
 
 
 def _candidate_grant(records,project,grant_id,candidate,*,fresh_snapshot=None,fresh=False):
@@ -186,6 +198,17 @@ def _candidate_grant(records,project,grant_id,candidate,*,fresh_snapshot=None,fr
     if grant['payload']['references'] is not None and refs!=grant['payload']['references']:
         raise Conflict('candidate window differs from the exact granted reference allowlist')
     return grant,checked
+
+
+def _project_cap(records,project,config):
+    grant=Backlog(records)._latest(project_name(project))
+    configured=config['backlog.builder_cap']['value']
+    if grant and grant['state']=='active':
+        cap=grant['payload'].get('builder_cap')
+        if type(cap) is not int or cap<1:
+            raise Conflict('active backlog grant has invalid builder capacity')
+        return min(configured,cap)
+    return configured
 
 
 def _idle_source(records,task,source,config,*,reservation_id=None):
@@ -214,6 +237,14 @@ def _idle_source(records,task,source,config,*,reservation_id=None):
         (prior['task_id'],prior['generation'],first['observed_at'],last['observed_at'])).fetchall()
     if latest[0]!=last['observation_id'] or len(rows)>1000:
         raise Conflict('idle observation history changed or exceeds the bounded pass')
+    activity=records._connection.execute('SELECT o.* FROM cadence_observations o JOIN tasks t ON t.task_id=o.task_id '
+        'WHERE t.owner=? AND o.generation=t.generation AND o.task_id<>? AND o.observed_at>=? LIMIT 1001',
+        (task['owner'],prior['task_id'],first['observed_at'])).fetchall()
+    if len(activity)>1000 or any(timestamp(row['observed_at'])>=end or
+            records._decode(row)['payload']['native_status']!='idle' or
+            records._decode(row)['payload']['watched_event'] is not None or
+            records._decode(row)['payload']['progress_ref'] is not None for row in activity):
+        raise Conflict('another assignment has newer or conflicting native session activity')
     for row in rows:
         observation=records._decode(row)
         facts=observation['payload']
@@ -221,8 +252,21 @@ def _idle_source(records,task,source,config,*,reservation_id=None):
             raise Conflict('unknown, working, progress or named-event observations do not prove idle eligibility')
     if records._connection.execute("SELECT 1 FROM events WHERE task_id=? AND generation=? "
         "AND kind IN ('progress','completed') AND created_at>? AND created_at<=? LIMIT 1",
-        (prior['task_id'],prior['generation'],first['observed_at'],last['observed_at'])).fetchone():
+        (prior['task_id'],prior['generation'],first['observed_at'],now.isoformat())).fetchone():
         raise Conflict('new task progress interrupts the idle interval')
+    if records._connection.execute("SELECT 1 FROM events e JOIN tasks t ON t.task_id=e.task_id WHERE t.owner=? "
+        "AND e.generation=t.generation AND e.kind IN ('progress','completed') AND e.created_at>? LIMIT 1",
+        (task['owner'],first['observed_at'])).fetchone():
+        raise Conflict('worker session progress interrupts the idle interval')
+    operations=records._connection.execute("SELECT * FROM operations WHERE kind IN ('send_message','create_session') "
+        "AND state<>'prepared' AND updated_at>=? LIMIT 1001",(first['observed_at'],)).fetchall()
+    if len(operations)>1000:
+        raise RecordError('worker activity exceeds idle admission budget')
+    for raw in operations:
+        op=records._decode(raw)
+        binding=op['request'].get('binding')
+        if op['request'].get('route')!='queen-forward' and type(binding) is dict and binding.get('session_id')==task['owner']:
+            raise Conflict('new worker-directed activity interrupts the idle interval')
     old=records._connection.execute('SELECT reservation_id,state,created_at,released_at FROM dispatch_reservations '
         'WHERE session_id=? LIMIT 1001',(task['owner'],)).fetchall()
     if len(old)>1000 or any(row['reservation_id']!=reservation_id and
@@ -352,6 +396,11 @@ class Backlog:
                          owner_message=decision['owner_message'],activated_at=now)
             self.db.execute('INSERT INTO backlog_events(event_id,project,state,payload,created_at) VALUES(?,?,?,?,?)',
                             (event_id,project,'active',_payload(grant),now))
+            from .backlog_metrics import review_due
+            from .cadence import Cadence,timestamp
+            due=review_due(self.state(project),now=now)
+            Cadence(self.records)._put(None,due['kind'],timestamp(due['due_at']),due['payload'],
+                recipient=due['recipient'],project=project,check_id=due['check_id'])
         return self.state(project)
 
     def revoke(self,project,*,owner_message):
@@ -451,13 +500,55 @@ class Backlog:
             if self.db.execute('SELECT 1 FROM dispatch_reservations WHERE release_receipt_id=?',(receipt_id,)).fetchone():
                 raise Conflict('writer release receipt already belongs to another reservation')
             operation=self.records.get_operation(row['operation_id'])
-            if (set(receipt)!={'kind','operation_id'} or receipt['kind']!='never-admitted'
-                    or receipt['operation_id']!=operation['operation_id'] or operation['state']!='prepared'
-                    or row['admitted_at'] is not None):
-                raise Conflict('release requires exact never-admitted custody evidence')
             now=_now()
-            self.db.execute("UPDATE operations SET state='failed',result=?,updated_at=? WHERE operation_id=?",
-                (_payload({'cancelled_before_admission':True}),now,operation['operation_id']))
+            if receipt.get('kind')=='never-admitted':
+                if (set(receipt)!={'kind','operation_id'} or receipt['operation_id']!=operation['operation_id']
+                        or operation['state']!='prepared' or row['admitted_at'] is not None or row['legacy']):
+                    raise Conflict('release requires exact never-admitted custody evidence')
+                self.db.execute("UPDATE operations SET state='failed',result=?,updated_at=? WHERE operation_id=?",
+                    (_payload({'cancelled_before_admission':True}),now,operation['operation_id']))
+            elif receipt.get('kind')=='writer-stopped':
+                self._stopped(row,receipt,now)
+            else:
+                raise Conflict('release requires explicit never-admitted or stopped-process evidence')
             self.db.execute("UPDATE dispatch_reservations SET state='released',release_receipt_id=?,release_receipt=?,released_at=? "
                 'WHERE reservation_id=?',(receipt_id,encoded,now,reservation_id))
         return self.reservation(reservation_id)
+
+    def _stopped(self,row,receipt,now):
+        from .cadence import timestamp
+        if set(receipt)!={'kind','outcome_id'}:
+            raise RecordError('stopped-process release requires an exact retained outcome')
+        outcome=self.records.get_outcome(receipt['outcome_id'])
+        body=outcome['payload']
+        required={'kind','generation','session_id','writer_repository','branch_ref','native_status',
+                  'processes_stopped','background_work_clear','observed_at','evidence_refs'}
+        if (set(body)!=required or body['kind']!='writer-custody' or outcome['task_id']!=row['task_id']
+                or type(body['generation']) is not int or body['generation']!=row['generation']
+                or body['session_id']!=row['session_id'] or body['writer_repository']!=row['writer_repository']
+                or body['branch_ref']!=(None if row['legacy'] else row['branch_ref'])
+                or body['native_status']!='idle' or body['processes_stopped'] is not True
+                or body['background_work_clear'] is not True
+                or type(body['evidence_refs']) is not list or not 1<=len(body['evidence_refs'])<=20):
+            raise Conflict('retained evidence does not prove this exact writer stopped')
+        for ref in body['evidence_refs']:_identifier(ref,'custody evidence reference')
+        observed=timestamp(body['observed_at'])
+        if not timestamp(row['created_at'])<=observed<=timestamp(outcome['created_at'])<=timestamp(now):
+            raise Conflict('custody evidence is outside the reservation and release interval')
+        if row['last_admitted_at'] is not None and observed<timestamp(row['last_admitted_at']):
+            raise Conflict('stopped-process evidence predates the last admitted worker message')
+        operations=self.db.execute("SELECT * FROM operations LIMIT 10001").fetchall()
+        if len(operations)>10000:
+            raise RecordError('writer operation history exceeds release budget')
+        for raw in operations:
+            op=self.records._decode(raw)
+            if op['request'].get('route')=='queen-forward':continue
+            binding=op['request'].get('binding')
+            if op['task_id']!=row['task_id'] and (type(binding) is not dict or binding.get('session_id')!=row['session_id']):
+                continue
+            if op['state'] in {'in_flight','unknown'}:
+                raise Conflict('reconcile all uncertain worker operations before releasing custody')
+            # Admission of a later message may have restarted the process. Readback
+            # may update the original operation after observation without a new send.
+            if op['operation_id']!=row['operation_id'] and op['state'] in {'confirmed','failed'} and timestamp(op['created_at'])>observed:
+                raise Conflict('later worker work requires fresh stopped-process evidence')

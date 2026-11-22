@@ -260,6 +260,202 @@ class BacklogTests(unittest.TestCase):
         with self.assertRaises(RecordError):self.records.get_task('held-pull')
         self.assertEqual(self.records.list_operations(),[])
 
+    def test_progress_after_latest_idle_observation_holds_preparation_and_admission(self):
+        self.activate()
+        candidate,snapshot,_,_=self.selected()
+        source=self.idle()
+        self.bound(candidate,self.backlog.state(PROJECT))
+        operation=self.backlog.prepare('selected',candidate,snapshot,idle_source=source)
+        self.records.record_event('late-progress','idle-source',1,'00000008-2222-4222-8222-222222222222',
+            'progress',{'summary':'Actual new work','evidence':'new-result'})
+        with self.assertRaises(Conflict):
+            self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared',
+                backlog_snapshot=snapshot)
+
+    def custody(self,task,operation,outcome_id='stopped-proof'):
+        reservation=self.backlog.reservation(operation['request']['reservation_id'])
+        body={'kind':'writer-custody','generation':task['generation'],'session_id':task['owner'],
+              'writer_repository':PROJECT,'branch_ref':reservation['branch_ref'],
+              'native_status':'idle','processes_stopped':True,'background_work_clear':True,
+              'observed_at':datetime.now(timezone.utc).isoformat(),'evidence_refs':['native-process-readback']}
+        return self.records.record_outcome(outcome_id,task['task_id'],body)
+
+    def test_stopped_process_evidence_releases_only_after_uncertain_delivery_is_reconciled(self):
+        task=self.writer('one','work/item')
+        operation=Court(self.records).prepare_dispatch('one')
+        self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared')
+        self.records.set_operation_state(operation['operation_id'],'unknown',expected_state='in_flight')
+        self.custody(task,operation)
+        receipt={'kind':'writer-stopped','outcome_id':'stopped-proof'}
+        with self.assertRaises(Conflict):self.backlog.release(operation['request']['reservation_id'],'release',receipt)
+        self.records.set_operation_state(operation['operation_id'],'confirmed',expected_state='unknown')
+        self.assertEqual(self.backlog.release(operation['request']['reservation_id'],'release',receipt)['state'],'released')
+        self.writer('two','work/item',3)
+        self.assertEqual(Court(self.records).prepare_dispatch('two')['state'],'prepared')
+
+    def test_v6_unknown_writer_history_is_preserved_and_holds_new_project_writers(self):
+        self.records.create_task('legacy',PROJECT,'legacy-session')
+        self.records.prepare_operation('old-launch','legacy','create_session',
+            {'generation':1,'binding':{'repo':PROJECT,'session_id':'legacy-session'},'text':'Original work'})
+        self.records._connection.execute("UPDATE operations SET state='unknown' WHERE operation_id='old-launch'")
+        old=self.records.get_operation('old-launch')
+        self.records.close()
+        import sqlite3
+        with sqlite3.connect(str(self.path)) as db:
+            db.execute('DROP TABLE dispatch_reservations')
+            db.execute('DROP TABLE backlog_events')
+            db.execute('PRAGMA user_version=6')
+        self.records=CourtRecords(self.path)
+        self.addCleanup(self.records.close)
+        self.backlog=Backlog(self.records)
+        self.assertEqual(self.records.get_operation('old-launch'),old)
+        self.writer('new','work/new')
+        with self.assertRaises(Conflict):Court(self.records).prepare_dispatch('new')
+        held=self.records._connection.execute("SELECT * FROM dispatch_reservations WHERE state='held'").fetchall()
+        self.assertEqual(len(held),1)
+        self.assertEqual(held[0]['legacy'],1)
+        self.records.set_operation_state('old-launch','confirmed',expected_state='unknown')
+        with self.assertRaises(Conflict):Court(self.records).prepare_dispatch('new')
+        with CourtRecords(self.path) as reopened:
+            self.assertEqual(reopened._connection.execute('SELECT count(*) FROM dispatch_reservations').fetchone()[0],1)
+
+    def test_other_assignment_activity_in_same_native_session_interrupts_idle_pull(self):
+        self.activate()
+        candidate,snapshot,_,_=self.selected()
+        source=self.idle()
+        self.bound(candidate,self.backlog.state(PROJECT))
+        from monarchy.cadence import Cadence
+        self.records.create_task('other-current-work',PROJECT,'00000008-2222-4222-8222-222222222222')
+        Cadence(self.records).observe('other-current-work','other-working',generation=1,
+            observed_at=datetime.now(timezone.utc).isoformat(),native_status='working')
+        with self.assertRaises(Conflict):self.backlog.prepare('selected',candidate,snapshot,idle_source=source)
+
+    def test_stop_receipt_before_later_admitted_steer_cannot_release_writer(self):
+        task=self.writer('one','work/item')
+        operation=Court(self.records).prepare_dispatch('one')
+        self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared')
+        self.records.set_operation_state(operation['operation_id'],'confirmed',expected_state='in_flight')
+        self.records.prepare_operation('later-steer','one','send_message',
+            {'generation':1,'binding':task['metadata']['binding'],'text':'Continue scoped work.'})
+        self.custody(task,operation)
+        self.records.set_operation_state('later-steer','in_flight',expected_state='prepared')
+        self.records.set_operation_state('later-steer','confirmed',expected_state='in_flight')
+        with self.assertRaises(Conflict):
+            self.backlog.release(operation['request']['reservation_id'],'stale-stop',
+                {'kind':'writer-stopped','outcome_id':'stopped-proof'})
+
+    def test_same_session_read_only_activity_after_stop_proof_holds_release(self):
+        task=self.writer('one','work/item')
+        operation=Court(self.records).prepare_dispatch('one')
+        self.records.set_operation_state(operation['operation_id'],'in_flight',expected_state='prepared')
+        self.records.set_operation_state(operation['operation_id'],'confirmed',expected_state='in_flight')
+        self.custody(task,operation)
+        self.records.create_task('reader',PROJECT,task['owner'],metadata={
+            'execution_mode':'read-only','binding':task['metadata']['binding']})
+        self.records.prepare_operation('read-after-stop','reader','send_message',
+            {'generation':1,'binding':task['metadata']['binding'],'text':'Read current status.'})
+        self.records.set_operation_state('read-after-stop','in_flight',expected_state='prepared')
+        self.records.set_operation_state('read-after-stop','confirmed',expected_state='in_flight')
+        with self.assertRaises(Conflict):
+            self.backlog.release(operation['request']['reservation_id'],'stale-stop',
+                {'kind':'writer-stopped','outcome_id':'stopped-proof'})
+
+    def test_activation_schedules_one_durable_trial_review_at_actual_start_plus_48_hours(self):
+        from monarchy.cadence import Cadence,timestamp
+        from monarchy.supervision import identity
+        grant=self.activate()
+        check_id=identity('backlog-review-check',grant['grant_id'])
+        check=Cadence(self.records).get(check_id)
+        self.assertEqual(check['recipient'],'secretary')
+        self.assertEqual(timestamp(check['due_at'])-timestamp(grant['payload']['activated_at']),timedelta(hours=48))
+        self.assertIn('not-due',check['held_reasons'])
+        with CourtRecords(self.path) as reopened:
+            self.assertEqual(Cadence(reopened).get(check_id)['payload']['grant_id'],grant['grant_id'])
+
+    def test_concurrent_last_slot_reservation_has_one_durable_winner(self):
+        import concurrent.futures
+        import threading
+        Preferences(self.records).override('backlog.builder_cap',1,project=PROJECT,owner_message='one-slot')
+        self.writer('one','work/one',2)
+        self.writer('two','work/two',3)
+        barrier=threading.Barrier(2)
+        def reserve(task_id):
+            with CourtRecords(self.path) as records:
+                barrier.wait()
+                try:return Court(records).prepare_dispatch(task_id)['operation_id']
+                except Conflict:return None
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results=list(pool.map(reserve,['one','two']))
+        self.assertEqual(sum(value is not None for value in results),1)
+        self.assertEqual(len(self.records.list_operations()),1)
+
+    def test_active_trial_cap_also_bounds_independently_authorized_project_writers(self):
+        self.activate()
+        self.writer('manual-one','work/one',2)
+        self.writer('manual-two','work/two',3)
+        Court(self.records).prepare_dispatch('manual-one')
+        with self.assertRaises(Conflict):Court(self.records).prepare_dispatch('manual-two')
+        self.backlog.revoke(PROJECT,owner_message='end-trial')
+        self.assertEqual(Court(self.records).prepare_dispatch('manual-two')['state'],'prepared')
+
+    def test_later_read_only_assignment_does_not_erase_legacy_writer_custody(self):
+        import sqlite3
+        self.records.create_task('old',PROJECT,'old-writer')
+        self.records.prepare_operation('old-write','old','send_message',{'generation':1,
+            'binding':{'repo':PROJECT,'session_id':'old-writer'},'text':'Original work'})
+        self.records._connection.execute("UPDATE operations SET state='confirmed' WHERE operation_id='old-write'")
+        self.records.assign_task('old','new-reader',expected_generation=1,metadata={'execution_mode':'read-only'})
+        self.records.close()
+        with sqlite3.connect(str(self.path)) as db:
+            db.execute('DROP TABLE dispatch_reservations')
+            db.execute('DROP TABLE backlog_events')
+            db.execute('PRAGMA user_version=6')
+        self.records=CourtRecords(self.path)
+        self.addCleanup(self.records.close)
+        self.backlog=Backlog(self.records)
+        row=self.records._connection.execute('SELECT * FROM dispatch_reservations').fetchone()
+        self.assertIsNotNone(row)
+        self.assertEqual((row['generation'],row['session_id']),(1,'old-writer'))
+
+    def test_named_event_on_another_same_session_assignment_prevents_idle_pull(self):
+        from monarchy.cadence import Cadence
+        self.activate()
+        candidate,snapshot,_,_=self.selected()
+        source=self.idle()
+        self.bound(candidate,self.backlog.state(PROJECT))
+        self.records.create_task('other',PROJECT,'00000008-2222-4222-8222-222222222222')
+        until=(datetime.now(timezone.utc)+timedelta(minutes=10)).isoformat()
+        self.records.record_outcome('watching','other',{'kind':'watched-event','generation':1,'name':'CI','until':until})
+        Cadence(self.records).observe('other','watching-observation',generation=1,
+            observed_at=datetime.now(timezone.utc).isoformat(),native_status='idle',
+            watched_event={'name':'CI','until':until,'source_ref':{'kind':'outcome','id':'watching'}})
+        Cadence(self.records).observe('idle-source','new-last',generation=1,
+            observed_at=datetime.now(timezone.utc).isoformat(),native_status='idle')
+        source['last_observation_id']='new-last'
+        with self.assertRaises(Conflict):self.backlog.prepare('selected',candidate,snapshot,idle_source=source)
+
+
+    def test_retained_trial_review_box_completes_only_its_exact_scheduled_check(self):
+        from unittest.mock import patch
+        from monarchy.cadence import Cadence
+        from monarchy.preferences import digest
+        from monarchy.supervision import identity
+        start=datetime.now(timezone.utc)-timedelta(hours=49)
+        with patch('monarchy.backlog._now',return_value=start.isoformat()):
+            grant=self.activate()
+        unknown={key:None for key in ('throughput','ci_cost','review_latency','queue_size')}
+        decision=self.backlog.review(PROJECT,unknown,observed_at=(start+timedelta(hours=48)).isoformat(),source_refs=unknown)
+        check_id=identity('backlog-review-check',grant['grant_id'])
+        cadence=Cadence(self.records)
+        with self.assertRaises(Conflict):
+            cadence.complete(check_id,'wrong-review',{'decision_id':decision['decision_id'],'decision_digest':'0'*64},
+                             completed_at=datetime.now(timezone.utc).isoformat())
+        completed=cadence.complete(check_id,'review-prepared',
+            {'decision_id':decision['decision_id'],'decision_digest':digest(decision['payload'])},
+            completed_at=datetime.now(timezone.utc).isoformat())
+        self.assertEqual(completed['state'],'completed')
+        self.assertEqual(self.records.get_decision(decision['decision_id'])['state'],'pending')
+
 
 if __name__ == '__main__':
     unittest.main()
