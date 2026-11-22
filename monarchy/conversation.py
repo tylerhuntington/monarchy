@@ -95,6 +95,8 @@ def forward_admission_check(records, operation):
     if request.get('route') != 'queen-forward':
         return
     queen, config = validate_forward(records, operation)
+    if config['court.away']['value']:
+        raise Conflict('owner Away holds this Queen forward')
     status = Conversation(records).status(queen['session_id'])
     if prompt_policy(status, config['prompts.abandoned_minutes']['value']) != 'available':
         raise Conflict('Queen prompt state holds this forward')
