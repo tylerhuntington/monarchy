@@ -95,9 +95,11 @@ the morning digest uses 06:57 in the confirmed `voice.zone`. Inspect `config sho
 for the effective values and their provenance.
 
 `cadence.reminder_start` and `cadence.reminder_end` define one increasing same-day
-window in that zone. Start is inclusive and end exclusive. The initial 08:00 to
-20:00 window is an implementation assumption, not a recovered source preference
-or a new owner decision. Both clocks have the owner layer as their writable home.
+window in that zone. Start is inclusive and end exclusive. The owner confirmed
+the 08:00 to 20:00 window in [decision 0009](decisions/0009-decision-reminder-window.md),
+replacing the initial implementation assumption. Both clocks have the owner layer
+as their writable home. With the default two-hour interval, reminder slots are
+08:00, 10:00, 12:00, 14:00, 16:00 and 18:00 in the confirmed zone.
 A missing daylight-saving clock time uses the first valid later minute; a repeated
 time uses its first occurrence. Local date and slot identities prevent duplicate
 calendar occurrences across restarts or the repeated clock hour.
