@@ -46,6 +46,7 @@ class DelegationApprovalTests(unittest.TestCase):
         task = self.prefs.bind({'task_id': 'task', 'repository': PROJECT, 'owner': WORKER,
             'metadata': {'binding': {'repo': PROJECT, 'session_id': WORKER,
                                      'workspace_id': '11111111-1111-4111-8111-111111111111'},
+                         'execution_mode': 'read-only',
                          'brief': 'Review an internal change.'}})
         self.records.create_task('task', PROJECT, WORKER, metadata=task['metadata'])
         self.transport = Transport()

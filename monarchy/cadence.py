@@ -154,6 +154,11 @@ class Cadence:
                 reasons.append('watched-event')
         if check['recipient']=='queen':
             reasons.extend(self._owner_holds(check,now,config))
+        if check['kind']=='backlog-review':
+            from .backlog import Backlog
+            grant=Backlog(self.records).state(check['project'])
+            if grant['state']!='active' or grant['grant_id']!=check['payload']['grant_id'] or grant['held_reasons']:
+                reasons.append('backlog-grant-changed')
         return reasons
 
     def _route(self, project, global_scope=False):
@@ -312,7 +317,19 @@ class Cadence:
             if self.db.execute('SELECT 1 FROM checks WHERE receipt_id=?', (receipt_id,)).fetchone():
                 raise Conflict('completion receipt is already bound to another check')
             task = self._task(check['task_id'], check['generation']) if check['task_id'] else None
-            if check['kind'] in {'report-overdue','status','stale-status'}:
+            if check['kind']=='backlog-review':
+                if set(receipt)!={'decision_id','decision_digest'}:
+                    raise RecordError('backlog review check requires one exact retained review box')
+                decision=self.records.get_decision(receipt['decision_id'])
+                body=decision['payload']
+                if (decision['task_id']!='court.backlog-review' or decision['revision']!=1
+                        or body.get('kind')!='backlog.review' or body.get('grant_id')!=check['payload']['grant_id']
+                        or body.get('project')!=check['project']
+                        or body.get('window',{}).get('start')!=check['payload']['activated_at']
+                        or hashlib.sha256(_payload(body).encode()).hexdigest()!=receipt['decision_digest']
+                        or not timestamp(check['due_at'])<=timestamp(decision['created_at'])<=timestamp(at)):
+                    raise Conflict('review box does not fulfill this exact trial check')
+            elif check['kind'] in {'report-overdue','status','stale-status'}:
                 if set(receipt) != {'event_id'}:
                     raise RecordError('report check requires one exact report event')
                 source = self._reference(task, {'kind':'event','id':receipt['event_id']})

@@ -24,8 +24,9 @@ class CadenceTests(unittest.TestCase):
         self.records = CourtRecords(self.path)
         self.addCleanup(self.records.close)
         with patch('monarchy.records._now', return_value=NOW.isoformat()):
-            self.records.create_task('task', 'example/project', 'worker', metadata={
-                'binding': {'session_id': WORKER},
+            self.records.create_task('task', 'example/project', WORKER, metadata={
+                'execution_mode': 'read-only',
+                'binding': {'session_id': WORKER, 'repo': 'example/project'},
                 'secretary_binding': {'session_id': SECRETARY}})
         self.cadence = Cadence(self.records)
 
@@ -124,7 +125,7 @@ class CadenceTests(unittest.TestCase):
         with self.assertRaises(RecordError):
             self.cadence.complete(check['check_id'], 'receipt', {'event_id':'invented'}, completed_at=now)
         with patch('monarchy.records._now', return_value=now):
-            self.records.record_event('report', 'task', 1, 'worker', 'progress', {'summary':'New evidence'})
+            self.records.record_event('report', 'task', 1, WORKER, 'progress', {'summary':'New evidence'})
         complete = self.cadence.complete(check['check_id'], 'receipt', {'event_id':'report'}, completed_at=now)
         self.assertEqual(complete['state'], 'completed')
         self.assertEqual(self.cadence.complete(check['check_id'], 'receipt',
@@ -136,7 +137,7 @@ class CadenceTests(unittest.TestCase):
 
     def steer(self, check, number, at, deadline):
         action = 'Inspect the next scoped failure ' + str(number)
-        request = {'generation':1,'binding':{'session_id':WORKER},
+        request = {'generation':1,'binding':self.records.get_task('task')['metadata']['binding'],
                    'sender_session_id':SECRETARY, 'text':'[steer] ' + action + '\nDeadline: ' + deadline}
         with patch('monarchy.records._now', return_value=at):
             self.records.prepare_operation('steer-'+str(number), 'task', 'send_message', request)
@@ -179,7 +180,7 @@ class CadenceTests(unittest.TestCase):
         first = self.idle_checks(0)[0]
         self.steer(first, 1, (NOW+timedelta(minutes=1)).isoformat(), (NOW+timedelta(minutes=2)).isoformat())
         with patch('monarchy.records._now', return_value=(NOW+timedelta(minutes=3)).isoformat()):
-            self.records.record_event('progress', 'task', 1, 'worker', 'progress',
+            self.records.record_event('progress', 'task', 1, WORKER, 'progress',
                                       {'summary':'New result', 'evidence':['source-result-1']})
         self.observe('new-progress', minutes=3, status='working', progress_ref='progress')
         self.observe('fresh-idle', minutes=4)
@@ -199,7 +200,7 @@ class CadenceTests(unittest.TestCase):
     def test_actual_recent_report_prevents_false_stale_status(self):
         at = (NOW + timedelta(minutes=59)).isoformat()
         with patch('monarchy.records._now', return_value=at):
-            self.records.record_event('fresh-report', 'task', 1, 'worker', 'progress', {'summary':'Current status'})
+            self.records.record_event('fresh-report', 'task', 1, WORKER, 'progress', {'summary':'Current status'})
         rows = self.cadence.due(now=(NOW+timedelta(minutes=60)).isoformat())
         self.assertNotIn('stale-status', {r['kind'] for r in rows})
         rows = self.cadence.due(now=(NOW+timedelta(minutes=119)).isoformat())
@@ -271,7 +272,7 @@ class CadenceTests(unittest.TestCase):
         self.observe()
         old=self.idle_checks(0)[0]
         with patch('monarchy.records._now',return_value=(NOW+timedelta(minutes=1)).isoformat()):
-            self.records.record_event('new-evidence','task',1,'worker','progress',{'evidence':['new-source']})
+            self.records.record_event('new-evidence','task',1,WORKER,'progress',{'evidence':['new-source']})
         self.observe('new-idle',minutes=2,progress_ref='new-evidence')
         checks=self.idle_checks(2)
         prior=next(r for r in checks if r['check_id']==old['check_id'])
@@ -332,7 +333,7 @@ class CadenceTests(unittest.TestCase):
             db.execute('PRAGMA user_version=5')
         with CourtRecords(self.path) as upgraded:
             self.assertEqual(upgraded.get_task('task'),task)
-            self.assertEqual(upgraded._connection.execute('PRAGMA user_version').fetchone()[0],6)
+            self.assertEqual(upgraded._connection.execute('PRAGMA user_version').fetchone()[0],7)
         with sqlite3.connect(self.path) as db:
             db.execute('ALTER TABLE checks DROP COLUMN config_digest')
         with self.assertRaises(RecordError):

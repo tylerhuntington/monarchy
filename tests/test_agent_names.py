@@ -4,7 +4,7 @@ import tempfile
 import unittest
 
 from monarchy.conductor import prepare_session
-from monarchy.records import CourtRecords, RecordError
+from monarchy.records import CourtRecords, RecordError, Conflict
 from monarchy.supervision import Court, identity
 
 WORKER = '22222222-2222-4222-8222-222222222222'
@@ -24,6 +24,7 @@ class AgentNameTests(unittest.TestCase):
 
     def task(self, task_id, name=None):
         meta = {'authority_ref': 'owner-request', 'brief': 'Read the requested source.',
+                'execution_mode': 'read-only',
                 'binding': {'session_id': WORKER, 'workspace_id': WORKSPACE,
                             'repo': 'example/project', 'profile': PROFILE}}
         if name is not None:
@@ -50,7 +51,7 @@ class AgentNameTests(unittest.TestCase):
                     self.court.prepare_dispatch(task_id, new_session=True)
                 self.assertEqual(self.records.list_operations(task_id=task_id), [])
 
-    def test_existing_legacy_intent_is_reused_without_renaming_or_resending(self):
+    def test_legacy_launch_holds_new_admission_and_retains_original_recovery_intent(self):
         task = self.task('legacy')
         key = 'legacy:1'
         old = prepare_session('legacy', WORKSPACE, 'example/project', PROFILE,
@@ -59,9 +60,18 @@ class AgentNameTests(unittest.TestCase):
                               message_id=identity('dispatch-message', key))
         old['request']['generation'] = 1
         stored = self.records.prepare_operation(old['operation_id'], 'legacy', old['kind'], old['request'])
-        self.assertEqual(self.court.prepare_dispatch('legacy', new_session=True), stored)
-        self.records.set_operation_state(old['operation_id'], 'in_flight', expected_state='prepared')
-        uncertain = self.records.set_operation_state(old['operation_id'], 'unknown',
-                                                     expected_state='in_flight', result={'reason': 'timeout'})
-        self.assertEqual(self.court.prepare_dispatch('legacy', new_session=True), uncertain)
+        with self.assertRaises(Conflict):
+            self.court.prepare_dispatch('legacy', new_session=True)
+        # A pre-custody installation already admitted this exact legacy launch.
+        # Seeding that historical state is not permission for a new admission.
+        self.records._connection.execute("UPDATE operations SET state='unknown' WHERE operation_id=?",
+                                         (old['operation_id'],))
+        uncertain = self.records.get_operation(old['operation_id'])
+        class ReconcileOnly:
+            def create_session(inner, operation, persist):
+                self.assertEqual(operation, uncertain)
+                self.assertEqual(operation['request']['name'], 'Worker · legacy')
+                return operation
+        self.court.transport = ReconcileOnly()
+        self.assertEqual(self.court.deliver(old['operation_id']), uncertain)
         self.assertEqual(len(self.records.list_operations(task_id='legacy')), 1)

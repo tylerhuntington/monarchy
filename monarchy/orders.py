@@ -23,6 +23,7 @@ TEMPLATE_INVARIANT_RULE_IDS = frozenset({
     'invariant.no-fallback', 'invariant.agent-names', 'invariant.headers',
     'invariant.prompt-state', 'invariant.verb-classification', 'invariant.grants',
     'invariant.runtime-boundary', 'invariant.config-custody', 'invariant.check-custody',
+    'invariant.backlog-admission',
 })
 DATA_RULE_IDS = frozenset({
     'invariant.effective-settings', 'invariant.project-data', 'invariant.owner-notes',

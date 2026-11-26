@@ -77,6 +77,7 @@ P2_TARGETS = {**{source: 'key:' + key for source, key in P2_KEYS.items()},
               **{source: 'rule:' + rule for source, (_, rule, _) in P2_RULES.items()},
               **{source: 'invariant:' + rule for source, rule in P2_INVARIANTS.items()}}
 P3_TARGETS = {
+    'authority.one-writer': 'invariant:invariant.one-writer',
     'preference.internal-pr-approval': 'rule:review.internal-approval',
     'preference.record-before-relay': 'invariant:invariant.owner-route',
     'authority.trusted-owner-route': 'invariant:invariant.owner-route',
@@ -106,11 +107,22 @@ P4_TARGETS = {
     'cadence.opt-in-rearm': 'rule:supervision.rearm',
     'cadence.check-records': 'invariant:invariant.check-custody',
 }
+P5_KEYS = {
+    'backlog.builder-cap': 'backlog.builder_cap',
+    'backlog.idle-minutes': 'backlog.idle_minutes',
+    'backlog.review-hours': 'backlog.review_hours',
+    'backlog.selection-order': 'backlog.selection_order',
+}
+P5_TARGETS = {
+    **{source: 'key:' + key for source, key in P5_KEYS.items()},
+    'preference.priority-idle-pull': 'rule:backlog.selection',
+    'backlog.activation': 'invariant:invariant.grants',
+    'backlog.selection-readonly': 'invariant:invariant.backlog-admission',
+    'backlog.metrics': 'rule:backlog.capacity-review',
+}
 # These rows represent runtime behavior, not the mere existence of a setting or
 # standing-order paragraph. Remove entries only with the phase's runtime proof.
 PENDING_RUNTIME = {
-    'authority.one-writer': 'P3',
-    'backlog.activation': 'P5',
     'signoff.candidate-binding': 'P6',
     'priority.feed-mode': 'P7',
     'profiles.create-readback': 'P8',
@@ -243,15 +255,14 @@ class ParityTests(unittest.TestCase):
                 self.assertEqual(rows[source]['target'], 'pending:' + phase)
         self.assertGreater(sum(row['target'].startswith('pending:') for row in rows.values()), 0)
 
-    def test_p3_mapped_targets_retain_the_branch_custody_gap(self):
+    def test_p3_mapped_targets_include_qualified_branch_custody(self):
         rows = catalog()
         by_source = {row['source']: row for row in rows}
-        self.assertEqual(len(P3_TARGETS), 24)
+        self.assertEqual(len(P3_TARGETS), 25)
         for source, target in P3_TARGETS.items():
             with self.subTest(source=source):
                 self.assertEqual(by_source[source]['target'], target)
-        self.assertEqual([row['source'] for row in rows if row['target'] == 'pending:P3'],
-                         ['authority.one-writer'])
+        self.assertFalse(any(row['target'] == 'pending:P3' for row in rows))
         self.assert_catalog(rows)
 
     def test_p3_category_inventory_matches_executable_vocabulary(self):
@@ -291,6 +302,35 @@ class ParityTests(unittest.TestCase):
                 with self.subTest(role=role, source=source):
                     self.assertEqual(settings[key], self.config[key])
                     self.assertEqual(settings[key]['value'], rows[source]['value'])
+
+    def test_p5_targets_match_the_qualified_bounded_backlog_contract(self):
+        rows = catalog()
+        by_source = {row['source']: row for row in rows}
+        self.assertEqual(len(P5_TARGETS), 8)
+        for source, target in P5_TARGETS.items():
+            with self.subTest(source=source):
+                self.assertEqual(by_source[source]['target'], target)
+        self.assertFalse(any(row['target'] == 'pending:P5' for row in rows))
+        self.assert_catalog(rows)
+
+    def test_p5_declared_settings_reach_leadership_with_their_actual_values(self):
+        rows = {row['source']: row for row in catalog()}
+        for role in ('queen', 'secretary'):
+            block = self.rendered[role]['text'].split(
+                'Effective settings (values, provenance and reasons; not grants):\n\n```json\n')[1]
+            settings = json.loads(block.split('\n```', 1)[0])
+            for source, key in P5_KEYS.items():
+                with self.subTest(role=role, source=source):
+                    self.assertEqual(settings[key], self.config[key])
+                    self.assertEqual(settings[key]['value'], rows[source]['value'])
+
+    def test_p5_metric_inventory_covers_the_actual_review_vocabulary(self):
+        from monarchy.backlog_metrics import METRICS
+        source_names = {'throughput': 'merged-prs-per-day', 'ci_cost': 'ci-cost',
+                        'review_latency': 'review-latency', 'queue_size': 'signoff-queue-size'}
+        self.assertEqual(set(METRICS), set(source_names))
+        row = next(row for row in catalog() if row['source'] == 'backlog.metrics')
+        self.assertEqual(row['value'], [source_names[key] for key in METRICS])
 
     def test_fixture_exercises_each_layer_without_activating_authority(self):
         self.assertEqual(self.config['profiles.worker']['layers'], ['defaults'])

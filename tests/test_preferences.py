@@ -114,8 +114,9 @@ class PreferenceTests(unittest.TestCase):
     def test_v1_migration_preserves_records_and_unknown_operations(self):
         task=self.records.create_task('t','example/project','worker',metadata={})
         self.records.prepare_operation('op','t','send_message',{'generation':1})
-        self.records.set_operation_state('op','in_flight',expected_state='prepared')
-        self.records.set_operation_state('op','unknown',expected_state='in_flight')
+        # Preserve a genuine pre-custody unknown operation without admitting it
+        # through the newer worker-mode gate to manufacture historical state.
+        self.records._connection.execute("UPDATE operations SET state='unknown' WHERE operation_id='op'")
         self.records.close()
         con=sqlite3.connect(self.db)
         con.execute('DROP TABLE pins'); con.execute('DROP TABLE overrides')
@@ -123,7 +124,7 @@ class PreferenceTests(unittest.TestCase):
         self.records=CourtRecords(self.db)
         self.assertEqual(self.records.get_task('t'),task)
         self.assertEqual(self.records.get_operation('op')['state'],'unknown')
-        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0],6)
+        self.assertEqual(self.records._connection.execute('PRAGMA user_version').fetchone()[0],7)
 
     def test_new_project_cannot_restore_older_court_owner_without_box(self):
         self.pin()
@@ -168,6 +169,8 @@ class PreferenceTests(unittest.TestCase):
         data=self.prefs.bind({'task_id':'work','repository':'example/project',
                              'owner':'22222222-2222-4222-8222-222222222222',
                              'metadata':{'authority_ref':'owner-task','brief':'Original task',
+                                         'execution_mode':'writer',
+                                         'writer_branch':{'repository':'example/project','ref':'work/configured'},
                                          'binding':{'session_id':'22222222-2222-4222-8222-222222222222',
                                                     'workspace_id':'11111111-1111-4111-8111-111111111111',
                                                     'repo':'example/project'}}})

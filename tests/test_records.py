@@ -13,6 +13,12 @@ import unittest
 from monarchy.records import Conflict, CourtRecords, RecordError, StaleGeneration
 
 
+# These journal-state fixtures send status/control reads. Native writer
+# reservation and branch fencing have dedicated coverage in test_backlog.py.
+READ_BINDING = {"repo": "example/project", "session_id": "worker-1"}
+READ_METADATA = {"execution_mode": "read-only", "binding": READ_BINDING}
+
+
 class CourtRecordsTests(unittest.TestCase):
     def setUp(self):
         self.temporary = tempfile.TemporaryDirectory()
@@ -127,9 +133,9 @@ class CourtRecordsTests(unittest.TestCase):
                 records.answer_decision("decision-1", {"format": "json"}, expected_revision=1, owner_message="owner-message-1")
 
     def test_unknown_operation_survives_restart_and_cannot_be_reprepared(self):
-        request = {"message_id": "native-message-1", "text": "continue", "session_id": "worker-1"}
+        request = {"generation": 1, "binding": READ_BINDING, "message_id": "native-message-1", "text": "continue", "session_id": "worker-1"}
         with CourtRecords(self.path) as records:
-            records.create_task("task-1", "example/project", "worker-1")
+            records.create_task("task-1", "example/project", "worker-1", metadata=READ_METADATA)
             prepared = records.prepare_operation("operation-1", "task-1", "send_message", request)
             self.assertEqual(prepared["state"], "prepared")
             records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
@@ -199,11 +205,11 @@ class CourtRecordsTests(unittest.TestCase):
             for index in range(3):
                 suffix = str(index)
                 task_id = "task-" + suffix
-                records.create_task(task_id, "example/project", "worker-1")
+                records.create_task(task_id, "example/project", "worker-1", metadata=READ_METADATA)
                 records.record_event("event-" + suffix, task_id, 1, "worker-1", "done", {})
                 records.record_outcome("outcome-" + suffix, task_id, {})
                 records.open_decision("decision-" + suffix, task_id, {})
-                records.prepare_operation("operation-" + suffix, task_id, "send_message", {})
+                records.prepare_operation("operation-" + suffix, task_id, "send_message", {"generation": 1, "binding": READ_BINDING})
             for listing, key in ((records.list_tasks, "task_id"), (records.list_events, "event_id"),
                                  (records.list_outcomes, "outcome_id"), (records.list_decisions, "decision_id"),
                                  (records.list_operations, "operation_id")):
@@ -233,8 +239,8 @@ class CourtRecordsTests(unittest.TestCase):
 
     def test_send_admission_is_exclusive_and_assignment_is_fenced_until_reconciled(self):
         with CourtRecords(self.path) as records:
-            records.create_task("task-1", "example/project", "worker-1")
-            records.prepare_operation("operation-1", "task-1", "send_message", {"generation": 1})
+            records.create_task("task-1", "example/project", "worker-1", metadata=READ_METADATA)
+            records.prepare_operation("operation-1", "task-1", "send_message", {"generation": 1, "binding": READ_BINDING})
             records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
             with self.assertRaises(Conflict):
                 records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
@@ -244,7 +250,7 @@ class CourtRecordsTests(unittest.TestCase):
             with self.assertRaises(Conflict):
                 records.assign_task("task-1", "worker-2", expected_generation=1)
             records.set_operation_state("operation-1", "confirmed", expected_state="unknown")
-            records.prepare_operation("operation-2", "task-1", "send_message", {"generation": 1})
+            records.prepare_operation("operation-2", "task-1", "send_message", {"generation": 1, "binding": READ_BINDING})
             records.assign_task("task-1", "worker-2", expected_generation=1)
             with self.assertRaises(StaleGeneration):
                 records.set_operation_state("operation-2", "in_flight", expected_state="prepared")
@@ -252,9 +258,9 @@ class CourtRecordsTests(unittest.TestCase):
 
     def test_decision_delivery_is_fenced_against_revision_and_pending_answers(self):
         with CourtRecords(self.path) as records:
-            records.create_task("task-1", "example/project", "worker-1")
+            records.create_task("task-1", "example/project", "worker-1", metadata=READ_METADATA)
             records.open_decision("decision-1", "task-1", {"question": "Continue?"})
-            request = {"generation": 1, "decision_id": "decision-1", "decision_revision": 1}
+            request = {"generation": 1, "binding": READ_BINDING, "decision_id": "decision-1", "decision_revision": 1}
             records.prepare_operation("operation-1", "task-1", "send_message", request)
             with self.assertRaises(Conflict):
                 records.set_operation_state("operation-1", "in_flight", expected_state="prepared")
@@ -343,15 +349,15 @@ class CourtRecordsTests(unittest.TestCase):
 
     def test_concurrent_reassignment_and_send_admission_have_one_winner(self):
         with CourtRecords(self.path) as records:
-            records.create_task("task-1", "example/project", "worker-1")
-            records.prepare_operation("operation-1", "task-1", "send_message", {"generation": 1})
+            records.create_task("task-1", "example/project", "worker-1", metadata=READ_METADATA)
+            records.prepare_operation("operation-1", "task-1", "send_message", {"generation": 1, "binding": READ_BINDING})
         admission = self.concurrently(8, lambda records, index: records.set_operation_state(
             "operation-1", "in_flight", expected_state="prepared",
         ))
         self.assertEqual(sum(isinstance(row, Conflict) for row in admission), 7)
         with CourtRecords(self.path) as records:
             records.set_operation_state("operation-1", "confirmed", expected_state="in_flight")
-            records.prepare_operation("operation-2", "task-1", "send_message", {"generation": 1})
+            records.prepare_operation("operation-2", "task-1", "send_message", {"generation": 1, "binding": READ_BINDING})
         race = self.concurrently(2, lambda records, index: (
             records.assign_task("task-1", "worker-2", expected_generation=1) if index == 0
             else records.set_operation_state("operation-2", "in_flight", expected_state="prepared")
@@ -370,11 +376,11 @@ class CourtRecordsTests(unittest.TestCase):
 
     def test_concurrent_decision_revision_and_answer_admission_have_one_winner(self):
         with CourtRecords(self.path) as records:
-            records.create_task("task-1", "example/project", "worker-1")
+            records.create_task("task-1", "example/project", "worker-1", metadata=READ_METADATA)
             records.open_decision("decision-1", "task-1", {"question": "Continue?"})
             records.answer_decision("decision-1", {"yes": True}, expected_revision=1, owner_message="message-1")
             records.prepare_operation("operation-1", "task-1", "send_message", {
-                "generation": 1, "decision_id": "decision-1", "decision_revision": 1,
+                "generation": 1, "binding": READ_BINDING, "decision_id": "decision-1", "decision_revision": 1,
             })
         results = self.concurrently(2, lambda records, index: (
             records.revise_decision("decision-1", {"question": "Change scope?"}, expected_revision=1)
@@ -394,11 +400,12 @@ class CourtRecordsTests(unittest.TestCase):
 import os, sys
 from monarchy.records import CourtRecords
 records = CourtRecords(sys.argv[1])
-records.create_task('task-1', 'example/project', 'worker-1')
+binding = {'repo': 'example/project', 'session_id': 'worker-1'}
+records.create_task('task-1', 'example/project', 'worker-1', metadata={'execution_mode': 'read-only', 'binding': binding})
 records.record_event('event-1', 'task-1', 1, 'worker-1', 'progress', {})
 records.record_outcome('outcome-1', 'task-1', {})
 records.open_decision('decision-1', 'task-1', {'question': 'Continue?'})
-records.prepare_operation('operation-1', 'task-1', 'send_message', {'generation': 1})
+records.prepare_operation('operation-1', 'task-1', 'send_message', {'generation': 1, 'binding': binding})
 records.set_operation_state('operation-1', 'in_flight', expected_state='prepared')
 os._exit(17)
 """

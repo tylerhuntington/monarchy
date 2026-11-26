@@ -9,6 +9,8 @@ background service, sign-off interface or approval-bound merge queue is installe
 Decision [0007](../decisions/0007-opinionated-defaults-private-owner-profile.md)
 records the configuration direction and amends the earlier design input in
 [0006](../decisions/0006-continuous-backlog-design-input.md).
+The bounded [backlog runtime](../backlog.md) documents grant, selection and
+dispatch contracts separately from this wider operating model.
 
 ## Responsibilities
 

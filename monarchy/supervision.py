@@ -184,7 +184,12 @@ class Court:
                                             expected_revision=expected_revision,
                                             owner_message=owner_message)
 
-    def prepare_dispatch(self, task_id, *, new_session=False):
+    def prepare_dispatch(self, task_id, *, new_session=False, backlog_snapshot=None, idle_source=None):
+        with self.records._transaction():
+            return self._prepare_dispatch(task_id,new_session=new_session,backlog_snapshot=backlog_snapshot,
+                                          idle_source=idle_source)
+
+    def _prepare_dispatch(self, task_id, *, new_session=False, backlog_snapshot=None, idle_source=None):
         task = self.records.get_task(task_id)
         meta = task['metadata']
         binding = meta['binding']
@@ -205,6 +210,8 @@ class Court:
         else:
             operation = prepare_message(task_id, binding, brief, **ids)
         operation['request']['generation'] = task['generation']
+        from .backlog import dispatch_fields
+        operation['request'].update(dispatch_fields(task))
         if new_session:
             # A stored launch is immutable. A branding change must not replace
             # its original intent or prevent reconciliation of an uncertain send.
@@ -216,8 +223,9 @@ class Court:
                 comparable = {**previous['request'], 'name': operation['request']['name']}
                 if comparable == operation['request']:
                     operation['request'] = previous['request']
-        return self.records.prepare_operation(operation['operation_id'], task_id,
-                                               operation['kind'], operation['request'])
+        return self.records._prepare_operation(operation['operation_id'], task_id,
+                                               operation['kind'], operation['request'],
+                                               backlog_snapshot=backlog_snapshot,idle_source=idle_source)
 
     def prepare_answer(self, decision_id, *, current_head=None):
         decision = self.records.get_decision(decision_id)
@@ -264,7 +272,7 @@ class Court:
         return self.records.prepare_operation(operation['operation_id'], operation['task_id'],
                                                operation['kind'], operation['request'], current_head=current_head)
 
-    def deliver(self, operation_id, *, current_head=None):
+    def deliver(self, operation_id, *, current_head=None, backlog_snapshot=None):
         if self.transport is None:
             raise RecordError('a native transport is required')
         operation = self.records.get_operation(operation_id)
@@ -285,7 +293,8 @@ class Court:
         def persist(value):
             nonlocal expected_state
             saved = self.records.set_operation_state(operation_id, value['state'],
-                expected_state=expected_state, result=value['result'], current_head=current_head)
+                expected_state=expected_state, result=value['result'], current_head=current_head,
+                backlog_snapshot=backlog_snapshot)
             expected_state = value['state']
             return saved
         if operation['kind'] == 'create_session':

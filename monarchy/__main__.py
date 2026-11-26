@@ -15,13 +15,18 @@ from .prompt_hooks import HookError, settings_snippet, lint_box
 from .controls import Controls
 
 
-def document(path):
+def document(path, *, allow_list=False):
     with Path(path).open('rb') as file:
         raw = file.read(65537)
     if len(raw) > 65536:
         raise RecordError('input document exceeds 64 KiB')
     value = _json(raw)
-    _payload(value)
+    if allow_list:
+        if type(value) is not list:
+            raise RecordError('input document requires a JSON list')
+        _payload({'items': value})
+    else:
+        _payload(value)
     return value
 
 
@@ -34,6 +39,15 @@ def cadence_document(path, required, optional=()):
 
 def now_string(value=None):
     return value if value is not None else datetime.now(timezone.utc).isoformat()
+
+
+def reread_backlog(path):
+    """A saved snapshot supplies the intended scope, never fresh read proof."""
+    from .backlog_selection import GitHubBacklog
+    snapshot = document(path)
+    if not {'repository', 'references'} <= set(snapshot):
+        raise RecordError('backlog source file requires its repository and reference window')
+    return GitHubBacklog().read(snapshot['repository'], snapshot['references'])
 
 
 def parser():
@@ -106,6 +120,30 @@ def parser():
     delegated_answer.add_argument('--revision', type=int, required=True)
     delegated_answer.add_argument('--grant-id', required=True)
     delegated_answer.add_argument('--current-head', help='fresh observed full head for internal PR approval')
+    backlog = commands.add_parser('backlog', help='select bounded work under an answered project grant')
+    backlog_actions = backlog.add_subparsers(dest='backlog_action', required=True)
+    backlog_actions.add_parser('state').add_argument('project')
+    proposal = backlog_actions.add_parser('propose')
+    proposal.add_argument('file'); proposal.add_argument('--owner-message', required=True)
+    backlog_actions.add_parser('apply').add_argument('decision_id')
+    revoke_backlog = backlog_actions.add_parser('revoke')
+    revoke_backlog.add_argument('project'); revoke_backlog.add_argument('--owner-message', required=True)
+    backlog_actions.add_parser('read', help='read fresh GitHub sources without remote writes').add_argument('file')
+    selection = backlog_actions.add_parser('select')
+    selection.add_argument('snapshot'); selection.add_argument('classifications')
+    bind = backlog_actions.add_parser('bind', help='print a grant-bound task without registering or dispatching')
+    bind.add_argument('file'); bind.add_argument('--candidate', required=True)
+    bind.add_argument('--grant-id', required=True)
+    prepare = backlog_actions.add_parser('prepare')
+    prepare.add_argument('file'); prepare.add_argument('--snapshot', required=True)
+    prepare.add_argument('--idle-source'); prepare.add_argument('--new-session', action='store_true')
+    pull = backlog_actions.add_parser('pull', help='read, select and prepare one eligible idle assignment without sending')
+    pull.add_argument('file'); pull.add_argument('--classifications', required=True)
+    pull.add_argument('--idle-source', required=True); pull.add_argument('--new-session', action='store_true')
+    release = backlog_actions.add_parser('release')
+    release.add_argument('reservation_id'); release.add_argument('file')
+    release.add_argument('--receipt-id', required=True)
+    backlog_actions.add_parser('review').add_argument('file')
     control = commands.add_parser('control', help='record owner controls or apply an answered proposal')
     verbs = control.add_subparsers(dest='verb', required=True)
     for verb in ('bearings', 'decisions', 'pause', 'stop', 'away', 'resume', 'model', 'handoff'):
@@ -133,9 +171,11 @@ def parser():
     send_answer.add_argument('--current-head', help='fresh observed full head for an internal PR answer')
     dispatch = commands.add_parser('prepare-dispatch', help='journal a brief without launching or sending')
     dispatch.add_argument('task'); dispatch.add_argument('--new-session', action='store_true')
+    dispatch.add_argument('--backlog-snapshot'); dispatch.add_argument('--idle-source')
     deliver = commands.add_parser('deliver', help='explicitly execute or reconcile a journaled operation')
     deliver.add_argument('operation_id')
     deliver.add_argument('--current-head', help='fresh observed full head before a new internal PR answer send')
+    deliver.add_argument('--backlog-snapshot', help='fresh source read for a new backlog send; reconciliation needs none')
     verify = commands.add_parser('verify', help='record independent, source-bound review evidence')
     verify.add_argument('task'); verify.add_argument('file')
     return p
@@ -155,8 +195,14 @@ def sources(args):
     return owner, project
 
 
-def output(value):
-    print(json.dumps(value, sort_keys=True, indent=2))
+def output(value, *, compact=False):
+    if compact:
+        text = json.dumps(value, sort_keys=True, separators=(',', ':'), ensure_ascii=False, allow_nan=False)
+        if len(text.encode('utf-8')) + 1 > 65536:
+            raise RecordError('export exceeds the input document bound')
+        print(text)
+    else:
+        print(json.dumps(value, sort_keys=True, indent=2))
 
 
 def main(argv=None):
@@ -264,6 +310,45 @@ def main(argv=None):
                     result = controls.command(args.verb,
                         document(args.file) if args.verb in ('model', 'handoff') else None,
                         owner_message=getattr(args, 'owner_message', None))
+            elif command == 'backlog':
+                from .backlog import Backlog
+                from .backlog_selection import GitHubBacklog, select
+                from .conversation import effective_config
+                backlog = Backlog(records)
+                action = args.backlog_action
+                if action == 'state':
+                    result = backlog.state(args.project)
+                elif action == 'propose':
+                    data = cadence_document(args.file, {'project'}, {'references', 'builder_cap'})
+                    result = backlog.propose(data['project'], data.get('references'),
+                        builder_cap=data.get('builder_cap'), owner_message=args.owner_message)
+                elif action == 'apply':
+                    result = backlog.apply(args.decision_id)
+                elif action == 'revoke':
+                    result = backlog.revoke(args.project, owner_message=args.owner_message)
+                elif action == 'read':
+                    result = GitHubBacklog().read(**cadence_document(args.file, {'project', 'references'}))
+                elif action == 'select':
+                    snapshot = document(args.snapshot)
+                    if type(snapshot) is not dict or type(snapshot.get('repository')) is not str:
+                        raise RecordError('backlog snapshot requires its repository identity')
+                    result = select(snapshot, effective_config(records, snapshot['repository']),
+                                    document(args.classifications, allow_list=True))
+                elif action == 'bind':
+                    result = backlog.bind(document(args.file), document(args.candidate), args.grant_id)
+                elif action == 'prepare':
+                    data = cadence_document(args.file, {'task_id', 'candidate'})
+                    result = backlog.prepare(**data, fresh_snapshot=reread_backlog(args.snapshot),
+                        idle_source=document(args.idle_source) if args.idle_source else None,
+                        new_session=args.new_session)
+                elif action == 'release':
+                    result = backlog.release(args.reservation_id, args.receipt_id, document(args.file))
+                elif action == 'pull':
+                    result = backlog.pull(document(args.file), document(args.classifications, allow_list=True),
+                        idle_source=document(args.idle_source), new_session=args.new_session)
+                elif action == 'review':
+                    result = backlog.review(**cadence_document(args.file,
+                        {'project', 'metrics', 'observed_at', 'source_refs'}))
             elif command == 'prompt':
                 if args.action == 'status':
                     if args.prompt_id: raise RecordError('status does not accept a prompt ID')
@@ -309,12 +394,18 @@ def main(argv=None):
                 result = court.prepare_answer(args.decision_id,
                     **({'current_head': args.current_head} if args.current_head is not None else {}))
             elif command == 'prepare-dispatch':
-                result = court.prepare_dispatch(args.task, new_session=args.new_session)
+                extra = {}
+                if args.backlog_snapshot: extra['backlog_snapshot'] = reread_backlog(args.backlog_snapshot)
+                if args.idle_source: extra['idle_source'] = document(args.idle_source)
+                result = court.prepare_dispatch(args.task, new_session=args.new_session, **extra)
             elif command == 'deliver':
-                result = court.deliver(args.operation_id,
-                    **({'current_head': args.current_head} if args.current_head is not None else {}))
+                extra = {}
+                if args.current_head is not None: extra['current_head'] = args.current_head
+                if args.backlog_snapshot and records.get_operation(args.operation_id)['state'] == 'prepared':
+                    extra['backlog_snapshot'] = reread_backlog(args.backlog_snapshot)
+                result = court.deliver(args.operation_id, **extra)
             elif command == 'verify': result = court.verify(args.task, **document(args.file))
-            output(result)
+            output(result, compact=command == 'backlog')
     except (ConfigError, OrdersError, HookError) as exc:
         p.exit(1, str(exc) + '\n')
     except (RecordError, TransportError, OSError, ValueError, KeyError, TypeError, RecursionError):

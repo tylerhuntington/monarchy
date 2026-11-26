@@ -13,3 +13,4 @@ reconstructing a chat. Keep owner decisions separate from implementation choices
 | [0006: Continuous building, owner judgment](0006-continuous-backlog-design-input.md) | Amended by 0007; not runtime activation | 2026-11-16 |
 | [0007: Opinionated defaults and private owner profile](0007-opinionated-defaults-private-owner-profile.md) | Accepted direction; staged implementation | 2026-11-20 |
 | [0008: The royalty](0008-royalty-terminology.md) | Accepted; maintained terminology backfill | 2026-11-21 |
+| [0009: Decision reminder window](0009-decision-reminder-window.md) | Accepted; confirms existing defaults | 2026-11-23 |

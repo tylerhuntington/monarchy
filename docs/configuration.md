@@ -129,8 +129,9 @@ orders integrity and pause/stop inside the journal transaction. Readback of an
 already uncertain operation remains available while new actions are held.
 
 Existing databases migrate transactionally through v2 (`pins` and `overrides`)
-to v3 (`prompt_observations`), v4 (nullable prompt cancellation reasons), and v5
-(answer provenance and append-only delegation history).
+to v3 (`prompt_observations`), v4 (nullable prompt cancellation reasons), v5
+(answer provenance and append-only delegation history), v6 (cadence checks and
+evidence), and v7 (backlog history and writer reservations).
 Existing ambiguous prompt observations remain unknown with no cancellation reason.
 Existing owner answers retain their provenance; migration activates no category grant.
 Legacy explicitly bound Monarchy installations remain recoverable before configuration adoption.
@@ -144,9 +145,13 @@ Invariants cannot be omitted. Project values render as labeled, escaped JSON dat
 not instruction text. Worker briefs exclude unrelated private leadership facts. Pinning rejects orders
 that exceed the transport budget, and registration checks orders plus the complete
 brief without truncating user text.
-The renderer consumes forwarding/report limits and identical-failure limits.
-The conversation adapter enforces forward and native report-summary caps.
-Cadence and failure-policy automation arrive in later phases.
+The renderer supplies forwarding/report limits, repair stop policies and the
+leadership cadence/backlog settings with their provenance. The conversation
+adapter enforces forwarding and native report-summary caps. Bounded
+[cadence checks](cadence.md) consume their configured intervals; repair limits
+remain agent instructions, not an arbitrary repair-command executor.
+[Backlog grants](backlog.md) bind their own frozen policy and authority separately
+from these settings.
 
 ## Restrictive overrides
 

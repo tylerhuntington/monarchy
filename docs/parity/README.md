@@ -14,7 +14,8 @@ The [conversation qualification](../verification/conversation-contract.md)
 separates P2's native observations from offline behavior checks and the narrower
 scope of each target. A rendered invariant alone does not qualify a runtime row.
 
-P3 maps 24 rows to the [delegation contract](../delegation.md). The executable
+P3 maps 24 delegation rows to the [delegation contract](../delegation.md), plus
+the writer-custody row qualified below. The executable
 tests in `tests/test_delegation.py`, `tests/test_delegation_approval.py`,
 `tests/test_approval.py`, and `tests/test_delegation_cli.py` cover owner-confirmed
 grants, exact precedents, the immutable action floor, three-state follow-up,
@@ -29,9 +30,15 @@ exercise those boundaries. The local owner route, action classification, current
 head and review evidence still require trusted callers; these tests do not
 authenticate a person or verify GitHub remotely. No native P3 exercise is claimed.
 
-`authority.one-writer` remains `pending:P3`. Current ownership fences one task
-and generation; it does not enforce shared branch custody across distinct tasks.
-That gap must close before final zero-pending qualification.
+`authority.one-writer` maps to `invariant.one-writer` with the P5 custody
+integration. New worker delivery requires explicit execution modes; writer
+reservations fence canonical branches across tasks and retain unknown legacy
+custody. The [backlog qualification](../verification/continuous-backlog.md)
+combines admission, migration and reconciliation tests with native branch
+reservation, independent stopped-process inspection and exact custody release.
+Task subprocesses had exited; provider processes stayed resident and idle.
+This mapping does not claim host process fencing or prevent unjournaled external
+writes.
 
 P4 maps 11 rows to the [cadence contract](../cadence.md), including seven setting
 values, three standing-order rules and the non-omittable check-custody invariant.
@@ -48,8 +55,20 @@ counts arbitrary agent repairs. Re-arm is opt-in and depends on a supported
 host; a prepared notice is an attempt, not confirmed delivery or completion.
 There is no native P4 or unattended-operation qualification claim. Reminder
 window hours are documented implementation defaults, not recovered private
-source facts. P5 through P10 rows retain their existing targets, and the inventory
+source facts. P6 through P10 rows retain their existing targets, and the inventory
 still makes no full-source or live preference-drift claim.
+
+P5 maps eight targets to four configuration values, the idle-selection and
+capacity-review rules, exact activation authority and the non-omittable
+read-only/admission boundary. The [backlog qualification](../verification/continuous-backlog.md)
+records one actual owner-approved native idle pull, delayed-readback
+reconciliation, independently verified result, revocation and custody release.
+The [backlog contract](../backlog.md) describes the runtime scope. The worker's
+plain transcript result does not qualify native report-envelope ingestion.
+Metrics and the forty-eight-hour review retain their offline evidence scope;
+this exercise does not claim a completed native metrics trial, pinned founding,
+full profile readback or unattended operation. The selected private evidence has been archived with independent exact-commit
+size and hash verification.
 
 The public hygiene test scans maintained text, including first-party vendor
 wrapper documentation. It preserves the pinned upstream archive and its legal
