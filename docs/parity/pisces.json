@@ -174,7 +174,7 @@
       "requires_no_watched_event": true,
       "selection": "highest-priority tracked work in configured dependency order"
     },
-    "target": "pending:P5"
+    "target": "rule:backlog.selection"
   },
   {
     "source": "preference.ready-for-signoff",
@@ -619,7 +619,7 @@
     "source": "authority.one-writer",
     "class": "invariant",
     "value": "One current writer per branch with explicit custody and uncertain-write reconciliation.",
-    "target": "pending:P3"
+    "target": "invariant:invariant.one-writer"
   },
   {
     "source": "authority.never-delegable-floor",
@@ -835,25 +835,25 @@
     "source": "backlog.activation",
     "class": "grant",
     "value": "Per-project owner activation is required before continuous backlog dispatch.",
-    "target": "pending:P5"
+    "target": "invariant:invariant.grants"
   },
   {
     "source": "backlog.builder-cap",
     "class": "default",
     "value": 8,
-    "target": "pending:P5"
+    "target": "key:backlog.builder_cap"
   },
   {
     "source": "backlog.idle-minutes",
     "class": "default",
     "value": 20,
-    "target": "pending:P5"
+    "target": "key:backlog.idle_minutes"
   },
   {
     "source": "backlog.review-hours",
     "class": "default",
     "value": 48,
-    "target": "pending:P5"
+    "target": "key:backlog.review_hours"
   },
   {
     "source": "backlog.selection-order",
@@ -866,13 +866,13 @@
       "other-bugs",
       "remaining-priority-smallest-first"
     ],
-    "target": "pending:P5"
+    "target": "key:backlog.selection_order"
   },
   {
     "source": "backlog.selection-readonly",
     "class": "invariant",
     "value": "Read GitHub candidates without mutating records until authorized dispatch.",
-    "target": "pending:P5"
+    "target": "invariant:invariant.backlog-admission"
   },
   {
     "source": "backlog.metrics",
@@ -883,7 +883,7 @@
       "review-latency",
       "signoff-queue-size"
     ],
-    "target": "pending:P5"
+    "target": "rule:backlog.capacity-review"
   },
   {
     "source": "signoff.candidate-binding",

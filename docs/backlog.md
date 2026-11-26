@@ -250,13 +250,17 @@ revocation does not prove running work stopped or release its reservations.
 
 ## Qualification boundary
 
-The P5 native exercise is still pending. Offline tests, a configured idle
-interval and prepared decisions cannot establish an actual owner answer or idle
-pull. Native qualification must retain the actual grant box and answer, genuine
-elapsed idle observations, fresh GitHub candidate evidence, one admitted dispatch
-and its native delivery/report receipts.
+The [native qualification](verification/continuous-backlog.md) observed one
+owner-approved, read-only task selected from GitHub after a retained idle interval.
+The original dispatch was reconciled after delayed readback, the worker returned
+a result that matched the immutable source, and the temporary grant was revoked.
+Independent host inspection confirmed that the task's foreground commands had
+exited and no task background work remained; the reservation was then released.
+Selected private evidence was archived and independently downloaded from the
+exact archive commit; every retained file matched its size and SHA-256.
 
-A compatibility exercise can qualify that bounded mechanism while retaining
-its explicit `legacy-unpinned` limit. It does not fill the separate source
-pinning, native founding, profile creation/readback or leadership-rotation gaps.
-No exercise here migrates another installation or proves unattended operation.
+The exercise uses the explicit `legacy-unpinned` compatibility path. Its worker
+returned a plain transcript result; it did not send a native report envelope.
+It does not qualify source pinning, native founding, full profile readback,
+leadership rotation, a native forty-eight-hour metrics trial, or unattended
+operation. No other installation was migrated.

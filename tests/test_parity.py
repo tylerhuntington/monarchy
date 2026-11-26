@@ -77,6 +77,7 @@ P2_TARGETS = {**{source: 'key:' + key for source, key in P2_KEYS.items()},
               **{source: 'rule:' + rule for source, (_, rule, _) in P2_RULES.items()},
               **{source: 'invariant:' + rule for source, rule in P2_INVARIANTS.items()}}
 P3_TARGETS = {
+    'authority.one-writer': 'invariant:invariant.one-writer',
     'preference.internal-pr-approval': 'rule:review.internal-approval',
     'preference.record-before-relay': 'invariant:invariant.owner-route',
     'authority.trusted-owner-route': 'invariant:invariant.owner-route',
@@ -122,8 +123,6 @@ P5_TARGETS = {
 # These rows represent runtime behavior, not the mere existence of a setting or
 # standing-order paragraph. Remove entries only with the phase's runtime proof.
 PENDING_RUNTIME = {
-    'authority.one-writer': 'P3',
-    'backlog.activation': 'P5',
     'signoff.candidate-binding': 'P6',
     'priority.feed-mode': 'P7',
     'profiles.create-readback': 'P8',
@@ -256,15 +255,14 @@ class ParityTests(unittest.TestCase):
                 self.assertEqual(rows[source]['target'], 'pending:' + phase)
         self.assertGreater(sum(row['target'].startswith('pending:') for row in rows.values()), 0)
 
-    def test_p3_mapped_targets_retain_the_branch_custody_gap(self):
+    def test_p3_mapped_targets_include_qualified_branch_custody(self):
         rows = catalog()
         by_source = {row['source']: row for row in rows}
-        self.assertEqual(len(P3_TARGETS), 24)
+        self.assertEqual(len(P3_TARGETS), 25)
         for source, target in P3_TARGETS.items():
             with self.subTest(source=source):
                 self.assertEqual(by_source[source]['target'], target)
-        self.assertEqual([row['source'] for row in rows if row['target'] == 'pending:P3'],
-                         ['authority.one-writer'])
+        self.assertFalse(any(row['target'] == 'pending:P3' for row in rows))
         self.assert_catalog(rows)
 
     def test_p3_category_inventory_matches_executable_vocabulary(self):
@@ -305,14 +303,14 @@ class ParityTests(unittest.TestCase):
                     self.assertEqual(settings[key], self.config[key])
                     self.assertEqual(settings[key]['value'], rows[source]['value'])
 
-    def test_p5_targets_are_prepared_without_promoting_pending_native_proof(self):
+    def test_p5_targets_match_the_qualified_bounded_backlog_contract(self):
         rows = catalog()
         by_source = {row['source']: row for row in rows}
         self.assertEqual(len(P5_TARGETS), 8)
         for source, target in P5_TARGETS.items():
             with self.subTest(source=source):
-                self.assertEqual(by_source[source]['target'], 'pending:P5')
-                by_source[source]['target'] = target
+                self.assertEqual(by_source[source]['target'], target)
+        self.assertFalse(any(row['target'] == 'pending:P5' for row in rows))
         self.assert_catalog(rows)
 
     def test_p5_declared_settings_reach_leadership_with_their_actual_values(self):
